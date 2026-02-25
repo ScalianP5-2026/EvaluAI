@@ -78,6 +78,9 @@ htmlcov/
 /mysql_data/
 /postgres_data/
 
+# Data (raw datasets - confidential)
+/data/
+
 # Temporary
 *.tmp
 *.bak

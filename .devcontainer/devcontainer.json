@@ -2,8 +2,9 @@
   "name": "EvaluAI Backend",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
   "features": {
-    "ghcr.io/devcontainers/features/postgres:1": {
-      "version": "15"
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},  
+    "ghcr.io/devcontainers/features/mysql:1": {               
+      "version": "8.0"
     },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "latest"
@@ -53,6 +54,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "pip install -r backend/requirements.txt && cd frontend && npm install",
+"postCreateCommand": "pip install -r requirements.txt && cd frontend && npm install",
   "remoteUser": "root"
 }
