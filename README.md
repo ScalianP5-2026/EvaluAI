@@ -13,7 +13,7 @@ It combines three modules: analytics dashboard, recommendation assistant, and NL
 ## 1) Problem / Problema
 
 **ES**  
-EvaluAI ayuda a responder preguntas operativas de RRHH y L&D:
+EvaluAI ayuda a responder preguntas operativas de RRHH y L&D (Learning & Development):
 
 1. Cómo se usa la IA en formación.
 2. Si existe relación entre uso de IA y variables como motivación, autoeficacia o aceptación.
@@ -108,9 +108,9 @@ Components:
 
 **ES**
 
-1. `DataRepository` carga encuestas, cursos y mentores al arrancar.
+1. al arrancar carga en memoria ( en una instancia `DataRepository`) los 3 .csv en backend\data (encuestas, cursos y mentores) para no leer continuamente de csv´s.
 2. React consume la API.
-3. Si se sube un CSV (`/surveys/upload`), la API valida, parsea, normaliza y reemplaza el dataset en memoria.
+3. Si se sube un CSV (`/surveys/upload`), la API valida, parsea, normaliza y reemplaza el dataset de encuestas en memoria.
 4. Dashboard (`/dashboard/summary`) calcula métricas, distribución, correlaciones e insights.
 5. Chat (`/chat/query`) cruza el objetivo del empleado con tags de cursos y expertise de mentores, y estima mejora para perfiles similares.
 6. NLP (`/nlp/analyze`) tokeniza comentarios, calcula sentimiento, detecta temas y propone recomendaciones grupales.
@@ -299,9 +299,30 @@ Covers smoke tests for health, dashboard, chat, and nlp.
 - `EVALUAI_SURVEYS_PATH` (default: `data/datos_encuesta_formacion_ia.csv`)
 - `EVALUAI_COURSES_PATH` (default: `data/courses.csv`)
 - `EVALUAI_MENTORS_PATH` (default: `data/mentors.csv`)
+- `EVALUAI_CHAT_PROVIDER` (`rule_based` or `azure_foundry`, default: `rule_based`)
+- `EVALUAI_AZURE_FOUNDRY_ENDPOINT` (Foundry model endpoint, e.g. `https://<resource>.services.ai.azure.com/models`)
+- `EVALUAI_AZURE_FOUNDRY_API_KEY` (API key for inference endpoint)
+- `EVALUAI_AZURE_FOUNDRY_MODEL` (deployed model name)
+- `EVALUAI_AZURE_FOUNDRY_TEMPERATURE` (default: `0.2`)
 - `VITE_API_BASE_URL` (React only, default: `http://localhost:8000/api/v1`)
 
-## 14) MVP Limitations / Limitaciones
+## 14) Azure Foundry Chat Mode
+
+The `/chat/query` endpoint supports two providers while keeping the same response schema used by the React UI:
+
+1. `rule_based` (default): current deterministic recommender.
+2. `azure_foundry`: uses Azure AI Foundry model inference and falls back to `rule_based` if inference/config fails.
+
+Example:
+
+```bash
+EVALUAI_CHAT_PROVIDER=azure_foundry
+EVALUAI_AZURE_FOUNDRY_ENDPOINT=https://<resource>.services.ai.azure.com/models
+EVALUAI_AZURE_FOUNDRY_API_KEY=<your-key>
+EVALUAI_AZURE_FOUNDRY_MODEL=gpt-4o-mini
+```
+
+## 15) MVP Limitations / Limitaciones
 
 **ES**
 

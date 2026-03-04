@@ -11,9 +11,9 @@ from backend.app.models.schemas import (
     SurveyUploadResponse,
 )
 from backend.app.services.analytics import build_dashboard_summary
+from backend.app.services.chat_orchestrator import create_chat_response_orchestrated
 from backend.app.services.data_store import repository
 from backend.app.services.nlp import analyze_comments
-from backend.app.services.recommender import create_chat_response
 
 api_router = APIRouter(prefix="/api/v1", tags=["evaluai"])
 
@@ -44,7 +44,7 @@ async def upload_surveys(file: UploadFile = File(...)) -> SurveyUploadResponse:
 
 @api_router.post("/chat/query", response_model=ChatResponse)
 def query_chatbot(request: ChatRequest) -> ChatResponse:
-    payload = create_chat_response(request, repository)
+    payload = create_chat_response_orchestrated(request, repository)
     return ChatResponse(**payload)
 
 
