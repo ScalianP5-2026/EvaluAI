@@ -13,6 +13,14 @@ const AI_USAGE_LEVELS = [
   "always",
 ];
 
+const FRECUENCIA_IA_LABELS = {
+  never: "Nunca",
+  rarely: "Rara vez",
+  sometimes: "A veces",
+  frequently: "Frecuentemente",
+  always: "Siempre",
+};
+
 const ROLES = [
   "Data Analyst",
   "Technology",
@@ -25,7 +33,7 @@ const ROLES = [
 
 function DashboardPanel({ dashboard, loading, error, onRefresh }) {
   if (loading) {
-    return <p className="status-card">Loading dashboard...</p>;
+    return <p className="status-card">Cargando dashboard...</p>;
   }
 
   if (error) {
@@ -33,14 +41,14 @@ function DashboardPanel({ dashboard, loading, error, onRefresh }) {
       <div className="status-card status-error">
         <p>{error}</p>
         <button className="btn btn-secondary" onClick={onRefresh}>
-          Retry
+          Reintentar
         </button>
       </div>
     );
   }
 
   if (!dashboard) {
-    return <p className="status-card">No dashboard data loaded yet.</p>;
+    return <p className="status-card">Todavia no hay datos cargados.</p>;
   }
 
   const usageData = dashboard.usage_distribution || [];
@@ -51,7 +59,9 @@ function DashboardPanel({ dashboard, loading, error, onRefresh }) {
 
   const normalizeItems = (items) =>
     items.map((item) => ({
-      label: item.level || item.label || "Unknown",
+      label: item.level
+        ? (FRECUENCIA_IA_LABELS[item.level] || item.level)
+        : (item.label || "Sin dato"),
       count: Number(item.count) || 0,
     }));
 
@@ -62,7 +72,7 @@ function DashboardPanel({ dashboard, loading, error, onRefresh }) {
       <article className="card">
         <h3>{title}</h3>
         {normalizedItems.length === 0 ? (
-          <p>No data available</p>
+          <p>Sin datos disponibles</p>
         ) : (
           <ul className="usage-list">
             {normalizedItems.map((item) => (
@@ -88,61 +98,61 @@ function DashboardPanel({ dashboard, loading, error, onRefresh }) {
       <div className="panel-header">
         <h2>Dashboard de analisis</h2>
         <button className="btn btn-secondary" onClick={onRefresh}>
-          Refresh
+          Actualizar
         </button>
       </div>
 
       <div className="stats-grid">
         <article>
-          <h3>Employees</h3>
+          <h3>Total empleados (id_empleado)</h3>
           <p>{dashboard.total_employees}</p>
         </article>
         <article>
-          <h3>Avg motivation</h3>
+          <h3>Promedio motivacion (M1-M4)</h3>
           <p>{dashboard.avg_motivation}</p>
         </article>
         <article>
-          <h3>Avg self efficacy</h3>
+          <h3>Promedio autoeficacia (AE1-AE4)</h3>
           <p>{dashboard.avg_self_efficacy}</p>
         </article>
         <article>
-          <h3>Avg AI use score</h3>
+          <h3>Promedio frecuencia_uso_ia</h3>
           <p>{dashboard.avg_ai_use_score}</p>
         </article>
         <article>
-          <h3>Avg age</h3>
+          <h3>Promedio edad (edad)</h3>
           <p>{dashboard.avg_age}</p>
         </article>
         <article>
-          <h3>Avg AI integration</h3>
+          <h3>Promedio nivel_integracion_ia</h3>
           <p>{dashboard.avg_ai_integration}</p>
         </article>
         <article>
-          <h3>Human vs AI preference</h3>
+          <h3>Promedio prefiere_humano_vs_ia</h3>
           <p>{dashboard.avg_human_preference}</p>
         </article>
       </div>
 
       <div className="panel-grid">
-        {renderDistribution("AI usage distribution", usageData)}
-        {renderDistribution("AI tools adoption", aiToolUsageData)}
+        {renderDistribution("Distribucion frecuencia_uso_ia", usageData)}
+        {renderDistribution("Uso de herramientas IA (usa_*)", aiToolUsageData)}
       </div>
 
       <div className="panel-grid">
-        {renderDistribution("Gender distribution", genderData)}
-        {renderDistribution("Department distribution", departmentData)}
+        {renderDistribution("Distribucion genero (genero)", genderData)}
+        {renderDistribution("Distribucion departamento (departamento)", departmentData)}
       </div>
 
       <div className="panel-grid">
-        {renderDistribution("Primary tool distribution", primaryToolData)}
+        {renderDistribution("Herramienta principal (herramienta_principal)", primaryToolData)}
         <article className="card">
-          <h3>Correlations</h3>
+          <h3>Correlaciones (indices)</h3>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Metric</th>
-                  <th>Value</th>
+                  <th>Indice</th>
+                  <th>Valor</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,7 +169,7 @@ function DashboardPanel({ dashboard, loading, error, onRefresh }) {
       </div>
 
       <article className="card">
-        <h3>Auto insights</h3>
+        <h3>Insights automaticos</h3>
         <ul className="plain-list">
           {(dashboard.insights || []).map((item) => (
             <li key={item}>{item}</li>

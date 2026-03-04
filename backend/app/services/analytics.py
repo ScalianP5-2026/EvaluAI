@@ -22,16 +22,16 @@ def _safe_mean(dataframe, column: str) -> float:
     return round(float(numeric.mean()), 2)
 
 
-def _category_distribution(series: pd.Series, top_n: int | None = None) -> list[dict[str, int | str]]:
-    cleaned = series.fillna("Unknown").astype(str).str.strip()
-    cleaned = cleaned.replace("", "Unknown")
+def _category_distribution(
+    series: pd.Series,
+    top_n: int | None = None,
+) -> list[dict[str, int | str]]:
+    cleaned = series.fillna("Sin dato").astype(str).str.strip()
+    cleaned = cleaned.replace("", "Sin dato")
     counts = cleaned.value_counts()
     if top_n is not None:
         counts = counts.head(top_n)
-    return [
-        {"label": str(label), "count": int(count)}
-        for label, count in counts.items()
-    ]
+    return [{"label": str(label), "count": int(count)} for label, count in counts.items()]
 
 
 def _as_bool(value: object) -> bool:
@@ -40,7 +40,7 @@ def _as_bool(value: object) -> bool:
     if value is None:
         return False
     text = str(value).strip().lower()
-    return text in {"1", "true", "t", "yes", "y", "si", "sí"}
+    return text in {"1", "true", "t", "yes", "y", "si"}
 
 
 def build_dashboard_summary(surveys_df):
@@ -62,7 +62,7 @@ def build_dashboard_summary(surveys_df):
             "primary_tool_distribution": [],
             "ai_tools_usage": [],
             "correlations": [],
-            "insights": ["No survey data available yet"],
+            "insights": ["No hay datos de encuestas disponibles"],
         }
 
     working = surveys_df.copy()
@@ -109,23 +109,18 @@ def build_dashboard_summary(surveys_df):
 
     correlations = []
     correlation_fields = [
-        ("motivation", "AI usage vs motivation"),
-        ("talent_development", "AI usage vs talent development"),
-        ("self_efficacy", "AI usage vs self efficacy"),
-        ("experience_years", "AI usage vs experience"),
-        ("acceptance", "AI usage vs acceptance"),
+        ("motivation", "frecuencia_uso_ia vs motivacion_promedio"),
+        ("talent_development", "frecuencia_uso_ia vs desarrollo_talento_promedio"),
+        ("self_efficacy", "frecuencia_uso_ia vs autoeficacia_promedio"),
+        ("experience_years", "frecuencia_uso_ia vs antiguedad_empresa"),
+        ("acceptance", "frecuencia_uso_ia vs aceptacion_promedio"),
     ]
     for column, label in correlation_fields:
         if working[column].nunique() > 1 and working["ai_use_score"].nunique() > 1:
             corr_value = working[column].corr(working["ai_use_score"])
         else:
             corr_value = 0.0
-        correlations.append(
-            {
-                "metric": label,
-                "value": round(float(corr_value), 3),
-            }
-        )
+        correlations.append({"metric": label, "value": round(float(corr_value), 3)})
 
     avg_ai_use = round(float(working["ai_use_score"].mean()), 2)
     avg_motivation = _safe_mean(working, "motivation")
@@ -137,38 +132,36 @@ def build_dashboard_summary(surveys_df):
     insights = []
     if avg_ai_use < 1.5:
         insights.append(
-            "AI adoption is low. Prioritize enablement and hands-on prompts."
+            "La adopcion de IA es baja. Prioriza capacitacion y casos practicos."
         )
     else:
         insights.append(
-            "AI adoption is moderate/high. Scale advanced use cases by role."
+            "La adopcion de IA es moderada/alta. Escala casos avanzados por rol."
         )
 
     if avg_motivation >= 7:
         insights.append(
-            "Motivation trend is strong. Keep personalized learning plans active."
+            "La motivacion es alta. Mantener planes de aprendizaje personalizados."
         )
     else:
         insights.append(
-            "Motivation is below target. Add manager follow-up and short learning goals."
+            "La motivacion esta por debajo del objetivo. Reforzar seguimiento y metas cortas."
         )
 
     if avg_self_efficacy >= 7:
-        insights.append(
-            "Self efficacy is solid. Promote peer mentoring to spread expertise."
-        )
+        insights.append("La autoeficacia es solida. Promover mentoring entre pares.")
     else:
         insights.append(
-            "Self efficacy needs support. Add guided paths and mentor checkpoints."
+            "La autoeficacia necesita refuerzo. Anadir rutas guiadas y checkpoints con mentor."
         )
 
     if avg_ai_integration >= 4.0:
         insights.append(
-            "AI integration is high in day-to-day learning. Focus on advanced practices."
+            "La integracion de IA en el aprendizaje diario es alta. Enfocar en practicas avanzadas."
         )
     else:
         insights.append(
-            "AI integration is still moderate. Reinforce practical use cases by department."
+            "La integracion de IA aun es moderada. Reforzar casos practicos por departamento."
         )
 
     return {
