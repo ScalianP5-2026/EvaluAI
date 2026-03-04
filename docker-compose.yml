@@ -8,7 +8,7 @@ services:
       - "8000:8000"
     environment:
       - EVALUAI_ALLOWED_ORIGINS=*
-      - EVALUAI_SURVEYS_PATH=data/datos_encuesta_formacion_ia.csv
+      - EVALUAI_SURVEYS_PATH=data/raw/EIPIA_FO_dataset_100_personas.xls
       - EVALUAI_COURSES_PATH=data/courses.csv
       - EVALUAI_MENTORS_PATH=data/mentors.csv
 

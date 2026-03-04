@@ -13,12 +13,24 @@ class CorrelationItem(BaseModel):
     value: float
 
 
+class CategoryCountItem(BaseModel):
+    label: str
+    count: int
+
+
 class DashboardSummaryResponse(BaseModel):
     total_employees: int
     avg_motivation: float
     avg_self_efficacy: float
     avg_ai_use_score: float
+    avg_age: float
+    avg_ai_integration: float
+    avg_human_preference: float
     usage_distribution: list[UsageDistributionItem]
+    gender_distribution: list[CategoryCountItem]
+    department_distribution: list[CategoryCountItem]
+    primary_tool_distribution: list[CategoryCountItem]
+    ai_tools_usage: list[CategoryCountItem]
     correlations: list[CorrelationItem]
     insights: list[str]
 

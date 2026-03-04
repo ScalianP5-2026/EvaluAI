@@ -46,7 +46,11 @@ class DataRepository:
     def _load_surveys(self, path: Path) -> pd.DataFrame:
         if not path.exists():
             return pd.DataFrame(columns=REQUIRED_SURVEY_COLUMNS)
-        dataframe = pd.read_csv(path)
+        suffix = path.suffix.lower()
+        if suffix in {".xls", ".xlsx"}:
+            dataframe = pd.read_excel(path)
+        else:
+            dataframe = pd.read_csv(path)
         return self._normalize_surveys(dataframe)
 
     def _normalize_surveys(self, dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -57,6 +61,7 @@ class DataRepository:
 
         aliases = {
             "empleado_id": "employee_id",
+            "id_empleado": "employee_id",
             "departamento": "role",
             "indice_motivacion": "motivation",
             "frecuencia_uso_ia": "ai_usage",
@@ -66,11 +71,47 @@ class DataRepository:
             "indice_aceptacion_ia": "acceptance",
             "comentarios_experiencia_ia": "comment",
             "sugerencias_mejora": "last_goal",
+            "sector": "role",
         }
 
         for source, target in aliases.items():
             if source in normalized.columns and target not in normalized.columns:
                 normalized[target] = normalized[source]
+
+        derived_numeric = {
+            "motivation": [
+                "M1_estimulante",
+                "M2_aumenta_interes",
+                "M3_aporta_valor",
+                "M4_mayor_esfuerzo",
+            ],
+            "self_efficacy": [
+                "AE1_resolver_problemas",
+                "AE2_confianza_digital",
+                "AE3_uso_eficaz",
+                "AE4_seguridad_aplicacion",
+            ],
+            "talent_development": [
+                "D1_mejora_competencias",
+                "D2_preparado_retos",
+                "D3_amplia_habilidades",
+                "D4_aprendizaje_autonomo",
+            ],
+            "acceptance": [
+                "AT1_rendimiento",
+                "AT2_facilita_aprendizaje",
+                "AT3_facilidad_uso",
+                "AT4_integracion_positiva",
+            ],
+        }
+        for target, source_columns in derived_numeric.items():
+            if target in normalized.columns:
+                continue
+            available = [col for col in source_columns if col in normalized.columns]
+            if not available:
+                continue
+            numeric_block = normalized[available].apply(pd.to_numeric, errors="coerce")
+            normalized[target] = numeric_block.mean(axis=1)
 
         for column in REQUIRED_SURVEY_COLUMNS:
             if column in normalized.columns:
@@ -102,7 +143,10 @@ class DataRepository:
             ).fillna(0.0)
 
         normalized["employee_id"] = normalized["employee_id"].astype(str)
-        return normalized[REQUIRED_SURVEY_COLUMNS]
+        ordered_columns = REQUIRED_SURVEY_COLUMNS + [
+            column for column in normalized.columns if column not in REQUIRED_SURVEY_COLUMNS
+        ]
+        return normalized[ordered_columns]
 
     def get_surveys(self) -> pd.DataFrame:
         return self.surveys_df.copy()

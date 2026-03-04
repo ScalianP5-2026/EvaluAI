@@ -44,7 +44,44 @@ function DashboardPanel({ dashboard, loading, error, onRefresh }) {
   }
 
   const usageData = dashboard.usage_distribution || [];
-  const maxUsage = Math.max(...usageData.map((item) => item.count), 1);
+  const genderData = dashboard.gender_distribution || [];
+  const departmentData = dashboard.department_distribution || [];
+  const primaryToolData = dashboard.primary_tool_distribution || [];
+  const aiToolUsageData = dashboard.ai_tools_usage || [];
+
+  const normalizeItems = (items) =>
+    items.map((item) => ({
+      label: item.level || item.label || "Unknown",
+      count: Number(item.count) || 0,
+    }));
+
+  const renderDistribution = (title, items) => {
+    const normalizedItems = normalizeItems(items);
+    const maxCount = Math.max(...normalizedItems.map((item) => item.count), 1);
+    return (
+      <article className="card">
+        <h3>{title}</h3>
+        {normalizedItems.length === 0 ? (
+          <p>No data available</p>
+        ) : (
+          <ul className="usage-list">
+            {normalizedItems.map((item) => (
+              <li key={`${title}-${item.label}`}>
+                <span>{item.label}</span>
+                <div className="bar-track">
+                  <div
+                    className="bar-fill"
+                    style={{ width: `${(item.count / maxCount) * 100}%` }}
+                  />
+                </div>
+                <strong>{item.count}</strong>
+              </li>
+            ))}
+          </ul>
+        )}
+      </article>
+    );
+  };
 
   return (
     <section className="panel">
@@ -72,27 +109,32 @@ function DashboardPanel({ dashboard, loading, error, onRefresh }) {
           <h3>Avg AI use score</h3>
           <p>{dashboard.avg_ai_use_score}</p>
         </article>
+        <article>
+          <h3>Avg age</h3>
+          <p>{dashboard.avg_age}</p>
+        </article>
+        <article>
+          <h3>Avg AI integration</h3>
+          <p>{dashboard.avg_ai_integration}</p>
+        </article>
+        <article>
+          <h3>Human vs AI preference</h3>
+          <p>{dashboard.avg_human_preference}</p>
+        </article>
       </div>
 
       <div className="panel-grid">
-        <article className="card">
-          <h3>AI usage distribution</h3>
-          <ul className="usage-list">
-            {usageData.map((item) => (
-              <li key={item.level}>
-                <span>{item.level}</span>
-                <div className="bar-track">
-                  <div
-                    className="bar-fill"
-                    style={{ width: `${(item.count / maxUsage) * 100}%` }}
-                  />
-                </div>
-                <strong>{item.count}</strong>
-              </li>
-            ))}
-          </ul>
-        </article>
+        {renderDistribution("AI usage distribution", usageData)}
+        {renderDistribution("AI tools adoption", aiToolUsageData)}
+      </div>
 
+      <div className="panel-grid">
+        {renderDistribution("Gender distribution", genderData)}
+        {renderDistribution("Department distribution", departmentData)}
+      </div>
+
+      <div className="panel-grid">
+        {renderDistribution("Primary tool distribution", primaryToolData)}
         <article className="card">
           <h3>Correlations</h3>
           <div className="table-wrap">

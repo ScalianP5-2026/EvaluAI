@@ -37,7 +37,7 @@ class Settings:
 
     surveys_path: str = os.getenv(
         "EVALUAI_SURVEYS_PATH",
-        "data/datos_encuesta_formacion_ia.csv",
+        "data/raw/EIPIA_FO_dataset_100_personas.xls",
     )
     courses_path: str = os.getenv("EVALUAI_COURSES_PATH", "data/courses.csv")
     mentors_path: str = os.getenv("EVALUAI_MENTORS_PATH", "data/mentors.csv")
