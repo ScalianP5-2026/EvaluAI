@@ -46,7 +46,7 @@
       "onAutoForward": "notify"
     },
     "5432": {
-      "label": "MySQL",
+      "label": "PostgreSQL",
       "onAutoForward": "notify"
     },
     "3000": {
