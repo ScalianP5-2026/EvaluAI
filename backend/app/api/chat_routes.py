@@ -1,0 +1,357 @@
+"""
+Chat Routes: Endpoints del chatbot.
+POST /api/v1/chat/query - Enviar mensaje
+GET /api/v1/chat/history - Obtener historial
+"""
+
+import logging
+import uuid
+from datetime import datetime
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from supabase import Client
+
+from app.chatbot.data_manager import DataManager
+from app.chatbot.gemini_client import GeminiChatClient
+from app.chatbot.prompt_builder import PromptBuilder
+from app.chatbot.conversation import ConversationMemory
+from app.chatbot.response_parser import parse_llm_response
+from app.chatbot.domain_tracking import TrainingSessionTracker
+from app.models.chat_schemas import (
+    ChatRequest,
+    ChatResponse,
+    InsightsData,
+    RecommendationData,
+    ConversationHistoryRequest,
+    ChatTurn,
+    ErrorResponse
+)
+from app.services.kpi_engine import (
+    calculate_acceptance_distribution,
+    calculate_ai_usage_vs_autoeficacia_correlation,
+    calculate_dependency_risk_distribution,
+    calculate_department_segmentation,
+    calculate_motivation_by_ai_usage
+)
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api/v1", tags=["chat"])
+
+# Dependency: obtener cliente Supabase (asume que se inicializa en main.py)
+def get_supabase_client() -> Client:
+    """
+    TODO: Implementar esta funcion en main.py
+    Por ahora es un placeholder.
+    """
+    from app.config import get_supabase_client as _get_db
+    return _get_db()
+
+def get_data_manager(supabase: Client = Depends(get_supabase_client)) -> DataManager:
+    """Dependency: Datamanager inicializado."""
+    return DataManager(supabase)
+
+def get_gemini_client() -> GeminiChatClient:
+    """Dependency: GeminiChatClient inicializado."""
+    from app.config import GEMINI_API_KEY
+    return GeminiChatClient(api_key=GEMINI_API_KEY)
+
+# ═══════════════════════════════════════════════════════════════
+# POST /api/v1/chat/query
+# ═══════════════════════════════════════════════════════════════
+
+@router.post("/chat/query", response_model=ChatResponse)
+async def chat_query(
+    request: ChatRequest,
+    dm: DataManager = Depends(get_data_manager),
+    client: GeminiChatClient = Depends(get_gemini_client),
+    supabase: Client = Depends(get_supabase_client)
+) -> ChatResponse:
+    """
+    Endpoint principal del chatbot.
+        Flujo:
+    1. Load employee context (si no viene en request)
+    2. Create session
+    3. Build prompt (initial)
+    4. Query Gemini
+    5. Parse response
+    6. Save to Supabase
+    7. Return ChatResponse
+    
+    Args:
+        request: ChatRequest con user_id, message
+        dm: DataManager (inyectado)
+        client: GeminiChatClient (inyectado)
+        supabase: Supabase client (inyectado)
+    
+    Returns:
+        ChatResponse con mensaje + insights + recomendaciones
+    """
+    try:
+        session_id = str(uuid.uuid4())
+        logger.info(f"New chat session: {session_id} for user {request.user_id}")
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 1. LOAD EMPLOYEE CONTEXT
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        if request.employee_context:
+            employee_ctx = request.employee_context
+            logger.info("Using provided employee context")
+        else:
+            employee_ctx = dm.get_employee_context(request.user_id)
+            if not employee_ctx:
+                logger.warning(f"Employee {request.user_id} not found in DB")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Employee {request.user_id} not found"
+                )       
+             
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 2. LOAD RAG CONTEXT (SQL)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        rag_ctx = {
+            "similar_profiles": dm.get_similar_profiles(
+                department=employee_ctx.get("department", "Unknown"),
+                ai_usage_frequency=employee_ctx.get("ai_usage_frequency", 3),
+                education_level=employee_ctx.get("education_level", "Unknown")
+            ),
+            "dept_insights": dm.get_department_insights(
+                department=employee_ctx.get("department", "Unknown")
+            ),
+            "top_courses": dm.get_top_courses(
+                department=employee_ctx.get("department", "Unknown"),
+                limit=3
+            ),
+            "avg_improvement": 24 # Placeholder
+        }   
+        
+        logger.info(f"RAG context loaded: {len(rag_ctx.get('top_courses', []))} courses")
+
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 3. INITIALIZE SESSION OBJECTS
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        memory = ConversationMemory(request.user_id)
+        tracker = TrainingSessionTracker(session_id, request.user_id)
+        pb = PromptBuilder()
+                
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 4. BUILD PROMPT (INITIAL)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        prompt = pb.build_contextual_prompt(
+            user_message=request.message,
+            user_context=employee_ctx,
+            rag_context=rag_ctx,
+            history=memory.get_history()
+        )
+        
+        logger.info("Prompt built, querying Gemini...")
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 5. QUERY GEMINI
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        response_text = await client.query(prompt, memory.get_history())
+        
+        logger.info("Gemini response received")
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 6. PARSE RESPONSE
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                
+        parsed = parse_llm_response(response_text)
+        
+        if not parsed.get("Success"):
+            logger.error(f"Failed to parse response: {parsed.get('raw')}")
+            # Fallback: retornar mensaje raw
+            chat_response = ChatResponse(
+                message=response_text,
+                session_id=session_id,
+                insights=InsightsData(
+                    general="Procesando tu solicitud...",
+                    department="",
+                    personal="",
+                ),
+                recommendations=None,
+                risk_alert=None
+            )
+            return chat_response
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 7. UPDATE MEMORY
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        memory.add_turn("user", request.message)
+        memory.add_turn("assistant", response_text)
+        
+        # Extract metadata from conversation
+        metadata = memory.extract_metadata()
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 8. BUILD CHAT RESPONSE
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                
+        recommendations = None
+        if parsed.get("recommendations"): 
+            recommendations = RecommendationData(
+                course=parsed["recommendations"].get("course"),
+                rationale=parsed["recommendations"].get("rationale"),
+                plan_30_days=parsed["recommendations"].get("plan_30_days")
+            )
+        
+        insights = parsed.get("insights", {})
+        chat_response = ChatResponse(
+            message=parsed.get("message", response_text),
+            session_id=session_id,
+            recommendations=recommendations,
+            insights=InsightsData(
+                general=insights.get("general", ""),
+                department=insights.get("department", ""),
+                personal=insights.get("personal", "")
+            ),
+            risk_alert=parsed.get("risk_alert")
+        )
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 9. SAVE TO SUPABASE
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        try:
+            # Save chat_sessions
+            supabase.table("chat_sessions").insert({
+                "id": session_id,
+                "employee_id": request.user_id,
+                "started_at": datetime.utcnow().isoformat(),
+                "goal_detected": metadata.get("goal_detected", False),
+                "primary_goal": metadata.get("primary_goal"),
+                "goal_clarity": metadata.get("goal_clarity"),
+                "conversation_depth": metadata.get("conversation_depth", 1),
+                "recommendation_generated": recommendations is not None
+            }).execute()
+            
+            # Save chat_turns (user turn)
+            supabase.table("chat_turns").insert({
+                "session_id": session_id,
+                "role": "user", 
+                "message": request.message,
+                "created_at": datetime.utcnow().isoformat()
+            }).execute()
+            
+            # Save chat_turns (assistant turn)
+            supabase.table("chat_turns").insert({
+                "session_id": session_id,
+                "role": "assistant",
+                "message": response_text,
+                "created_at": datetime.utcnow().isoformat()
+            }).execute()
+            
+            # Save recommendation if exists
+            if recommendations:
+                supabase.table("recommendation_events").insert({
+                    "employee_id": request.user_id,
+                    "session_id": session_id,
+                    "course_recommended": recommendations.course,
+                    "plan_generated": bool(recommendations.plan_30_days),
+                    "created_at": datetime.utcnow().isoformat()
+                }).execute()
+            
+            logger.info(f"Session data saved to Supabase: {session_id}")
+        
+        except Exception as e:
+            logger.error(f"Error saving to Supabase: {e}")
+            # No fallar, continuar de todas formas
+        
+        logger.info(f"Chat query completed successfully: {session_id}")
+        return chat_response
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in chat_query: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error processing chat request"
+        )
+        
+            
+# ═══════════════════════════════════════════════════════════════
+# GET /api/v1/chat/history
+# ═══════════════════════════════════════════════════════════════
+
+@router.get("/chat/history", response_model=list[ChatTurn])
+async def get_chat_history(
+    user_id: str,
+    limit: int = 10,
+    supabase: Client = Depends(get_supabase_client)
+) -> list[ChatTurn]:
+    """
+    Obtiene el historial de conversación de un empleado.
+    
+    Args:
+        user_id: ID del empleado
+        limit: Número máximo de turnos (default 10)
+        supabase: Supabase client
+    
+    Returns:
+        List[ChatTurn] ordenado por timestamp descendente
+    """
+    
+    try:
+        # Fetch último session
+        sessions = supabase.table("chat_sessions").select("id").eq(
+            "employee_id", user_id
+        ).order("started_at", desc=True).limit(1).execute()
+        
+        if not sessions.data:
+            logger.info(f"No chat history for user {user_id}")
+            return []
+        
+        session_id = sessions.data[0]["id"]
+        
+        # Fetch turnos
+        turns_response = supabase.table("chat_turns").select(
+            "role, message, created_at"
+        ).eq("session_id", session_id).order(
+            "created_at", desc=True
+        ).limit(limit).execute()
+        
+        turns = [
+            ChatTurn(
+                role=turn["role"],
+                content=turn["message"],
+                timestamp=turn["created_at"]
+            )
+            for turn in turns_response.data
+        ]
+        
+        logger.info(f"Retrieved {len(turns)} turns for user {user_id}")
+        return turns
+    
+    except Exception as e:
+        logger.error(f"Error fetching chat history: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving chat history"
+        )            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
