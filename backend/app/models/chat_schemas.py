@@ -2,9 +2,10 @@
 Pydantic schemas para chatbot y KPIs.
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, List
 from datetime import datetime
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel, Field, RootModel
 
 # ═══════════════════════════════════════════════════════════════
 # CHAT SCHEMAS
@@ -52,7 +53,7 @@ class ChatResponse(BaseModel):
     
     message: str = Field(..., description="Respuesta natural del chatbot")
     session_id: str = Field(..., description="ID de sesión")
-    recommendations: Optional[RecomendationData] = Field(
+    recommendations: Optional[RecommendationData] = Field(
         default=None,
         description="Recomendacion (si la hay)"
     )
@@ -130,17 +131,12 @@ class DepartmentMetrics(BaseModel):
     avg_autoeficacia: float = Field(..., description="Promedio autoeficacia")
     count: int = Field(..., description="Número de empleados")
         
-class DepartmentSegmentation(BaseModel):
-    """KPI 4: Segmentación por departamento"""        
+
+
+class DepartmentSegmentation(RootModel[Dict[str, DepartmentMetrics]]):
+    """KPI 4: Segmentación por departamento"""
     
-    __root__: Dict[str, DepartmentMetrics]
-    
-    def __iter__(self):
-        return iter(self.__root__)
-    
-    def items(self):
-        return self.__root__.items()
-    
+    root: Dict[str, DepartmentMetrics]
 
 class MotivationByUsage(BaseModel):
     """Motivación en un nivel de uso"""
@@ -149,16 +145,10 @@ class MotivationByUsage(BaseModel):
     count: int = Field(..., description="Número de empleados")
     
 
-class MotivationByAIUsage(BaseModel):
+class MotivationByAIUsage(RootModel[Dict[str, MotivationByUsage]]):
     """KPI 5: Motivación cruzada por uso de IA"""   
     
-    __root__: Dict[str, MotivationByUsage]
-    
-    def __iter__(self):
-        return iter(self.__root__)
-    
-    def items(self):
-        return self.__root__.items()
+    root: Dict[str, MotivationByUsage]
     
     
 class KPIResponse(BaseModel):

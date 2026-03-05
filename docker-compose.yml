@@ -1,0 +1,45 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "9000:8000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DEBUG=true
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./backend:/app
+    command: python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    networks:
+      - evaluai-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5173"
+    environment:
+      - VITE_API_BASE_URL=http://backend:8000/api/v1
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/.env.local:/app/.env.local
+    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - evaluai-net
+    depends_on:
+      - backend
+
+networks:
+  evaluai-net:
+    driver: bridge

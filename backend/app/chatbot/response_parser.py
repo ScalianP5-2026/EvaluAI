@@ -8,7 +8,7 @@ Implements fallback for malformed responses.
 import json
 import logging
 import re
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class ResponseParseError(Exception):
     pass
 
 
-def parse_response(raw_response: str) -> Dict[str, Any]:
+def parse_llm_response(raw_response: str) -> Dict[str, Any]:
     """
     Parse LLM response and ensure valid structure.
 

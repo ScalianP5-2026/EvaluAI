@@ -5,10 +5,10 @@ Pure chatbot logic without database or API dependencies.
 Designed to integrate with RAG system (Comp2) and frontend (Comp3).
 """
 
+from .conversation import ConversationMemory
 from .gemini_client import GeminiChatClient
 from .prompt_builder import PromptBuilder
-from .conversation import ConversationMemory
-from .response_parser import parse_response, validate_response_structure
+from .response_parser import parse_llm_response, validate_response_structure
 
 __all__ = [
     "GeminiChatClient",

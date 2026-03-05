@@ -1,13 +1,12 @@
 {
-  "name": "EvaluAI Backend",
+  "name": "EvaluAI Full Stack",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},  
-    "ghcr.io/devcontainers/features/mysql:1": {               
-      "version": "8.0"
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false
     },
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "latest"
+      "version": "18"
     }
   },
   "customizations": {
@@ -19,10 +18,13 @@
         "ms-python.flake8",
         "charliermarsh.ruff",
         "ms-vscode.makefile-tools",
-        "ms-azuretools.vscode-docker",
         "eamodio.gitlens",
         "github.copilot",
-        "REST Client.rest-client"
+        "REST Client.rest-client",
+        "dsznajder.es7-react-js-snippets",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -35,25 +37,29 @@
           "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit"
           }
+        },
+        "[javascript]": {
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[javascriptreact]": {
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
         }
       }
     }
   },
-  "forwardPorts": [8000, 5432, 3000],
+  "forwardPorts": [8000, 5173],
   "portsAttributes": {
     "8000": {
-      "label": "FastAPI",
+      "label": "FastAPI Backend",
       "onAutoForward": "notify"
     },
-    "5432": {
-      "label": "PostgreSQL",
-      "onAutoForward": "notify"
-    },
-    "3000": {
-      "label": "React Frontend",
+    "5173": {
+      "label": "Vite React Frontend",
       "onAutoForward": "notify"
     }
   },
-"postCreateCommand": "pip install -r requirements.txt && cd frontend && npm install",
+  "postCreateCommand": "pip install -r backend/requirements.txt",
   "remoteUser": "root"
 }
