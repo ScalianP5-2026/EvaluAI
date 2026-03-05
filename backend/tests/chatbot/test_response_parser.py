@@ -6,7 +6,13 @@ Tests JSON parsing, fallback handling, and validation.
 
 import pytest
 import json
-from backend.app.chatbot.response_parser import (
+import sys
+from pathlib import Path
+
+# Add backend to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from app.chatbot.response_parser import (
     parse_response,
     validate_response_structure,
 )

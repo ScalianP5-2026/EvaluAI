@@ -5,7 +5,13 @@ Tests conversation tracking, metadata extraction, and goal detection.
 """
 
 import pytest
-from backend.app.chatbot.conversation import ConversationMemory
+import sys
+from pathlib import Path
+
+# Add backend to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from app.chatbot.conversation import ConversationMemory
 
 
 @pytest.mark.unit
@@ -120,6 +126,7 @@ class TestConversationMemory:
 
         assert metadata["goal_detected"] is True
         assert metadata["primary_goal"] is not None
+        assert "learn" in metadata["primary_goal"].lower()
         assert "learn" in metadata["primary_goal"].lower()
 
     def test_extract_metadata_no_goal(self, memory):

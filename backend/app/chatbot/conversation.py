@@ -7,7 +7,7 @@ Uses simple heuristics for goal detection.
 
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class ConversationMemory:
         self.employee_id = employee_id
         self.turns: List[Dict[str, str]] = []
         self.max_turns = 10
-        self.created_at = datetime.utcnow()
+        self.created_at = datetime.now(UTC)
 
         logger.debug(f"ConversationMemory initialized for employee={employee_id}")
 
@@ -87,7 +87,7 @@ class ConversationMemory:
         turn = {
             "role": role,
             "content": content.strip(),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         if metadata:
@@ -195,10 +195,10 @@ class ConversationMemory:
         Returns:
             Goal description or None
         """
-        # Simple pattern: find first occurrence of goal keyword + next words
+        # Simple pattern: find goal keyword + following words until punctuation or new sentence
         for keyword in self.GOAL_KEYWORDS:
-            pattern = rf"{keyword}\s+([a-z\s]+?)(?:\.|,|$)"
-            match = re.search(pattern, text)
+            pattern = rf"{keyword}\s+([a-z\s]+?)(?=[!.?,;]|\s+[a-z]{{4,}}\s|$)"
+            match = re.search(pattern, text, re.IGNORECASE)
             if match:
                 goal_text = match.group(1).strip()
                 # Clean up and limit length

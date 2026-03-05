@@ -240,4 +240,4 @@ CRITICAL RULES FOR RESPONSE:
         Returns:
             True if prompt contains JSON format block, False otherwise
         """
-        return "MANDATORY JSON RESPONSE FORMAT" in prompt and "{{" in prompt
+        return "MANDATORY JSON RESPONSE FORMAT" in prompt and "{" in prompt and "}" in prompt

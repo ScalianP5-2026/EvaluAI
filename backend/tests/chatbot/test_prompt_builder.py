@@ -5,7 +5,13 @@ Tests that prompts are correctly structured and include JSON format instructions
 """
 
 import pytest
-from backend.app.chatbot.prompt_builder import PromptBuilder
+import sys
+from pathlib import Path
+
+# Add backend to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from app.chatbot.prompt_builder import PromptBuilder
 
 
 @pytest.mark.unit
@@ -44,7 +50,7 @@ class TestPromptBuilder:
         prompt = builder.build_initial_prompt(mock_user_context)
 
         assert "MANDATORY JSON RESPONSE FORMAT" in prompt
-        assert "{{" in prompt
+        assert "{" in prompt and "}" in prompt
         assert "Respond ONLY with JSON" in prompt
         assert '"message"' in prompt
         assert '"recommendations"' in prompt
