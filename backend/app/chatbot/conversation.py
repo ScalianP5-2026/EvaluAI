@@ -10,6 +10,8 @@ import re
 from datetime import datetime, UTC
 from typing import List, Dict, Optional
 
+from . import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,20 +24,9 @@ class ConversationMemory:
     - Extracts goals using keyword detection
     - Calculates goal clarity levels
     - Serializable to/from dict
-    """
 
-    # Keywords for goal detection
-    GOAL_KEYWORDS = [
-        "learn",
-        "improve",
-        "develop",
-        "advance",
-        "study",
-        "train",
-        "certification",
-        "master",
-        "become",
-    ]
+    Goal keywords loaded from environment variable CHATBOT_GOAL_DETECTION_KEYWORDS
+    """
 
     # Skills that can be detected
     SKILL_PATTERNS = [
@@ -156,7 +147,7 @@ class ConversationMemory:
 
         # Goal detection
         goal_detected = any(
-            keyword in all_text.lower() for keyword in self.GOAL_KEYWORDS
+            keyword in all_text.lower() for keyword in settings.GOAL_DETECTION_KEYWORDS
         )
 
         # Primary goal extraction (simplified)
@@ -196,7 +187,7 @@ class ConversationMemory:
             Goal description or None
         """
         # Simple pattern: find goal keyword + following words until punctuation or new sentence
-        for keyword in self.GOAL_KEYWORDS:
+        for keyword in settings.GOAL_DETECTION_KEYWORDS:
             pattern = rf"{keyword}\s+([a-z\s]+?)(?=[!.?,;]|\s+[a-z]{{4,}}\s|$)"
             match = re.search(pattern, text, re.IGNORECASE)
             if match:

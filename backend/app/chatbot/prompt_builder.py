@@ -8,6 +8,8 @@ The goal is to force deterministic, parseable JSON output from the LLM.
 import logging
 from typing import List, Dict, Any, Optional
 
+from . import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,20 +19,9 @@ class PromptBuilder:
     
     CRITICAL: Forces JSON-only output to enable automatic parsing.
     All prompts must include strict JSON format instructions.
+    
+    Goal detection keywords loaded from environment variable CHATBOT_GOAL_DETECTION_KEYWORDS
     """
-
-    # Keywords to detect training/learning intent
-    GOAL_DETECTION_KEYWORDS = [
-        "learn",
-        "improve",
-        "develop",
-        "advance",
-        "study",
-        "train",
-        "certification",
-        "master",
-        "become",
-    ]
 
     def __init__(self):
         """Initialize PromptBuilder with system role."""

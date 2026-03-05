@@ -30,11 +30,12 @@ class TestPromptBuilder:
         assert "JSON" in builder.system_role
 
     def test_goal_detection_keywords_present(self, builder):
-        """Test that goal detection keywords are defined."""
-        assert len(builder.GOAL_DETECTION_KEYWORDS) > 0
-        assert "learn" in builder.GOAL_DETECTION_KEYWORDS
-        assert "improve" in builder.GOAL_DETECTION_KEYWORDS
-        assert "master" in builder.GOAL_DETECTION_KEYWORDS
+        """Test that goal detection keywords are defined in settings."""
+        from app.chatbot import settings
+        assert len(settings.GOAL_DETECTION_KEYWORDS) > 0
+        assert "learn" in settings.GOAL_DETECTION_KEYWORDS
+        assert "improve" in settings.GOAL_DETECTION_KEYWORDS
+        assert "master" in settings.GOAL_DETECTION_KEYWORDS
 
     def test_build_initial_prompt_basic(self, builder, mock_user_context):
         """Test building initial prompt with user context."""

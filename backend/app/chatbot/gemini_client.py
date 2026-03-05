@@ -17,6 +17,8 @@ except ImportError:
         "Install with: pip install google-generativeai"
     )
 
+from . import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,46 +26,47 @@ class GeminiChatClient:
     """
     Async client for Google Gemini 2.5 Flash.
 
-    Configuration:
-    - Model: gemini-2.5-flash
-    - Temperature: 0.4 (for consistency)
-    - Max tokens: 800 (ensures concise responses)
-    - Retries: 3 attempts
-    - Timeout: 30 seconds
+    Configuration loaded from environment variables (.env):
+    - CHATBOT_GEMINI_MODEL: gemini-2.5-flash
+    - CHATBOT_GEMINI_TEMPERATURE: 0.4 (for consistency)
+    - CHATBOT_GEMINI_MAX_TOKENS: 800 (ensures concise responses)
+    - CHATBOT_GEMINI_TIMEOUT_SECONDS: 30
+    - CHATBOT_GEMINI_MAX_RETRIES: 3 attempts
     """
 
-    def __init__(self, api_key: str, model: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         """
         Initialize Gemini client.
 
         Args:
-            api_key: Google API key for Gemini
-            model: Model name (default: gemini-2.5-flash)
+            api_key: Google API key for Gemini (overrides env variable)
+            model: Model name (overrides env variable)
 
         Raises:
             ValueError: If api_key is empty
         """
-        if not api_key:
-            raise ValueError("API key cannot be empty")
+        # Use provided values or fall back to settings
+        self.api_key = api_key or settings.GEMINI_API_KEY
+        self.model = model or settings.GEMINI_MODEL
+        self.temperature = settings.GEMINI_TEMPERATURE
+        self.max_tokens = settings.GEMINI_MAX_TOKENS
+        self.timeout_seconds = settings.GEMINI_TIMEOUT_SECONDS
+        self.max_retries = settings.GEMINI_MAX_RETRIES
 
-        self.api_key = api_key
-        self.model = model
-        self.temperature = 0.4
-        self.max_tokens = 800
-        self.timeout_seconds = 30
-        self.max_retries = 3
+        if not self.api_key:
+            raise ValueError("API key cannot be empty (set CHATBOT_GEMINI_API_KEY)")
 
         # Configure Gemini
-        genai.configure(api_key=api_key)
+        genai.configure(api_key=self.api_key)
         self.client = genai.GenerativeModel(
-            model_name=model,
+            model_name=self.model,
             generation_config=genai.types.GenerationConfig(
                 temperature=self.temperature,
                 max_output_tokens=self.max_tokens,
             ),
         )
 
-        logger.info(f"GeminiChatClient initialized with model={model}")
+        logger.info(f"GeminiChatClient initialized with model={self.model}")
 
     async def query(
         self,
