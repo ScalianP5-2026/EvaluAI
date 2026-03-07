@@ -4,6 +4,7 @@ Courses Seed: Insertar cursos de ejemplo en Supabase
 
 import asyncio
 import logging
+
 from supabase import Client
 
 logger = logging.getLogger(__name__)
@@ -21,100 +22,88 @@ async def seed_courses(supabase: Client) -> bool:
     
     courses = [
         {
-            "name": "ML Fundamentals Bootcamp",
+            "title": "ML Fundamentals Bootcamp",
             "department": "IT",
-            "duration_hours": 40,
+            "skill_level": "Beginner",
             "avg_autoeficacia_improvement": 1.8,
             "avg_completion_rate": 0.92,
-            "description": "Introducción a Machine Learning desde cero"
         },
         {
-            "name": "Python Advanced",
+            "title": "Python Advanced",
             "department": "IT",
-            "duration_hours": 30,
+            "skill_level": "Advanced",
             "avg_autoeficacia_improvement": 1.5,
             "avg_completion_rate": 0.88,
-            "description": "Programación avanzada en Python: decoradores, async/await, testing"
         },
         {
-            "name": "Data Visualization with Tableau",
+            "title": "Data Visualization with Tableau",
             "department": "Analytics",
-            "duration_hours": 25,
+            "skill_level": "Intermediate",
             "avg_autoeficacia_improvement": 1.2,
             "avg_completion_rate": 0.85,
-            "description": "Crear dashboards interactivos y reportes visuales"
         },
         {
-            "name": "Leadership Skills",
+            "title": "Leadership Skills",
             "department": "HR",
-            "duration_hours": 20,
+            "skill_level": "Intermediate",
             "avg_autoeficacia_improvement": 1.4,
             "avg_completion_rate": 0.78,
-            "description": "Desarrollo de habilidades de liderazgo y gestión de equipos"
         },
         {
-            "name": "SQL Mastery",
+            "title": "SQL Mastery",
             "department": "IT",
-            "duration_hours": 35,
+            "skill_level": "Advanced",
             "avg_autoeficacia_improvement": 1.6,
             "avg_completion_rate": 0.90,
-            "description": "SQL avanzado: queries complejas, optimización, índices"
         },
         {
-            "name": "Communication in English",
+            "title": "Communication in English",
             "department": "HR",
-            "duration_hours": 45,
+            "skill_level": "Beginner",
             "avg_autoeficacia_improvement": 1.3,
             "avg_completion_rate": 0.75,
-            "description": "Comunicación empresarial en inglés: presentaciones y reuniones"
         },
         {
-            "name": "Cloud Architecture (AWS)",
+            "title": "Cloud Architecture (AWS)",
             "department": "IT",
-            "duration_hours": 50,
+            "skill_level": "Advanced",
             "avg_autoeficacia_improvement": 2.1,
             "avg_completion_rate": 0.95,
-            "description": "Diseño e implementación de arquitecturas en AWS"
         },
         {
-            "name": "Financial Analysis Basics",
+            "title": "Financial Analysis Basics",
             "department": "Finance",
-            "duration_hours": 30,
+            "skill_level": "Beginner",
             "avg_autoeficacia_improvement": 1.1,
             "avg_completion_rate": 0.82,
-            "description": "Análisis financiero: ratios, presupuestos deflacionados"
         },
         {
-            "name": "Project Management with Agile",
+            "title": "Project Management with Agile",
             "department": "Management",
-            "duration_hours": 25,
+            "skill_level": "Intermediate",
             "avg_autoeficacia_improvement": 1.5,
             "avg_completion_rate": 0.87,
-            "description": "Metodologías Agile y Scrum para gestión de proyectos"
         },
         {
-            "name": "UX/UI Design Principles",
+            "title": "UX/UI Design Principles",
             "department": "Design",
-            "duration_hours": 35,
+            "skill_level": "Intermediate",
             "avg_autoeficacia_improvement": 1.7,
             "avg_completion_rate": 0.89,
-            "description": "Diseño centrado en usuario: wireframes, prototipos, testing"
         },
         {
-            "name": "Customer Success Strategy",
+            "title": "Customer Success Strategy",
             "department": "Sales",
-            "duration_hours": 20,
+            "skill_level": "Beginner",
             "avg_autoeficacia_improvement": 1.2,
             "avg_completion_rate": 0.81,
-            "description": "Estrategias de retención y satisfacción del cliente"
         },
         {
-            "name": "DevOps & CI/CD Pipeline",
+            "title": "DevOps & CI/CD Pipeline",
             "department": "IT",
-            "duration_hours": 40,
+            "skill_level": "Advanced",
             "avg_autoeficacia_improvement": 1.9,
             "avg_completion_rate": 0.91,
-            "description": "Automatización de deployments y monitoreo en producción"
         }
     ]
     

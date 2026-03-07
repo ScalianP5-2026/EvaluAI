@@ -3,7 +3,7 @@ import ChatBox from "../components/ChatBox";
 import { chatAPI } from "../services/api";
 
 export default function ChatPage() {
-  const [userId] = useState("emp_001"); // Demo user
+  const [userId] = useState("1XVWCBPH"); // Demo user
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 

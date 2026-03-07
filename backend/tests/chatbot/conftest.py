@@ -4,9 +4,10 @@ Pytest configuration and fixtures for chatbot tests.
 Provides mocks and fixtures for testing chatbot core components.
 """
 
-import pytest
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
+
+import pytest
 
 
 @pytest.fixture
@@ -57,7 +58,7 @@ def mock_empty_response():
 def mock_user_context() -> Dict[str, Any]:
     """Fixture for employee user context."""
     return {
-        "employee_id": "EMP_001",
+        "employee_id": "1XVWCBPH",
         "department": "Technology",
         "education_level": "Master",
         "ai_usage_frequency": 4,

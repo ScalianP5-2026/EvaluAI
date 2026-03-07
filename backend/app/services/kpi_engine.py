@@ -3,16 +3,17 @@ KPI Engine: Calcula 5 KPIs MVP desde CSV.
 """
 
 import logging
-import pandas as pd
-import numpy as np
-from scipy.stats import pearsonr
 from pathlib import Path
 from typing import Dict
+
+import numpy as np
+import pandas as pd
+from scipy.stats import pearsonr
 
 logger = logging.getLogger(__name__)
 
 # Ruta al CSV (ajusta según tu estructura)
-CSV_PATH = Path(__file__).parent.parent.parent.parent / "data" / "EIPIA_FO_dataset_100_personas Excel.xls"
+CSV_PATH = Path(__file__).parent.parent.parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas Excel.csv"
 
 
 class KPIEngine:
@@ -21,7 +22,7 @@ class KPIEngine:
     def __init__(self):
         """Load CSV on init."""
         try:
-            self.df = pd.read_excel(CSV_PATH)
+            self.df = pd.read_csv(CSV_PATH, delimiter=';', encoding='utf-8-sig')
             logger.info(f"Loaded {len(self.df)} employees from CSV")
         except Exception as e:
             logger.error(f"Error loading CSV: {e}")
@@ -35,7 +36,19 @@ class KPIEngine:
             {"very_low": 15, "low": 20, "medium": 35, "high": 25, "very_high": 5}
         """
         try:
-            at_cols = [col for col in self.df.columns if col.startswith("at")]
+            # Línea ~38 - buscar "at" columns
+            at_cols = [col for col in self.df.columns if col.startswith("AT")]  # ✅ UPPERCASE
+
+            # Línea ~54 - buscar "ae" columns
+            ae_cols = [col for col in self.df.columns if col.startswith("AE")]  # ✅ UPPERCASE
+
+            # Línea ~78 - buscar "c" columns
+            c_cols = [col for col in self.df.columns if col.startswith("C")]  # ✅ UPPERCASE
+
+            # Línea ~128 - buscar "m" columns
+            m_cols = [col for col in self.df.columns if col.startswith("M")]  # ✅ UPPERCASE
+
+            # etc para todas las búsquedas de columnas
             if not at_cols:
                 logger.warning("AT columns not found")
                 return {}
@@ -71,7 +84,7 @@ class KPIEngine:
         try: 
             # Detectar columnas
             freq_cols = [col for col in self.df.columns if "frecuencia" in col.lower()]
-            ae_cols = [col for col in self.df.columns if col.startswith("ae")]
+            ae_cols = [col for col in self.df.columns if col.startswith("AE")]
             
             if not freq_cols or not ae_cols:
                 logger.warning("Required columns not found")
@@ -109,7 +122,7 @@ class KPIEngine:
             {"high_risk": 15, "medium_risk": 35, "low_risk": 50}
         """
         try: 
-            c_cols = [col for col in self.df.columns if col.startswith("c")]
+            c_cols = [col for col in self.df.columns if col.startswith("C")]
             if len(c_cols) < 4:
                 logger.warning("C columns not found (need c1, c2, c3, c4)")
                 return {}
@@ -156,8 +169,8 @@ class KPIEngine:
         """
         try:
             dept_col = [col for col in self.df.columns if "departamento" in col.lower()]
-            m_cols = [col for col in self.df.columns if col.startswith("m")]
-            ae_cols = [col for col in self.df.columns if col.startswith("ae")]
+            m_cols = [col for col in self.df.columns if col.startswith("M")]
+            ae_cols = [col for col in self.df.columns if col.startswith("AE")]
             
             if not dept_col or not m_cols or not ae_cols:
                 logger.warning("Required columns not found")
@@ -201,7 +214,7 @@ class KPIEngine:
         """
         try:
             freq_cols = [col for col in self.df.columns if "frecuencia" in col.lower()]
-            m_cols = [col for col in self.df.columns if col.startswith("m")]
+            m_cols = [col for col in self.df.columns if col.startswith("M")]
             
             if not freq_cols or not m_cols:
                 logger.warning("Required columns not found")

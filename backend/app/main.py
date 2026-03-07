@@ -16,6 +16,7 @@ from app.config import (
     get_supabase_client,
 )
 from app.database.seeds.courses_seed import seed_courses
+from app.database.seeds.employees_seed import seed_employees
 
 logger = logging.getLogger(__name__)
 
@@ -52,13 +53,22 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"⚠ Demo courses seed skipped: {str(e)}")
         
+        # Seed demo employees (execute once on startup)
+        try:
+            logger.info("Seeding demo employees...")
+            await seed_employees(supabase)
+            logger.info("✓ Demo employees seeded successfully")
+        except Exception as e:
+            logger.warning(f"⚠ Demo employees seed skipped: {str(e)}")
+            
         logger.info("✓ API ready at /api/v1 (Gemini configured)")
         logger.info("=== EvaluAI Backend Ready ===")
         
     except Exception as e:
         logger.error(f"✗ Startup failed: {str(e)}")
         raise
-    
+
+
     # ━━━━━━━━━━━━━━━━━ SHUTDOWN ━━━━━━━━━━━━━━━━
     yield
     

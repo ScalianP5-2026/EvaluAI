@@ -4,15 +4,16 @@ GET /api/v1/kpi/summary - Obtener resumen de 5 KPIs
 """
 
 import logging
+
 from fastapi import APIRouter, HTTPException, status
 
 from app.models.chat_schemas import KPIResponse
 from app.services.kpi_engine import (
     calculate_acceptance_distribution,
     calculate_ai_usage_vs_autoeficacia_correlation,
-    calculate_dependency_risk_distribution,
     calculate_department_segmentation,
-    calculate_motivation_by_ai_usage
+    calculate_dependency_risk_distribution,
+    calculate_motivation_by_ai_usage,
 )
 
 logger = logging.getLogger(__name__)
@@ -96,9 +97,9 @@ async def get_kpi_summary() -> KPIResponse:
         kpi_response = KPIResponse(
             acceptance_distribution=acceptance_dist,
             ai_usage_correlation=correlation,
-            dependency_risk_distribution=risk_dist,
+            dependency_risk=risk_dist,
             department_segmentation=dept_seg,
-            motivation_by_ai_usage=motivation
+            motivation_by_usage=motivation
         )
         
         logger.info("KPI summary calculated successfully")

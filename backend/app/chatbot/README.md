@@ -36,7 +36,7 @@ from backend.app.chatbot import (
 
 client = GeminiChatClient(api_key="your-gemini-key")
 builder = PromptBuilder()
-memory = ConversationMemory(employee_id="EMP_001")
+memory = ConversationMemory(employee_id="1XVWCBPH")
 ```
 
 ### 2. Build and Send Prompt

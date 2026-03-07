@@ -5,8 +5,9 @@ RAG context vía SQL queries.
 
 import logging
 from typing import Dict, List, Optional
-from supabase import Client
+
 import pandas as pd
+from supabase import Client
 
 logger = logging.getLogger(__name__)
 
@@ -204,14 +205,13 @@ class DataManager:
                     "tittle": "ML Masterclass",
                     "avg_autoeficacia_improvement": 1.5,
                     "avg_completion_rate": 0.85,
-                    "duration:hours": 40
                 },
                 ...
             ]
         """
         try:
             response = self.db.table("courses").select(
-                "title, avg_autoeficacia_improvement, avg_completion_rate, duration_hours"
+                "title, avg_autoeficacia_improvement, avg_completion_rate"
             ).eq("department", department).order(
                 "avg_completion_rate", desc=True
             ).limit(limit).execute()

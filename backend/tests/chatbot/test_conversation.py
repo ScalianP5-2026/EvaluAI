@@ -4,9 +4,10 @@ Unit tests for ConversationMemory.
 Tests conversation tracking, metadata extraction, and goal detection.
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add backend to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -21,11 +22,11 @@ class TestConversationMemory:
     @pytest.fixture
     def memory(self):
         """Initialize ConversationMemory for tests."""
-        return ConversationMemory(employee_id="EMP_001")
+        return ConversationMemory(employee_id="1XVWCBPH")
 
     def test_initialization(self, memory):
         """Test ConversationMemory initializes correctly."""
-        assert memory.employee_id == "EMP_001"
+        assert memory.employee_id == "1XVWCBPH"
         assert len(memory.turns) == 0
         assert memory.max_turns == 10
 
