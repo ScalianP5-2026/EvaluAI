@@ -41,7 +41,9 @@ class DataRepository:
     def _load_csv(self, path: Path) -> pd.DataFrame:
         if not path.exists():
             return pd.DataFrame()
-        return pd.read_csv(path)
+        df = pd.read_csv(path, encoding="utf-8-sig")
+        df.columns = [str(col).replace("\ufeff", "").strip() for col in df.columns]
+        return df
 
     def _load_surveys(self, path: Path) -> pd.DataFrame:
         if not path.exists():
