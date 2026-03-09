@@ -68,14 +68,14 @@ async def lifespan(app: FastAPI):
         logger.error(f"✗ Startup failed: {str(e)}")
         raise
 
-
     # ━━━━━━━━━━━━━━━━━ SHUTDOWN ━━━━━━━━━━━━━━━━
-    yield
-    
-    logger.info("=== EvaluAI Backend Shutting Down ===")
-    close_supabase_client()
-    logger.info("✓ Supabase client closed")
-    logger.info("=== EvaluAI Backend Stopped ===")
+    try:
+        yield
+    finally:
+        logger.info("=== EvaluAI Backend Shutting Down ===")
+        close_supabase_client()
+        logger.info("✓ Supabase client closed")
+        logger.info("=== EvaluAI Backend Stopped ===")
 
 # ═══════════════════════════════════════════════════════════════
 # FastAPI Application Factory
