@@ -163,7 +163,7 @@ def _fallback_response(message: str, raw_response: str) -> Dict[str, Any]:
     """
     return {
         "success": False,
-        "message": f"[System Fall back] {message}. Original response: {raw_response[:100]}...",
+        "message": f"[System Fallback] {message}. Original response: {raw_response[:100]}...",
         "recommendations": {
             "course": None,
             "mentor": None,
