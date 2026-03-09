@@ -31,7 +31,7 @@ from backend.app.chatbot import (
     GeminiChatClient,
     PromptBuilder,
     ConversationMemory,
-    parse_response,
+    parse_llm_response,
 )
 
 client = GeminiChatClient(api_key="your-gemini-key")
@@ -71,7 +71,7 @@ response_text = await client.query(prompt, memory.get_last_n_turns(n=8))
 ### 3. Parse Response
 
 ```python
-parsed = parse_response(response_text)
+parsed = parse_llm_response(response_text)
 
 print(parsed["message"])  # Conversational response
 print(parsed["recommendations"]["course"])  # Recommended course
@@ -192,7 +192,7 @@ Parses responses and handles malformed JSON.
 
 **Usage:**
 ```python
-parsed = parse_response(raw_response)
+parsed = parse_llm_response(raw_response)
 
 # All responses have this structure:
 {
@@ -295,7 +295,7 @@ rag_context = get_rag_context(employee_id)  # Your SQL enrichment
 
 # Query chatbot
 response = await chatbot.client.query(prompt, history)
-parsed = parse_response(response)
+parsed = parse_llm_response(response)
 
 # Save metadata for KPI calculations
 db.save(parsed["metadata"])

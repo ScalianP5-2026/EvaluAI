@@ -14,6 +14,6 @@ __all__ = [
     "GeminiChatClient",
     "PromptBuilder",
     "ConversationMemory",
-    "parse_response",
+    "parse_llm_response",
     "validate_response_structure",
 ]

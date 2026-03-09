@@ -184,6 +184,10 @@ def _fallback_response(message: str, raw_response: str) -> Dict[str, Any]:
     }
 
 
+# Backward-compatible alias
+parse_response = parse_llm_response
+
+
 def validate_response_structure(response: Dict[str, Any]) -> bool:
     """
     Validate response has all required fields.
