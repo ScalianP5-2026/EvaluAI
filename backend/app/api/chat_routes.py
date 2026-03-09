@@ -165,7 +165,7 @@ async def chat_query(
                 
         parsed = parse_llm_response(response_text)
         
-        if not parsed.get("Success"):
+        if not parsed.get("success"):
             logger.error(f"Failed to parse response: {parsed.get('raw')}")
             # Fallback: retornar mensaje raw
             chat_response = ChatResponse(
