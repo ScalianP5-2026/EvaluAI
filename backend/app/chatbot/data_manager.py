@@ -103,25 +103,38 @@ class DataManager:
             }
         """
         try: 
-            # Query a employee_assesments filtrando por dpto
-            response = self.db.table("employee_assessments").select(
-                "motivacion, autoeficacia, dependencia"
-            ).eq("assessment_type", "baseline").execute()
-            
-            # Filtrar por dpto
+            # Obtener empleados del departamento
             dept_employees = self.db.table("employees").select(
                 "employee_id"
             ).eq("department", department).execute()
             
             dept_ids = [e["employee_id"] for e in dept_employees.data]
             
-            # Recalcultar con pandas
+            # Si no hay empleados en el departamento, devolvemos solo el conteo
             if not dept_ids:
                 return {"count_employees": 0}
             
-            avg_motivation = 7.2 #Default
-            avg_self_efficacy = 7.8
-            avg_dependency = 3.1
+            # Query a employee_assessments solo para empleados del departamento
+            response = (
+                self.db.table("employee_assessments")
+                .select("employee_id, motivacion, autoeficacia, dependencia")
+                .eq("assessment_type", "baseline")
+                .in_("employee_id", dept_ids)
+                .execute()
+            )
+            
+            # Recalcular con pandas si hay datos de assessments
+            if response.data:
+                df = pd.DataFrame(response.data)
+                avg_motivation = float(df["motivacion"].mean()) if "motivacion" in df.columns and not df["motivacion"].empty else 0.0
+                avg_self_efficacy = float(df["autoeficacia"].mean()) if "autoeficacia" in df.columns and not df["autoeficacia"].empty else 0.0
+                avg_dependency = float(df["dependencia"].mean()) if "dependencia" in df.columns and not df["dependencia"].empty else 0.0
+            else:
+                # Sin datos de assessments, devolvemos 0.0 como promedio
+                avg_motivation = 0.0
+                avg_self_efficacy = 0.0
+                avg_dependency = 0.0
+            
             count = len(dept_ids)
             
             insights = {
