@@ -12,27 +12,27 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
 
+from app.chatbot.conversation import ConversationMemory
 from app.chatbot.data_manager import DataManager
+from app.chatbot.domain_tracking import TrainingSessionTracker
 from app.chatbot.gemini_client import GeminiChatClient
 from app.chatbot.prompt_builder import PromptBuilder
-from app.chatbot.conversation import ConversationMemory
-from app.chatbot.response_parser import parse_llm_response
-from app.chatbot.domain_tracking import TrainingSessionTracker
+from app.chatbot.response_parser import parse_response
 from app.models.chat_schemas import (
     ChatRequest,
     ChatResponse,
+    ChatTurn,
+    ConversationHistoryRequest,
+    ErrorResponse,
     InsightsData,
     RecommendationData,
-    ConversationHistoryRequest,
-    ChatTurn,
-    ErrorResponse
 )
 from app.services.kpi_engine import (
     calculate_acceptance_distribution,
     calculate_ai_usage_vs_autoeficacia_correlation,
-    calculate_dependency_risk_distribution,
     calculate_department_segmentation,
-    calculate_motivation_by_ai_usage
+    calculate_dependency_risk_distribution,
+    calculate_motivation_by_ai_usage,
 )
 
 logger = logging.getLogger(__name__)
@@ -163,7 +163,7 @@ async def chat_query(
         # 6. PARSE RESPONSE
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                 
-        parsed = parse_llm_response(response_text)
+        parsed = parse_response(response_text)
         
         if not parsed.get("success"):
             logger.error(f"Failed to parse response: {parsed.get('raw')}")

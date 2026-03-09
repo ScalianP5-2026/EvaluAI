@@ -165,7 +165,7 @@ class DataManager:
         Obtiene empleados similares (mismo dpto, ai_usage, educación). 
         
         Args: 
-            department, ai_usage_frequecy (1-5), education_level, limit
+            department, ai_usage_frequency (1-5), education_level, limit
         
         Returns:
             {

@@ -18,7 +18,7 @@ class ResponseParseError(Exception):
     pass
 
 
-def parse_llm_response(raw_response: str) -> Dict[str, Any]:
+def parse_response(raw_response: str) -> Dict[str, Any]:
     """
     Parse LLM response and ensure valid structure.
 
