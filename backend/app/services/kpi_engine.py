@@ -59,6 +59,7 @@ class KPIEngine:
         
         except Exception as e:
             logger.error(f"Error calculating acceptance: {e}")
+            return {}
     
     def calculate_ai_usage_vs_autoeficacia_correlation(self) -> Dict:
         """ 
