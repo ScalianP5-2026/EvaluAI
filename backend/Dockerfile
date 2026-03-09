@@ -14,4 +14,4 @@ ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
-CMD ["/bin/sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 & sleep 5 && python backend/scripts/test_populate_supabase.py && wait %1"]
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
