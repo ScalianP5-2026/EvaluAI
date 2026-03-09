@@ -1,24 +1,50 @@
-
 services:
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "9000:8000"
     environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DEBUG=true
+      - LOG_LEVEL=INFO
       - EVALUAI_ALLOWED_ORIGINS=*
       - EVALUAI_SURVEYS_PATH=data/raw/EIPIA_FO_dataset_100_personas.xls
       - EVALUAI_COURSES_PATH=data/courses.csv
       - EVALUAI_MENTORS_PATH=data/mentors.csv
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    command: python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    networks:
+      - evaluai-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:5173"
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+      - VITE_API_BASE_URL=http://backend:8000/api/v1
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/.env.local:/app/.env.local
+    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - evaluai-net
     depends_on:
       - backend
+
+networks:
+  evaluai-net:
+    driver: bridge

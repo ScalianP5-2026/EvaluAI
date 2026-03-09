@@ -2,16 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-
-# Increase pip timeout for large package downloads
-ENV PIP_DEFAULT_TIMEOUT=300
-COPY backend/requirements.txt ./requirements.txt
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY backend ./backend
-
-ENV PYTHONPATH=/app
+COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
