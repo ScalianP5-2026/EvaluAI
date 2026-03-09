@@ -41,7 +41,7 @@ class DataRepository:
     def _load_csv(self, path: Path) -> pd.DataFrame:
         if not path.exists():
             return pd.DataFrame()
-        return pd.read_csv(path)
+        return pd.read_csv(path, encoding="utf-8-sig")
 
     def _load_surveys(self, path: Path) -> pd.DataFrame:
         if not path.exists():
