@@ -57,7 +57,7 @@ async def get_kpi_summary() -> KPIResponse:
         if not correlation:
             raise ValueError("Failed to calculate correlation")
         
-        logger.info(f"KPI2 Correlation: r={correlation.get('pearson_r')}, p={correlation.get('p_value')}")
+        logger.info(f"KPI2 Correlation: r={correlation.get('correlation')}, p={correlation.get('p_value')}")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # KPI 3: DEPENDENCY RISK DISTRIBUTION
