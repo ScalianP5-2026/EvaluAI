@@ -215,7 +215,7 @@ class DataManager:
         Returns:
             [
                 {
-                    "tittle": "ML Masterclass",
+                    "title": "ML Masterclass",
                     "avg_autoeficacia_improvement": 1.5,
                     "avg_completion_rate": 0.85,
                 },
