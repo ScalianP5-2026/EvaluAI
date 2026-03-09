@@ -1,9 +1,19 @@
+import os
+from pathlib import Path
+
 import pandas as pd
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
-# Cambiar con tus credenciales
-#DATABASE_URL = "postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
-DATABASE_URL = "postgresql://postgres.zeoafuemimbvaubaelen:cB6reuDVm3EzJzPG@aws-1-eu-central-1.pooler.supabase.com:5432/postgres"
+# Cargar variables de entorno desde el .env en la raiz del proyecto.
+ROOT_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(ROOT_DIR / ".env")
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL no esta definida. Configurala en tu archivo .env."
+    )
 
 engine = create_engine(DATABASE_URL)
 
