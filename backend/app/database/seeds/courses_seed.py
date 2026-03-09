@@ -133,7 +133,7 @@ async def main():
     """
     from app.config import get_supabase_client
     
-    logger.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     supabase = get_supabase_client()
     
     success = await seed_courses(supabase)
