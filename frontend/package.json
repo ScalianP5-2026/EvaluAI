@@ -1,6 +1,7 @@
 {
   "name": "evaluai-frontend",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "description": "EvaluAI - AI-powered training evaluation system",
   "scripts": {
