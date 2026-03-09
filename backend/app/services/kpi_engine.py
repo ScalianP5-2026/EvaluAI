@@ -39,15 +39,6 @@ class KPIEngine:
             # Línea ~38 - buscar "at" columns
             at_cols = [col for col in self.df.columns if col.startswith("AT")]  # ✅ UPPERCASE
 
-            # Línea ~54 - buscar "ae" columns
-            ae_cols = [col for col in self.df.columns if col.startswith("AE")]  # ✅ UPPERCASE
-
-            # Línea ~78 - buscar "c" columns
-            c_cols = [col for col in self.df.columns if col.startswith("C")]  # ✅ UPPERCASE
-
-            # Línea ~128 - buscar "m" columns
-            m_cols = [col for col in self.df.columns if col.startswith("M")]  # ✅ UPPERCASE
-
             # etc para todas las búsquedas de columnas
             if not at_cols:
                 logger.warning("AT columns not found")
