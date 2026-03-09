@@ -68,7 +68,5 @@
     "5173": {
       "onAutoForward": "ignore"
     }
-  },
-"postCreateCommand": "pip install -r backend/requirements.txt && cd frontend && npm install",
-  "remoteUser": "root"
+  }
 }
