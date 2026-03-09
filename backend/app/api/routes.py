@@ -10,12 +10,13 @@ from backend.app.models.schemas import (
     NLPResponse,
     SurveyUploadResponse,
 )
+from backend.app.config import settings
 from backend.app.services.analytics import build_dashboard_summary
 from backend.app.services.chat_orchestrator import create_chat_response_orchestrated
 from backend.app.services.data_store import repository
 from backend.app.services.nlp import analyze_comments
 
-api_router = APIRouter(prefix="/api/v1", tags=["evaluai"])
+api_router = APIRouter(prefix=settings.api_prefix, tags=["evaluai"])
 
 
 @api_router.get("/dashboard/summary", response_model=DashboardSummaryResponse)
