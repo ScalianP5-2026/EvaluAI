@@ -452,15 +452,24 @@ function toCsvContent_(values) {
 
 function escapeCsvCell_(value) {
   const text = value == null ? "" : String(value);
+  // Prevent CSV formula injection: prefix values starting with a formula
+  // character with a single quote so spreadsheet applications (Excel, Google
+  // Sheets, LibreOffice) treat them as plain text rather than formulas.
+  const needsFormulaPrefix = /^[=+\-@]/.test(text);
+  const escapedText = text.replace(/"/g, "\"\"");
+  const safe = needsFormulaPrefix ? `'${escapedText}` : escapedText;
   if (
+    // Quote cells that were prefixed to neutralize formula injection, as well
+    // as cells containing characters that require quoting under RFC 4180.
+    needsFormulaPrefix ||
     text.indexOf(",") !== -1 ||
     text.indexOf("\"") !== -1 ||
     text.indexOf("\n") !== -1 ||
     text.indexOf("\r") !== -1
   ) {
-    return `"${text.replace(/"/g, "\"\"")}"`;
+    return `"${safe}"`;
   }
-  return text;
+  return safe;
 }
 
 function installSubmitTrigger_(form) {
