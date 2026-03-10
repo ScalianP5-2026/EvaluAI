@@ -6,10 +6,7 @@ Initializes the app, configures routes, CORS, and startup/shutdown hooks.
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.api import chat_routes, kpi_routes
+from app.api import chat_routes, kpi_routes, surveys_routes
 from app.config import (
     AppConfig,
     close_supabase_client,
@@ -17,6 +14,8 @@ from app.config import (
 )
 from app.database.seeds.courses_seed import seed_courses
 from app.database.seeds.employees_seed import seed_employees
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +107,7 @@ def create_app() -> FastAPI:
     # ━━━━━━━━━━━━━━━━━ Routes Registration ━━━━━━━━━━━━━━━━━
     app.include_router(chat_routes.router)
     app.include_router(kpi_routes.router)
+    app.include_router(surveys_routes.router)
     
     # ━━━━━━━━━━━━━━━━━ Health Check Endpoints ━━━━━━━━━━━━━━━━━
     @app.get("/api/v1/health", tags=["health"])
@@ -141,6 +141,7 @@ def create_app() -> FastAPI:
                 "chat": "/api/v1/chat/query",
                 "history": "/api/v1/chat/history",
                 "kpi": "/api/v1/kpi/summary",
+                "upload": "/api/v1/upload/surveys",
                 "health": "/api/v1/health"
             }
         }

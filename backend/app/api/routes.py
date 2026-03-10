@@ -1,7 +1,39 @@
+"""
+⚠️ DEPRECATED MODULE: This router is no longer used in the application.
+
+REASON FOR DEPRECATION:
+- This module's endpoints have been superseded by separate, focused routers:
+  * chat_routes.py → /api/v1/chat/* endpoints (ACTIVE)
+  * kpi_routes.py → /api/v1/kpi/* endpoints (ACTIVE)
+  
+- The endpoints defined here are listed below but NOT registered in main.py:
+  * GET /api/v1/dashboard/summary [UNUSED]
+  * POST /api/v1/surveys/upload [UNUSED]
+  * POST /api/v1/chat/query [DUPLICATE - chat_routes.py is used instead]
+  * POST /api/v1/nlp/analyze [UNUSED]
+
+- The frontend does NOT call any of these endpoints.
+
+MIGRATION PATH:
+If any of these endpoints are needed in the future:
+1. Review the implementation below
+2. Migrate logic to the appropriate router (chat_routes.py, kpi_routes.py, or create new)
+3. Remove duplicate POST /chat/query
+4. Test thoroughly before re-registration in main.py
+5. Remove this file once migration is complete
+
+To revive this router:
+1. Uncomment the import in app/api/__init__.py
+2. Register in main.py: app.include_router(api_router)
+3. Test all endpoints before deploying
+
+This file is kept for reference and historical context.
+Last verified: 2026-03-10 (Post-merge stabilization branch)
+"""
+
 from __future__ import annotations
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
-
+from app.config import settings
 from app.models.schemas import (
     ChatRequest,
     ChatResponse,
@@ -10,11 +42,11 @@ from app.models.schemas import (
     NLPResponse,
     SurveyUploadResponse,
 )
-from app.config import settings
 from app.services.analytics import build_dashboard_summary
 from app.services.chat_orchestrator import create_chat_response_orchestrated
 from app.services.data_store import repository
 from app.services.nlp import analyze_comments
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 api_router = APIRouter(prefix=settings.api_prefix, tags=["evaluai"])
 
