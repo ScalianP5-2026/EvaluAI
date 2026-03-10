@@ -63,19 +63,24 @@ async def upload_surveys(
     if not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="File must be a CSV file (.csv)")
     
-    # Validate file size (max 5MB)
-    MAX_SIZE = 5 * 1024 * 1024
-    if file.size and file.size > MAX_SIZE:
-        raise HTTPException(status_code=400, detail=f"File too large (max 5MB)")
-    
     # Read file
+    MAX_SIZE = 5 * 1024 * 1024
     try:
         content = await file.read()
-        if not content:
-            raise HTTPException(status_code=400, detail="File is empty")
     except Exception as e:
         logger.error(f"Error reading file: {e}")
         raise HTTPException(status_code=400, detail="Failed to read file")
+
+    if not content:
+        raise HTTPException(status_code=400, detail="File is empty")
+
+    # Validate file size (max 5MB) after reading to avoid relying on file.size
+    if len(content) > MAX_SIZE:
+        actual_mb = len(content) / (1024 * 1024)
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large ({actual_mb:.1f}MB, max 5MB)"
+        )
     
     # Process CSV
     try:
