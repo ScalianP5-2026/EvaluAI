@@ -122,7 +122,7 @@ class SurveyUploadService:
             raise ValueError(f"Failed to parse CSV: {str(e)}")
         
         # Total rows (excluding header)
-        total_rows = row_num - 1 if row_num > 1 else 0
+        total_rows = len(valid_rows) + len(invalid_rows)
         
         logger.info(
             f"CSV validation complete: {len(valid_rows)} valid, {len(invalid_rows)} invalid"
