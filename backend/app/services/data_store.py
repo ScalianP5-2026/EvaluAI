@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from backend.app.config import settings
+from app.config import settings
 
 REQUIRED_SURVEY_COLUMNS = [
     "employee_id",

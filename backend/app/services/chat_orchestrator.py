@@ -4,8 +4,8 @@ import json
 import logging
 from typing import Any
 
-from backend.app.config import settings
-from backend.app.services.recommender import create_chat_response
+from app.config import settings
+from app.services.recommender import create_chat_response
 
 logger = logging.getLogger(__name__)
 
