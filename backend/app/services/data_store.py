@@ -4,8 +4,7 @@ from io import StringIO
 from pathlib import Path
 
 import pandas as pd
-
-from backend.app.config import settings
+from app.config import settings
 
 REQUIRED_SURVEY_COLUMNS = [
     "employee_id",
@@ -44,7 +43,7 @@ class DataRepository:
         df = pd.read_csv(path, encoding="utf-8-sig")
         df.columns = [str(col).replace("\ufeff", "").strip() for col in df.columns]
         return df
-feat--codex-design
+
     def _load_surveys(self, path: Path) -> pd.DataFrame:
         if not path.exists():
             return pd.DataFrame(columns=REQUIRED_SURVEY_COLUMNS)

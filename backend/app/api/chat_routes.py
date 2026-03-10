@@ -9,9 +9,6 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from supabase import Client
-
 from app.chatbot.conversation import ConversationMemory
 from app.chatbot.data_manager import DataManager
 from app.chatbot.domain_tracking import TrainingSessionTracker
@@ -34,16 +31,26 @@ from app.services.kpi_engine import (
     calculate_dependency_risk_distribution,
     calculate_motivation_by_ai_usage,
 )
+from fastapi import APIRouter, Depends, HTTPException, status
+from supabase import Client
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 
-# Dependency: obtener cliente Supabase (asume que se inicializa en main.py)
+# Dependency: obtener cliente Supabase (inicializado en main.py lifespan)
 def get_supabase_client() -> Client:
     """
-    TODO: Implementar esta funcion en main.py
-    Por ahora es un placeholder.
+    Obtains Supabase client singleton initialized during app lifespan.
+    
+    The client is initialized once in main.py during app startup and
+    reused across all requests via dependency injection.
+    
+    Returns:
+        Client: Supabase async client instance
+    
+    Raises:
+        RuntimeError: If Supabase client not initialized
     """
     from app.config import get_supabase_client as _get_db
     return _get_db()
