@@ -343,7 +343,7 @@ export default function SurveyUpload() {
       formData.append("file", file);
 
       const response = await fetch(
-        `${window.import?.meta?.env?.VITE_API_BASE_URL || "http://localhost:9000/api/v1"}/upload/surveys`,
+        `${import.meta.env.VITE_API_BASE_URL}/upload/surveys`,
         {
           method: "POST",
           body: formData,
