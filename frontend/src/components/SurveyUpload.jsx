@@ -347,7 +347,9 @@ export default function SurveyUpload() {
     } catch (err) {
       console.error("Upload error:", err);
       const detail = err?.response?.data?.detail;
-      setError(detail || "Error de conexión. Verifica tu conexión e intenta de nuevo.");
+      setError(
+        detail || "Error de conexión. Verifica tu conexión e intenta de nuevo."
+      );
       setResult(null);
     } finally {
       setIsLoading(false);
