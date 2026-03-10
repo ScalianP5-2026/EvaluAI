@@ -93,8 +93,8 @@ async def upload_surveys(
             f"{result.invalid_rows} invalid"
         )
         
-        # If no rows were inserted, return 422
-        if result.inserted_rows == 0 and result.valid_rows > 0:
+        # If no rows were inserted or skipped as duplicates, return 422
+        if result.inserted_rows == 0 and result.skipped_duplicates == 0 and result.valid_rows > 0:
             raise HTTPException(
                 status_code=422,
                 detail="No rows could be inserted. Check error details."
