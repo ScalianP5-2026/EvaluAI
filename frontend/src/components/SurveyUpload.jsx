@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { dashboardAPI } from "../services/api";
 
 /**
  * Survey Upload Component - Corporate Edition
@@ -339,30 +340,14 @@ export default function SurveyUpload() {
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(
-        `${window.import?.meta?.env?.VITE_API_BASE_URL || "http://localhost:9000/api/v1"}/upload/surveys`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.detail || "Falló la subida. Intenta de nuevo.");
-        setResult(null);
-      } else {
-        const data = await response.json();
-        setResult(data);
-        setFile(null);
-        setError(null);
-      }
+      const data = await dashboardAPI.uploadSurveys(file);
+      setResult(data);
+      setFile(null);
+      setError(null);
     } catch (err) {
       console.error("Upload error:", err);
-      setError("Error de conexión. Verifica tu conexión e intenta de nuevo.");
+      const detail = err?.response?.data?.detail;
+      setError(detail || "Error de conexión. Verifica tu conexión e intenta de nuevo.");
       setResult(null);
     } finally {
       setIsLoading(false);

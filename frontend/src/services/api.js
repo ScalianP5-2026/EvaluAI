@@ -68,7 +68,7 @@ export const dashboardAPI = {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const response = await apiClient.post("/surveys/upload", formData, {
+      const response = await apiClient.post("/upload/surveys", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data;
