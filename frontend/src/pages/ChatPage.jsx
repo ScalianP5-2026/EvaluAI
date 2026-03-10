@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import ChatBox from "../components/ChatBox";
+import ChatBox from "../components/Chatbox";
 import { chatAPI } from "../services/api";
 
 export default function ChatPage() {
