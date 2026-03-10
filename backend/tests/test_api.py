@@ -15,6 +15,11 @@ DEPRECATED (not tested):
   See app/api/routes.py for deprecation notice and migration path.
 """
 
+import json
+from unittest.mock import AsyncMock, MagicMock
+
+from app.api import chat_routes
+from app.chatbot.data_manager import DataManager
 from app.main import app
 from fastapi.testclient import TestClient
 
@@ -32,29 +37,68 @@ def test_health_endpoint() -> None:
 
 
 def test_chat_query_endpoint() -> None:
-    """Test chat query endpoint (registered in chat_routes.py).
-    
-    Note: This endpoint requires Supabase connectivity and a valid employee
-    in the database. Uses mock data for testing structure.
+    """Test chat query endpoint with mocked Supabase and Gemini dependencies.
+
+    Supabase and Gemini are replaced via app.dependency_overrides so the test
+    is isolated from external services and always returns a deterministic result.
     """
-    response = client.post(
-        "/api/v1/chat/query",
-        json={
-            "employee_role": "Technology",
-            "learning_goal": "Python avanzado para ML",
-            "ai_usage": "sometimes",
-            "self_efficacy": 6.5,
-            "motivation": 7.0,
-        },
+    # --- Mock DataManager (wraps Supabase queries) ---
+    mock_dm = MagicMock(spec=DataManager)
+    mock_dm.get_similar_profiles.return_value = {"count": 5}
+    mock_dm.get_department_insights.return_value = {"count_employees": 10}
+    mock_dm.get_top_courses.return_value = []
+
+    # --- Mock Gemini client with a deterministic JSON response ---
+    mock_gemini = MagicMock()
+    mock_gemini.query = AsyncMock(
+        return_value=json.dumps(
+            {
+                "message": "Here are your personalized recommendations.",
+                "recommendations": {
+                    "course": "Python for ML",
+                    "rationale": "Ideal for your level",
+                    "plan_30_days": ["Week 1: Basics", "Week 2: Advanced"],
+                },
+                "insights": {
+                    "general": "72% of similar employees improved.",
+                    "department": "Tech dept shows 25% improvement.",
+                    "personal": "Based on your profile...",
+                },
+                "risk_alert": None,
+            }
+        )
     )
-    
-    # Accept both 200 (success) and 422 (validation error from missing data)
-    # What matters is: path is registered and responds
-    assert response.status_code in [200, 422, 500]
-    
-    if response.status_code == 200:
+
+    # --- Mock Supabase client used for inserts inside the route handler ---
+    mock_supabase = MagicMock()
+
+    app.dependency_overrides[chat_routes.get_data_manager] = lambda: mock_dm
+    app.dependency_overrides[chat_routes.get_gemini_client] = lambda: mock_gemini
+    app.dependency_overrides[chat_routes.get_supabase_client] = lambda: mock_supabase
+
+    try:
+        response = client.post(
+            "/api/v1/chat/query",
+            json={
+                "user_id": "test-employee-001",
+                "message": "I want to learn Python for ML",
+                "employee_context": {
+                    "department": "Technology",
+                    "education_level": "Bachelor",
+                    "ai_usage_frequency": 3,
+                    "motivation": 7.0,
+                    "self_efficacy": 6.5,
+                },
+            },
+        )
+
+        assert response.status_code == 200
         payload = response.json()
-        assert "message" in payload or "recommended_courses" in payload
+        assert "message" in payload
+        assert "session_id" in payload
+        assert "insights" in payload
+    finally:
+        app.dependency_overrides.clear()
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
