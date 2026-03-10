@@ -17,7 +17,7 @@ services:
       - EVALUAI_MENTORS_PATH=data/mentors.csv
     volumes:
       - ./backend:/app
-      - ./data:/app/data
+      - ./backend/data:/app/data
     command: python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     networks:
       - evaluai-net
@@ -38,7 +38,6 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
-      - ./frontend/.env.local:/app/.env.local
     command: npm run dev -- --host 0.0.0.0
     networks:
       - evaluai-net
