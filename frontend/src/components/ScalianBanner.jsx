@@ -10,7 +10,7 @@ export default function ScalianBanner() {
 
   return (
     <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm px-8 py-3 border-b-2 border-red-500 dark:border-red-600 shadow-sm">
-      <p className="text-xs font-bold text-gray-900 dark:text-gray-100 tracking-widest uppercase letter-spacing">
+      <p className="text-xs font-bold text-gray-900 dark:text-gray-100 tracking-widest uppercase">
         {t("branding.scalian")}
       </p>
     </div>
