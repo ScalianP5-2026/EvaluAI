@@ -86,3 +86,4 @@ export default function CorrelationCard({ data }) {
     </div>
   );
 }
+
