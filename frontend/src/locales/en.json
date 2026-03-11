@@ -19,6 +19,7 @@
     "title": "Executive Analytics Dashboard",
     "analyticsTitle": "Behavioral & Adoption Analytics",
     "loading": "Loading analytics data...",
+    "loadError": "Failed to load analytics data. Please try again.",
     "uploadTitle": "Upload Training Survey",
     "uploadDescription": "Import employee training assessment data",
     "dragDrop": "Drag & drop CSV file or click to select",
