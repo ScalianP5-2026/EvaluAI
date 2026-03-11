@@ -13,7 +13,10 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "axios": "^1.6.0",
-    "react-router-dom": "^6.18.0"
+    "react-router-dom": "^6.18.0",
+    "recharts": "^2.10.0",
+    "i18next": "^23.7.0",
+    "react-i18next": "^13.5.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.1.0",

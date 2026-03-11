@@ -1,0 +1,59 @@
+{
+  "nav": {
+    "dashboard": "Analytics Dashboard",
+    "chatbot": "Intelligent Chatbot",
+    "nlp": "NLP Opinion Analyzer"
+  },
+  "sidebar": {
+    "subtitle": "Training Intelligence",
+    "upload": "Upload Survey",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "dashboard": {
+    "title": "Analytics Dashboard",
+    "loading": "Loading analytics data...",
+    "uploadTitle": "Upload Training Survey",
+    "uploadDescription": "Import employee training assessment data",
+    "dragDrop": "Drag & drop CSV file or click to select",
+    "uploading": "Uploading...",
+    "uploadSuccess": "Survey uploaded successfully",
+    "uploadError": "Error uploading survey"
+  },
+  "kpi": {
+    "acceptanceRate": "Acceptance Rate",
+    "aiUsageFrequency": "AI Usage Frequency",
+    "motivation": "Overall Motivation",
+    "dependencyRisk": "Dependency Risk",
+    "correlation": "AI-Self-Efficacy Correlation",
+    "statusPositive": "positive",
+    "statusModerate": "moderate",
+    "statusRisk": "risk"
+  },
+  "charts": {
+    "acceptanceDistribution": "Technology Acceptance Distribution",
+    "motivationTrend": "Motivation by AI Usage Frequency",
+    "departmentComparison": "Department Performance Metrics",
+    "riskDistribution": "Risk Distribution",
+    "correlationAnalysis": "AI Usage & Self-Efficacy Correlation"
+  },
+  "benefitRisk": {
+    "title": "Executive Impact Summary",
+    "benefit": "Benefit Score",
+    "risk": "Risk Score",
+    "netImpact": "Net Impact",
+    "positiveStatus": "Positive - Strong training adoption",
+    "balancedStatus": "Balanced - Manage dependencies",
+    "riskStatus": "Risk - Address adoption barriers"
+  },
+  "correlation": {
+    "title": "Strategic Insights",
+    "noSignificant": "No significant correlation",
+    "moderate": "Moderate correlation",
+    "strong": "Strong correlation",
+    "insight": "Key Insight",
+    "recommendation": "Recommended Action"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "nav": {
+    "dashboard": "Panel de Análisis",
+    "chatbot": "Chatbot Inteligente",
+    "nlp": "Analizador de Opiniones NLP"
+  },
+  "sidebar": {
+    "subtitle": "Inteligencia en Formación",
+    "upload": "Subir Encuesta",
+    "language": "Idioma",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "dashboard": {
+    "title": "Panel de Análisis",
+    "loading": "Cargando datos de análisis...",
+    "uploadTitle": "Subir Encuesta de Formación",
+    "uploadDescription": "Importar datos de evaluación de formación de empleados",
+    "dragDrop": "Arrastra y suelta archivo CSV o haz clic para seleccionar",
+    "uploading": "Subiendo...",
+    "uploadSuccess": "Encuesta subida exitosamente",
+    "uploadError": "Error al subir encuesta"
+  },
+  "kpi": {
+    "acceptanceRate": "Tasa de Aceptación",
+    "aiUsageFrequency": "Frecuencia de Uso de IA",
+    "motivation": "Motivación General",
+    "dependencyRisk": "Riesgo de Dependencia",
+    "correlation": "Correlación IA-Autoeficacia",
+    "statusPositive": "positivo",
+    "statusModerate": "moderado",
+    "statusRisk": "riesgo"
+  },
+  "charts": {
+    "acceptanceDistribution": "Distribución de Aceptación Tecnológica",
+    "motivationTrend": "Motivación por Frecuencia de Uso de IA",
+    "departmentComparison": "Métricas de Desempeño por Departamento",
+    "riskDistribution": "Distribución de Riesgos",
+    "correlationAnalysis": "Correlación entre Uso de IA y Autoeficacia"
+  },
+  "benefitRisk": {
+    "title": "Resumen del Impacto Ejecutivo",
+    "benefit": "Puntuación de Beneficio",
+    "risk": "Puntuación de Riesgo",
+    "netImpact": "Impacto Neto",
+    "positiveStatus": "Positivo - Fuerte adopción de formación",
+    "balancedStatus": "Equilibrado - Gestionar dependencias",
+    "riskStatus": "Riesgo - Abordar barreras de adopción"
+  },
+  "correlation": {
+    "title": "Información Estratégica",
+    "noSignificant": "Sin correlación significativa",
+    "moderate": "Correlación moderada",
+    "strong": "Correlación fuerte",
+    "insight": "Información Clave",
+    "recommendation": "Acción Recomendada"
+  }
+}

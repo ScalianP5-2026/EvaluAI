@@ -6,11 +6,22 @@ import React, { useState, useRef } from "react";
  * Returns a compact header button that opens a modal for CSV uploads.
  * Maintains all functionality while being visually subtle.
  */
-function UploadButton({ onClick }) {
+function UploadButton({ onClick, compact }) {
+  if (compact) {
+    return (
+      <button
+        onClick={onClick}
+        className="w-full px-3 py-2 text-xs font-medium text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-md transition-colors"
+      >
+        📥 {compact ? "Upload CSV" : "Importar CSV"}
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={onClick}
-      className="px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-md transition-colors"
+      className="px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-md transition-colors"
     >
       📥 Importar CSV
     </button>
@@ -246,7 +257,7 @@ function UploadModal({
 /**
  * Main Component - Exports Header Button + Modal
  */
-export default function SurveyUpload() {
+export default function SurveyUpload({ compact = false }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -385,7 +396,7 @@ export default function SurveyUpload() {
   return (
     <>
       {/* Header Button */}
-      <UploadButton onClick={() => setIsModalOpen(true)} />
+      <UploadButton onClick={() => setIsModalOpen(true)} compact={compact} />
 
       {/* Modal */}
       <ModalOverlay isOpen={isModalOpen} onClose={handleReset}>
