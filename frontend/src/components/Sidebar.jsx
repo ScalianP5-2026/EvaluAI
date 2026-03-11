@@ -68,8 +68,10 @@ export default function Sidebar() {
                   : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               }`}
               title="Español"
+              aria-label="Español"
+              aria-pressed={i18n.language === "es"}
             >
-              🇪🇸
+              <span aria-hidden="true">🇪🇸</span>
             </button>
             <button
               onClick={() => i18n.changeLanguage("en")}
@@ -79,8 +81,10 @@ export default function Sidebar() {
                   : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               }`}
               title="English"
+              aria-label="English"
+              aria-pressed={i18n.language === "en"}
             >
-              🇬🇧
+              <span aria-hidden="true">🇬🇧</span>
             </button>
           </div>
 
