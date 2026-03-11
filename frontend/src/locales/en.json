@@ -25,7 +25,8 @@
     "uploading": "Uploading...",
     "uploadSuccess": "Survey uploaded successfully",
     "uploadError": "Error uploading survey",
-    "refreshData": "↻ Refresh Data"
+    "refreshData": "↻ Refresh Data",
+    "loadError": "Failed to load analytics data"
   },
   "executive": {
     "snapshot": "Executive Snapshot",
@@ -225,7 +226,8 @@
     "messages": "Messages",
     "status": "Status",
     "processing": "Processing...",
-    "ready": "Ready"
+    "ready": "Ready",
+    "sendError": "Failed to send message. Please try again."
   },
   "insights": {
     "adoptionLow": "AI adoption is low ({{rate}}%). Prioritize practical training cases.",
