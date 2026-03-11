@@ -23,10 +23,16 @@ async def seed_employees(supabase: Client) -> bool:
         True si se insertaron todos o parcialmente; False si hay error crítico
     """
     
-    csv_path = Path(__file__).parent.parent.parent.parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas Excel.csv"
-    
-    if not csv_path.exists():
-        logger.error(f"CSV file not found: {csv_path}")
+    current = Path(__file__).resolve()
+    csv_path = None
+    for parent in [current] + list(current.parents):
+        candidate = parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas.csv"
+        if candidate.exists():
+            csv_path = candidate
+            break
+
+    if not csv_path:
+        logger.error("CSV file not found in any parent data/raw/ directory")
         return False
     
     employees = []

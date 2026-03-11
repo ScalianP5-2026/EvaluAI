@@ -57,7 +57,7 @@ export const chatAPI = {
 export const dashboardAPI = {
   getSummary: async () => {
     try {
-      const response = await apiClient.get("/dashboard/summary");
+      const response = await apiClient.get("/kpi/summary");
       return response.data;
     } catch (error) {
       handleError(error, "Dashboard");
