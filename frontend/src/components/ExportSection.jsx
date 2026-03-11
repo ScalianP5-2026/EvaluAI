@@ -314,6 +314,7 @@ export default function ExportSection({ data }) {
   const exportExcel = async () => {
     setExporting("excel");
     let _successFile = null;
+    let _xlsxBlobRef = null;
     try {
       const charts = await captureAllCharts();
       const { default: ExcelJS } = await import("exceljs");
@@ -513,12 +514,13 @@ export default function ExportSection({ data }) {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       _successFile = _xlsxFile;
+      _xlsxBlobRef = xlsxBlob;
     } catch (error) {
       console.error("Excel export error:", error);
       alert(t("export.error"));
     } finally {
       setExporting(null);
-      if (_successFile) setModalState({ filename: _successFile, format: "excel", blob: xlsxBlob });
+      if (_successFile) setModalState({ filename: _successFile, format: "excel", blob: _xlsxBlobRef });
     }
   };
 
