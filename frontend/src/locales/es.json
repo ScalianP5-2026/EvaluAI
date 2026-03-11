@@ -19,6 +19,7 @@
     "title": "Panel de Análisis Ejecutivo",
     "analyticsTitle": "Análisis de Comportamiento y Adopción",
     "loading": "Cargando datos de análisis...",
+    "loadError": "Error al cargar los datos de análisis. Por favor, inténtalo de nuevo.",
     "uploadTitle": "Subir Encuesta de Formación",
     "uploadDescription": "Importar datos de evaluación de formación de empleados",
     "dragDrop": "Arrastra y suelta archivo CSV o haz clic para seleccionar",
