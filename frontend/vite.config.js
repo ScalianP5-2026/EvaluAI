@@ -1,6 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+// Derive the backend proxy target from the environment.
+// - Set BACKEND_PROXY_TARGET=http://localhost:8000 when running Vite outside
+//   docker-compose (e.g. a local dev environment or VS Code dev container).
+// - Leave unset (or set to http://backend:8000) when running inside
+//   docker-compose, where the backend container is reachable by hostname.
+const backendTarget = process.env.BACKEND_PROXY_TARGET ?? "http://backend:8000";
+
 export default defineConfig({
   /**
    * envDir: "../"
@@ -22,12 +29,13 @@ export default defineConfig({
     /**
      * Proxy configuration for development
      * Routes all /api/* requests to the backend service.
-     * In docker-compose: routes to http://backend:8000
-     * In dev container: routes to http://localhost:8000
+     * Target is read from BACKEND_PROXY_TARGET env var so that:
+     *   - docker-compose: http://backend:8000  (default)
+     *   - local / dev container: http://localhost:8000
      */
     proxy: {
       "/api": {
-        target: "http://backend:8000",
+        target: backendTarget,
         changeOrigin: true, // Modifies request host header to match target origin
       },
     },
