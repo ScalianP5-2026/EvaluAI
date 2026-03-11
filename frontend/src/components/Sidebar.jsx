@@ -1,6 +1,6 @@
 /**
  * Sidebar Navigation Component
- * Corporate-style sidebar with logo, navigation, language, and theme controls
+ * Corporate-style sidebar with navy background, gradient overlay
  */
 
 import { useTranslation } from "react-i18next";
@@ -22,27 +22,27 @@ export default function Sidebar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen flex flex-col fixed left-0 top-0">
+    <div className="w-64 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 border-r border-slate-800 h-screen flex flex-col fixed left-0 top-0 shadow-xl">
       {/* Logo Section */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-        <h1 className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+      <div className="p-8 border-b border-slate-800">
+        <h1 className="text-2xl font-bold text-blue-400 tracking-tight">
           EvaluAI
         </h1>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 font-medium uppercase tracking-wide">
+        <p className="text-xs text-slate-400 mt-2 font-medium uppercase tracking-widest">
           {t("sidebar.subtitle")}
         </p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
-            className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all ${
               isActive(item.path)
-                ? "bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-blue-600 shadow-lg text-white"
+                : "border border-slate-600 text-slate-100 bg-slate-700/60 hover:bg-blue-600 hover:text-white hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 focus:ring-offset-slate-900 transition-all duration-200"
             }`}
           >
             {item.text}
@@ -51,73 +51,53 @@ export default function Sidebar() {
       </nav>
 
       {/* Upload Section */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+      <div className="p-4 border-t border-slate-800">
         <SurveyUpload compact />
       </div>
 
       {/* Controls Section */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
-        {/* Language Selector */}
-        <div>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-            {t("sidebar.language")}
-          </label>
-          <div className="flex gap-2 mt-2">
+      <div className="p-4 border-t border-slate-800">
+        {/* Compact Language & Theme Controls */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Language Selector - Flag Buttons */}
+          <div className="flex gap-1">
             <button
               onClick={() => i18n.changeLanguage("es")}
-              className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`w-9 h-9 rounded text-lg font-medium transition-all ${
                 i18n.language === "es"
-                  ? "bg-blue-700 dark:bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               }`}
+              title="Español"
             >
-              ES
+              🇪🇸
             </button>
             <button
               onClick={() => i18n.changeLanguage("en")}
-              className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`w-9 h-9 rounded text-lg font-medium transition-all ${
                 i18n.language === "en"
-                  ? "bg-blue-700 dark:bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               }`}
+              title="English"
             >
-              EN
+              🇬🇧
             </button>
           </div>
-        </div>
 
-        {/* Theme Toggle */}
-        <div>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-            {t("sidebar.theme")}
-          </label>
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => isDark && toggleTheme()}
-              className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                !isDark
-                  ? "bg-blue-700 dark:bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
-            >
-              ☀️
-            </button>
-            <button
-              onClick={() => !isDark && toggleTheme()}
-              className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                isDark
-                  ? "bg-blue-700 dark:bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
-            >
-              🌙
-            </button>
-          </div>
+          {/* Theme Toggle - Compact Icon Button */}
+          <button
+            onClick={toggleTheme}
+            className="w-9 h-9 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white flex items-center justify-center text-lg font-medium transition-all"
+            title={isDark ? "Light Mode" : "Dark Mode"}
+          >
+            {isDark ? "☀️" : "🌙"}
+          </button>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-800 text-center">
+      <div className="p-4 border-t border-slate-800 text-center">
         <p className="text-xs text-gray-500 dark:text-gray-500">EvaluAI v1.0</p>
       </div>
     </div>

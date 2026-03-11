@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Survey Upload Component - Corporate Edition
@@ -7,13 +8,15 @@ import React, { useState, useRef } from "react";
  * Maintains all functionality while being visually subtle.
  */
 function UploadButton({ onClick, compact }) {
+  const { t } = useTranslation();
+
   if (compact) {
     return (
       <button
         onClick={onClick}
-        className="w-full px-3 py-2 text-xs font-medium text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-md transition-colors"
+        className="w-full px-3 py-2.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-lg rounded-lg transition-all"
       >
-        📥 {compact ? "Upload CSV" : "Importar CSV"}
+        📥 {t("sidebar.uploadCSV")}
       </button>
     );
   }
@@ -23,7 +26,7 @@ function UploadButton({ onClick, compact }) {
       onClick={onClick}
       className="px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-md transition-colors"
     >
-      📥 Importar CSV
+      📥 {t("sidebar.uploadCSV")}
     </button>
   );
 }

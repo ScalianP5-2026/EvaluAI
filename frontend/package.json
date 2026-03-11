@@ -16,7 +16,13 @@
     "react-router-dom": "^6.18.0",
     "recharts": "^2.10.0",
     "i18next": "^23.7.0",
-    "react-i18next": "^13.5.0"
+    "react-i18next": "^13.5.0",
+    "jspdf": "^2.5.1",
+    "xlsx": "^0.18.5",
+    "docx": "^8.5.0",
+    "file-saver": "^2.0.5",
+    "exceljs": "^4.4.0",
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.1.0",

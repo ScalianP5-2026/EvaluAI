@@ -3,8 +3,11 @@
  * Executive summary showing Benefit, Risk, and Net Impact scores
  */
 
+import { useTranslation } from "react-i18next";
+
 export default function BenefitRiskBlock({ data }) {
-  // Calculate scores (placeholder logic)
+  const { t } = useTranslation();
+
   const benefitScore = 72;
   const riskScore = 35;
   const netImpact = benefitScore - riskScore;
@@ -14,25 +17,25 @@ export default function BenefitRiskBlock({ data }) {
 
   const statusConfig = {
     positive: {
-      bg: "bg-green-50 dark:bg-green-900",
+      bg: "bg-green-50 dark:bg-green-900/30",
       border: "border-green-200 dark:border-green-800",
       text: "text-green-700 dark:text-green-200",
-      label: "Positive Impact",
-      description: "Strong training adoption with controlled risks",
+      label: t("benefit.positiveImpact"),
+      description: t("benefit.positiveDesc"),
     },
     balanced: {
-      bg: "bg-amber-50 dark:bg-amber-900",
+      bg: "bg-amber-50 dark:bg-amber-900/30",
       border: "border-amber-200 dark:border-amber-800",
       text: "text-amber-700 dark:text-amber-200",
-      label: "Balanced",
-      description: "Moderate impact - manage dependencies carefully",
+      label: t("benefit.balanced"),
+      description: t("benefit.balancedDesc"),
     },
     risk: {
-      bg: "bg-red-50 dark:bg-red-900",
+      bg: "bg-red-50 dark:bg-red-900/30",
       border: "border-red-200 dark:border-red-800",
       text: "text-red-700 dark:text-red-200",
-      label: "Risk Status",
-      description: "Address adoption barriers to improve outcomes",
+      label: t("benefit.riskStatus"),
+      description: t("benefit.riskDesc"),
     },
   };
 
@@ -56,7 +59,7 @@ export default function BenefitRiskBlock({ data }) {
       <div className="grid grid-cols-3 gap-4">
         <div className={`${config.bg} p-4 rounded-lg border ${config.border}`}>
           <p className={`text-xs font-medium ${config.text} opacity-75`}>
-            Benefit Score
+            {t("benefit.benefitScore")}
           </p>
           <p className={`text-3xl font-bold ${config.text} mt-2`}>
             {benefitScore}
@@ -64,7 +67,7 @@ export default function BenefitRiskBlock({ data }) {
         </div>
         <div className={`${config.bg} p-4 rounded-lg border ${config.border}`}>
           <p className={`text-xs font-medium ${config.text} opacity-75`}>
-            Risk Score
+            {t("benefit.riskScore")}
           </p>
           <p className={`text-3xl font-bold ${config.text} mt-2`}>
             {riskScore}
@@ -72,7 +75,7 @@ export default function BenefitRiskBlock({ data }) {
         </div>
         <div className={`${config.bg} p-4 rounded-lg border ${config.border}`}>
           <p className={`text-xs font-medium ${config.text} opacity-75`}>
-            Net Impact
+            {t("benefit.netImpact")}
           </p>
           <p className={`text-3xl font-bold ${config.text} mt-2`}>
             +{netImpact}

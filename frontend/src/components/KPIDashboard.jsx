@@ -6,15 +6,17 @@
  */
 
 import { useTranslation } from "react-i18next";
-import ExecutiveKPICards from "./dashboard/ExecutiveKPICards";
+import ScalianBanner from "./ScalianBanner";
+import ExecutiveSnapshot from "./ExecutiveSnapshot";
+import ExecutiveSummary from "./ExecutiveSummary";
 import AcceptanceChart from "./dashboard/AcceptanceChart";
 import MotivationChart from "./dashboard/MotivationChart";
 import DepartmentChart from "./dashboard/DepartmentChart";
 import DependencyChart from "./dashboard/DependencyChart";
-import BenefitRiskBlock from "./dashboard/BenefitRiskBlock";
-import CorrelationCard from "./dashboard/CorrelationCard";
+import CorrelationMetricsTable from "./dashboard/CorrelationMetricsTable";
+import DatasetOverview from "./DatasetOverview";
+import ExportSection from "./ExportSection";
 import ChartCard from "./ui/ChartCard";
-import SectionHeader from "./ui/SectionHeader";
 
 export default function KPIDashboard({ data }) {
   const { t } = useTranslation();
@@ -22,55 +24,127 @@ export default function KPIDashboard({ data }) {
   if (!data) {
     return (
       <div className="p-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <p className="text-gray-500 dark:text-gray-400">{t('dashboard.loading')}</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          {t("dashboard.loading")}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Executive KPI Cards - Top Summary */}
-      <SectionHeader title={t('kpi.acceptanceRate')} />
-      <ExecutiveKPICards data={data} />
+    <div>
+      {/* SCALIAN Branding Banner */}
+      <ScalianBanner />
 
-      {/* Benefit vs Risk Executive Block */}
-      <div className="mt-8">
-        <SectionHeader title={t('benefitRisk.title')} />
-        <BenefitRiskBlock data={data} />
-      </div>
+      {/* Main Content */}
+      <div className="px-8 py-8">
+        {/* 1️⃣ EXECUTIVE SNAPSHOT */}
+        <ExecutiveSnapshot data={data} />
 
-      {/* Charts Grid */}
-      <div className="mt-8">
-        <SectionHeader title="Detailed Analytics" description="In-depth performance metrics and trends" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ChartCard title={t('charts.acceptanceDistribution')}>
-            <AcceptanceChart data={data} />
-          </ChartCard>
-          <ChartCard title={t('charts.riskDistribution')}>
-            <DependencyChart data={data} />
+        {/* 2️⃣ EXECUTIVE SUMMARY */}
+        <ExecutiveSummary />
+
+        {/* 3️⃣ BEHAVIORAL & ADOPTION ANALYTICS */}
+        <div className="mb-12">
+          <h2 className="text-xl font-600 text-gray-900 dark:text-white mb-6">
+            {t("dashboard.analyticsTitle")}
+          </h2>
+
+          {/* Row 1: Acceptance + Motivation */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div id="chart-acceptance">
+              <ChartCard
+                title={t("charts.acceptanceDistribution")}
+                subtitle={t("charts.acceptanceExplanation")}
+              >
+                <AcceptanceChart data={data} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.acceptanceInsight1")}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.acceptanceInsight2")}
+                  </p>
+                </div>
+              </ChartCard>
+            </div>
+
+            <div id="chart-motivation">
+              <ChartCard
+                title={t("charts.motivationTrend")}
+                subtitle={t("charts.motivationExplanation")}
+              >
+                <MotivationChart data={data} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.motivationInsight1")}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.motivationInsight2")}
+                  </p>
+                </div>
+              </ChartCard>
+            </div>
+          </div>
+
+          {/* Row 2: Department + Risk */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div id="chart-department">
+              <ChartCard
+                title={t("charts.departmentComparison")}
+                subtitle={t("charts.departmentExplanation")}
+              >
+                <DepartmentChart data={data} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.departmentInsight1")}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.departmentInsight2")}
+                  </p>
+                </div>
+              </ChartCard>
+            </div>
+
+            <div id="chart-dependency">
+              <ChartCard
+                title={t("charts.riskDistribution")}
+                subtitle={t("charts.riskExplanation")}
+              >
+                <DependencyChart data={data} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.riskInsight1")}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.riskInsight2")}
+                  </p>
+                </div>
+              </ChartCard>
+            </div>
+          </div>
+        </div>
+
+        {/* 4️⃣ RISK & CORRELATION ANALYSIS */}
+        <div className="mb-12">
+          <h2 className="text-xl font-600 text-gray-900 dark:text-white mb-2">
+            {t("correlation.title")}
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            {t("correlation.subtitle")}
+          </p>
+
+          <ChartCard>
+            <CorrelationMetricsTable data={data} />
           </ChartCard>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-          <ChartCard title={t('charts.motivationTrend')}>
-            <MotivationChart data={data} />
-          </ChartCard>
-          <ChartCard title={t('charts.departmentComparison')}>
-            <DepartmentChart data={data} />
-          </ChartCard>
-        </div>
-      </div>
+        {/* 5️⃣ DATASET OVERVIEW */}
+        <DatasetOverview data={data} />
 
-      {/* Correlation Insight Card - Full Width */}
-      <div className="mt-8">
-        <ChartCard title={t('correlation.title')}>
-          <CorrelationCard data={data} />
-        </ChartCard>
+        {/* 6️⃣ EXPORT SECTION */}
+        <ExportSection data={data} />
       </div>
-    </div>
-  );
-}
-      <CorrelationCard data={data} />
     </div>
   );
 }

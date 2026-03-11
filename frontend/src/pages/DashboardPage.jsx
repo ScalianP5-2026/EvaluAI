@@ -57,7 +57,7 @@ export default function DashboardPage() {
           onClick={loadKPIs}
           className="px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-md transition-colors"
         >
-          ⟳ Refresh Data
+          {t("dashboard.refreshData")}
         </button>
       </div>
     </div>

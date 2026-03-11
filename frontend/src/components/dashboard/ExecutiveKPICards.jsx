@@ -48,12 +48,12 @@ export default function ExecutiveKPICards({ data }) {
     },
     {
       label: t("kpi.dependencyRisk"),
-      value: "Medium",
+      value: t("kpi.medium"),
       status: "moderate",
     },
     {
       label: t("kpi.correlation"),
-      value: "Weak",
+      value: t("kpi.weak"),
       status: "moderate",
     },
   ];

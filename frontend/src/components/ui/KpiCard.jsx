@@ -3,16 +3,26 @@
  * Displays a single KPI metric with value, label, and status indicator
  */
 
+import { useTranslation } from "react-i18next";
+
 export default function KpiCard({ label, value, status, icon: Icon }) {
+  const { t } = useTranslation();
+
   const statusColors = {
     positive:
-      "bg-green-50 border-green-200 text-green-700 dark:bg-green-900 dark:border-green-800 dark:text-green-100",
+      "bg-green-50 border-green-200 text-green-700 dark:bg-green-900/40 dark:border-green-800 dark:text-green-100",
     moderate:
-      "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900 dark:border-amber-800 dark:text-amber-100",
-    risk: "bg-red-50 border-red-200 text-red-700 dark:bg-red-900 dark:border-red-800 dark:text-red-100",
+      "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-100",
+    risk: "bg-red-50 border-red-200 text-red-700 dark:bg-red-900/40 dark:border-red-800 dark:text-red-100",
   };
 
   const statusValue = status || "moderate";
+
+  const statusLabel = {
+    positive: t("kpi.statusHealthy"),
+    moderate: t("kpi.statusMonitor"),
+    risk: t("kpi.statusAlert"),
+  }[statusValue];
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -34,9 +44,7 @@ export default function KpiCard({ label, value, status, icon: Icon }) {
       <div
         className={`mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-xs font-medium px-2 py-1 rounded ${statusColors[statusValue]}`}
       >
-        {statusValue === "positive" && "Status: Healthy"}
-        {statusValue === "moderate" && "Status: Monitor"}
-        {statusValue === "risk" && "Status: Alert"}
+        {t("kpi.statusLabel")}: {statusLabel}
       </div>
     </div>
   );

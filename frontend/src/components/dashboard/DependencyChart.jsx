@@ -12,30 +12,37 @@ import {
   Tooltip,
 } from "recharts";
 import { useTheme } from "../../context/ThemeContext";
+import { useTranslation } from "react-i18next";
+import CustomTooltip from "../ui/CustomTooltip";
 
 export default function DependencyChart({ data }) {
   const { isDark } = useTheme();
+  const { t } = useTranslation();
 
   if (!data?.dependency_risk) {
     return (
       <div className="h-80 flex items-center justify-center text-gray-400 dark:text-gray-500">
-        No data
+        {t("common.noData")}
       </div>
     );
   }
 
   const chartData = [
     {
-      name: "High Risk",
+      name: t("dataset.highRisk"),
       value: data.dependency_risk.high_risk,
       fill: "#dc2626",
     },
     {
-      name: "Medium Risk",
+      name: t("dataset.mediumRisk"),
       value: data.dependency_risk.medium_risk,
       fill: "#f59e0b",
     },
-    { name: "Low Risk", value: data.dependency_risk.low_risk, fill: "#10b981" },
+    {
+      name: t("dataset.lowRisk"),
+      value: data.dependency_risk.low_risk,
+      fill: "#10b981",
+    },
   ];
 
   const gridColor = isDark ? "#374151" : "#e5e7eb";
@@ -60,14 +67,8 @@ export default function DependencyChart({ data }) {
           ))}
         </Pie>
         <Tooltip
-          formatter={(value) => `${value} respondents`}
-          contentStyle={{
-            backgroundColor: isDark ? "#1f2937" : "#ffffff",
-            border: `1px solid ${gridColor}`,
-            borderRadius: "8px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            color: textColor,
-          }}
+          formatter={(value) => `${value} ${t("common.respondents")}`}
+          content={<CustomTooltip isDark={isDark} />}
         />
         <Legend />
       </PieChart>

@@ -14,14 +14,17 @@ import {
   Legend,
 } from "recharts";
 import { useTheme } from "../../context/ThemeContext";
+import { useTranslation } from "react-i18next";
+import CustomTooltip from "../ui/CustomTooltip";
 
 export default function DepartmentChart({ data }) {
   const { isDark } = useTheme();
+  const { t } = useTranslation();
 
   if (!data?.department_segmentation) {
     return (
       <div className="h-80 flex items-center justify-center text-gray-400 dark:text-gray-500">
-        No data
+        {t("common.noData")}
       </div>
     );
   }
@@ -48,13 +51,7 @@ export default function DepartmentChart({ data }) {
         <XAxis dataKey="name" style={{ fontSize: "12px", color: textColor }} />
         <YAxis style={{ fontSize: "12px", color: textColor }} />
         <Tooltip
-          contentStyle={{
-            backgroundColor: isDark ? "#1f2937" : "#ffffff",
-            border: `1px solid ${gridColor}`,
-            borderRadius: "8px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            color: textColor,
-          }}
+          content={<CustomTooltip isDark={isDark} />}
           formatter={(value) => value.toFixed(2)}
         />
         <Legend />
@@ -62,13 +59,13 @@ export default function DepartmentChart({ data }) {
           dataKey="motivation"
           fill="#3b82f6"
           radius={[8, 8, 0, 0]}
-          name="Motivation"
+          name={t("charts.motivation")}
         />
         <Bar
           dataKey="autoeficacia"
           fill="#8b5cf6"
           radius={[8, 8, 0, 0]}
-          name="Digital Self-Efficacy"
+          name={t("charts.digitalSelfEfficacy")}
         />
       </BarChart>
     </ResponsiveContainer>

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import ChatBox from "../components/ChatBox";
+import { useTranslation } from "react-i18next";
+import ChatBox from "../components/Chatbox";
 import { chatAPI } from "../services/api";
 
 export default function ChatPage() {
-  const [userId] = useState("1XVWCBPH"); // Demo user
+  const { t } = useTranslation();
+  const [userId] = useState("1XVWCBPH");
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -35,33 +37,57 @@ export default function ChatPage() {
       ]);
     } catch (error) {
       console.error("Failed to send message:", error);
-      alert("Error sending message. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2">
-        <ChatBox
-          history={history}
-          onSendMessage={handleSendMessage}
-          loading={loading}
-        />
-      </div>
-      <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Session Info</h3>
-        <div className="space-y-2 text-sm text-slate-600">
-          <p>
-            <strong>User ID:</strong> {userId}
-          </p>
-          <p>
-            <strong>Messages:</strong> {history.length}
-          </p>
-          <p>
-            <strong>Status:</strong> {loading ? "⏳ Processing..." : "✓ Ready"}
-          </p>
+    <div className="p-8 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <ChatBox
+            history={history}
+            onSendMessage={handleSendMessage}
+            loading={loading}
+          />
+        </div>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {t("chat.sessionInfo")}
+          </h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400 font-medium">
+                {t("chat.userId")}:
+              </span>
+              <span className="text-gray-900 dark:text-white font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                {userId}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400 font-medium">
+                {t("chat.messages")}:
+              </span>
+              <span className="text-gray-900 dark:text-white font-semibold">
+                {history.length}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 dark:text-gray-400 font-medium">
+                {t("chat.status")}:
+              </span>
+              <span
+                className={`text-xs font-medium px-2 py-1 rounded-full ${
+                  loading
+                    ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                    : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                }`}
+              >
+                {loading ? t("chat.processing") : t("chat.ready")}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

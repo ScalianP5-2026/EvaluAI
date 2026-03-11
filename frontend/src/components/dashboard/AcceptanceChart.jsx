@@ -15,33 +15,44 @@ import {
   Cell,
 } from "recharts";
 import { useTheme } from "../../context/ThemeContext";
+import { useTranslation } from "react-i18next";
+import CustomTooltip from "../ui/CustomTooltip";
 
 export default function AcceptanceChart({ data }) {
   const { isDark } = useTheme();
+  const { t } = useTranslation();
 
   if (!data?.acceptance_distribution) {
     return (
       <div className="h-80 flex items-center justify-center text-gray-400 dark:text-gray-500">
-        No data
+        {t("common.noData")}
       </div>
     );
   }
 
   const chartData = [
     {
-      name: "Very Low",
+      name: t("acceptance.veryLow"),
       value: data.acceptance_distribution.very_low,
       fill: "#ef4444",
     },
-    { name: "Low", value: data.acceptance_distribution.low, fill: "#f97316" },
     {
-      name: "Medium",
+      name: t("acceptance.low"),
+      value: data.acceptance_distribution.low,
+      fill: "#f97316",
+    },
+    {
+      name: t("acceptance.medium"),
       value: data.acceptance_distribution.medium,
       fill: "#eab308",
     },
-    { name: "High", value: data.acceptance_distribution.high, fill: "#84cc16" },
     {
-      name: "Very High",
+      name: t("acceptance.high"),
+      value: data.acceptance_distribution.high,
+      fill: "#84cc16",
+    },
+    {
+      name: t("acceptance.veryHigh"),
       value: data.acceptance_distribution.very_high,
       fill: "#22c55e",
     },
@@ -60,14 +71,8 @@ export default function AcceptanceChart({ data }) {
         <XAxis dataKey="name" style={{ fontSize: "12px", color: textColor }} />
         <YAxis style={{ fontSize: "12px", color: textColor }} />
         <Tooltip
-          contentStyle={{
-            backgroundColor: isDark ? "#1f2937" : "#ffffff",
-            border: `1px solid ${gridColor}`,
-            borderRadius: "8px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            color: textColor,
-          }}
-          formatter={(value) => `${value} responses`}
+          content={<CustomTooltip isDark={isDark} />}
+          formatter={(value) => `${value} ${t("common.responses")}`}
         />
         <Bar dataKey="value" radius={[8, 8, 0, 0]}>
           {chartData.map((entry, index) => (
