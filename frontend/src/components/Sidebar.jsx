@@ -90,6 +90,7 @@ export default function Sidebar() {
             onClick={toggleTheme}
             className="w-9 h-9 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white flex items-center justify-center text-lg font-medium transition-all"
             title={isDark ? "Light Mode" : "Dark Mode"}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
             {isDark ? "☀️" : "🌙"}
           </button>
