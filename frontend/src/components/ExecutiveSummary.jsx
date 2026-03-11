@@ -16,7 +16,7 @@ export default function ExecutiveSummary() {
 
   return (
     <div className="mb-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 shadow-sm">
-      <h2 className="text-xl font-600 text-gray-900 dark:text-white mb-6">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
         {t("executive.summaryTitle")}
       </h2>
 
