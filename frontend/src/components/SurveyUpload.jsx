@@ -1,5 +1,7 @@
 import React, { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { dashboardAPI } from "../services/api";
+
 
 /**
  * Survey Upload Component - Corporate Edition
@@ -7,13 +9,26 @@ import { dashboardAPI } from "../services/api";
  * Returns a compact header button that opens a modal for CSV uploads.
  * Maintains all functionality while being visually subtle.
  */
-function UploadButton({ onClick }) {
+function UploadButton({ onClick, compact }) {
+  const { t } = useTranslation();
+
+  if (compact) {
+    return (
+      <button
+        onClick={onClick}
+        className="w-full px-3 py-2.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-lg rounded-lg transition-all"
+      >
+        📥 {t("sidebar.uploadCSV")}
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={onClick}
-      className="px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-md transition-colors"
+      className="px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-md transition-colors"
     >
-      📥 Importar CSV
+      📥 {t("sidebar.uploadCSV")}
     </button>
   );
 }
@@ -247,7 +262,7 @@ function UploadModal({
 /**
  * Main Component - Exports Header Button + Modal
  */
-export default function SurveyUpload() {
+export default function SurveyUpload({ compact = false }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -372,7 +387,7 @@ export default function SurveyUpload() {
   return (
     <>
       {/* Header Button */}
-      <UploadButton onClick={() => setIsModalOpen(true)} />
+      <UploadButton onClick={() => setIsModalOpen(true)} compact={compact} />
 
       {/* Modal */}
       <ModalOverlay isOpen={isModalOpen} onClose={handleReset}>

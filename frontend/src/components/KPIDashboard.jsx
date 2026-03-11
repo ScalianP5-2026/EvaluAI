@@ -1,117 +1,149 @@
-import SurveyUpload from "./SurveyUpload";
+/**
+ * Executive Analytics Dashboard
+ *
+ * Professional, corporate-style dashboard designed for executives and stakeholders.
+ * Features real data visualizations and key performance metrics.
+ */
+
+import { useTranslation } from "react-i18next";
+import ScalianBanner from "./ScalianBanner";
+import ExecutiveSnapshot from "./ExecutiveSnapshot";
+import ExecutiveSummary from "./ExecutiveSummary";
+import AcceptanceChart from "./dashboard/AcceptanceChart";
+import MotivationChart from "./dashboard/MotivationChart";
+import DepartmentChart from "./dashboard/DepartmentChart";
+import DependencyChart from "./dashboard/DependencyChart";
+import CorrelationMetricsTable from "./dashboard/CorrelationMetricsTable";
+import DatasetOverview from "./DatasetOverview";
+import ExportSection from "./ExportSection";
+import ChartCard from "./ui/ChartCard";
 
 export default function KPIDashboard({ data }) {
-  if (!data) return <div>No KPI data available</div>;
+  const { t } = useTranslation();
+
+  if (!data) {
+    return (
+      <div className="p-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-400">
+          {t("common.noData")}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Upload Button - Top Right */}
-      <div className="mb-4 flex justify-end">
-        <SurveyUpload />
-      </div>
+      {/* SCALIAN Branding Banner */}
+      <ScalianBanner />
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* KPI 1: Acceptance Distribution */}
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4 text-indigo-600">
-            📊 Acceptance Distribution
-          </h3>
-          <div className="space-y-2 text-sm">
-            {data.acceptance_distribution &&
-              Object.entries(data.acceptance_distribution).map(([key, val]) => (
-                <div key={key} className="flex justify-between">
-                  <span className="capitalize">{key.replace("_", " ")}</span>
-                  <span className="font-bold text-indigo-600">{val}%</span>
+      {/* Main Content */}
+      <div className="px-8 py-8">
+        {/* 1️⃣ EXECUTIVE SNAPSHOT */}
+        <ExecutiveSnapshot data={data} />
+
+        {/* 2️⃣ EXECUTIVE SUMMARY */}
+        <ExecutiveSummary />
+
+        {/* 3️⃣ BEHAVIORAL & ADOPTION ANALYTICS */}
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+            {t("dashboard.analyticsTitle")}
+          </h2>
+
+          {/* Row 1: Acceptance + Motivation */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div id="chart-acceptance">
+              <ChartCard
+                title={t("charts.acceptanceDistribution")}
+                subtitle={t("charts.acceptanceExplanation")}
+              >
+                <AcceptanceChart data={data} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.acceptanceInsight1")}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.acceptanceInsight2")}
+                  </p>
                 </div>
-              ))}
-          </div>
-        </div>
+              </ChartCard>
+            </div>
 
-        {/* KPI 2: AI Usage vs Autoeficacia */}
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4 text-emerald-600">
-            🔗 AI Usage Correlation
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Correlation</span>
-              <span className="font-bold text-emerald-600">
-                {data.ai_usage_vs_autoeficacia_correlation?.correlation ||
-                  "N/A"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>P-value</span>
-              <span className="font-bold">
-                {data.ai_usage_vs_autoeficacia_correlation?.p_value || "N/A"}
-              </span>
-            </div>
-            <div className="text-xs text-slate-600 mt-3">
-              {data.ai_usage_vs_autoeficacia_correlation?.insight}
+            <div id="chart-motivation">
+              <ChartCard
+                title={t("charts.motivationTrend")}
+                subtitle={t("charts.motivationExplanation")}
+              >
+                <MotivationChart data={data} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.motivationInsight1")}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.motivationInsight2")}
+                  </p>
+                </div>
+              </ChartCard>
             </div>
           </div>
-        </div>
 
-        {/* KPI 3: Dependency Risk */}
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4 text-amber-600">
-            ⚠️ Dependency Risk
-          </h3>
-          <div className="space-y-2 text-sm">
-            {data.dependency_risk_distribution &&
-              Object.entries(data.dependency_risk_distribution).map(
-                ([key, val]) => (
-                  <div key={key} className="flex justify-between">
-                    <span className="capitalize">{key.replace("_", " ")}</span>
-                    <span className="font-bold text-amber-600">{val}%</span>
-                  </div>
-                ),
-              )}
+          {/* Row 2: Department + Risk */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div id="chart-department">
+              <ChartCard
+                title={t("charts.departmentComparison")}
+                subtitle={t("charts.departmentExplanation")}
+              >
+                <DepartmentChart data={data} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.departmentInsight1")}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.departmentInsight2")}
+                  </p>
+                </div>
+              </ChartCard>
+            </div>
+
+            <div id="chart-dependency">
+              <ChartCard
+                title={t("charts.riskDistribution")}
+                subtitle={t("charts.riskExplanation")}
+              >
+                <DependencyChart data={data} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.riskInsight1")}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {t("charts.riskInsight2")}
+                  </p>
+                </div>
+              </ChartCard>
+            </div>
           </div>
         </div>
 
-        {/* KPI 4: Department Segmentation */}
-        <div className="card lg:col-span-2">
-          <h3 className="text-lg font-semibold mb-4 text-blue-600">
-            🏢 Department Segmentation
-          </h3>
-          <div className="space-y-3 text-sm">
-            {data.department_segmentation &&
-              Object.entries(data.department_segmentation).map(
-                ([dept, metrics]) => (
-                  <div key={dept} className="border-l-4 border-blue-600 pl-3">
-                    <p className="font-semibold text-slate-900">{dept}</p>
-                    <div className="flex justify-between text-xs text-slate-600">
-                      <span>Motivation: {metrics.avg_motivation}</span>
-                      <span>Autoeficacia: {metrics.avg_autoeficacia}</span>
-                      <span>Count: {metrics.count}</span>
-                    </div>
-                  </div>
-                ),
-              )}
-          </div>
+        {/* 4️⃣ RISK & CORRELATION ANALYSIS */}
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            {t("correlation.title")}
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            {t("correlation.subtitle")}
+          </p>
+
+          <ChartCard>
+            <CorrelationMetricsTable data={data} />
+          </ChartCard>
         </div>
 
-        {/* KPI 5: Motivation by AI Usage */}
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4 text-purple-600">
-            💪 Motivation by AI Usage
-          </h3>
-          <div className="space-y-2 text-sm">
-            {data.motivation_by_ai_usage &&
-              Object.entries(data.motivation_by_ai_usage).map(
-                ([usage, metrics]) => (
-                  <div key={usage} className="flex justify-between">
-                    <span className="capitalize">{usage}</span>
-                    <span className="font-bold text-purple-600">
-                      {metrics.avg_motivation}
-                    </span>
-                  </div>
-                ),
-              )}
-          </div>
-        </div>
+        {/* 5️⃣ DATASET OVERVIEW */}
+        <DatasetOverview data={data} />
+
+        {/* 6️⃣ EXPORT SECTION */}
+        <ExportSection data={data} />
       </div>
     </div>
   );
