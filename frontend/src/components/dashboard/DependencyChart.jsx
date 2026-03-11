@@ -45,9 +45,6 @@ export default function DependencyChart({ data }) {
     },
   ];
 
-  const gridColor = isDark ? "#374151" : "#e5e7eb";
-  const textColor = isDark ? "#d1d5db" : "#6b7280";
-
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>

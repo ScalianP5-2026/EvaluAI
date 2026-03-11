@@ -314,6 +314,7 @@ export default function ExportSection({ data }) {
   const exportExcel = async () => {
     setExporting("excel");
     let _successFile = null;
+    let _xlsxBlobRef = null;
     try {
       const charts = await captureAllCharts();
       const { default: ExcelJS } = await import("exceljs");
@@ -509,7 +510,7 @@ export default function ExportSection({ data }) {
 
       const buffer = await workbook.xlsx.writeBuffer();
       const _xlsxFile = `EvaluAI_Executive_Report_${exportTimestamp()}.xlsx`;
-      const xlsxBlob = new Blob([buffer], {
+      _xlsxBlobRef = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       _successFile = _xlsxFile;
@@ -518,7 +519,7 @@ export default function ExportSection({ data }) {
       alert(t("export.error"));
     } finally {
       setExporting(null);
-      if (_successFile) setModalState({ filename: _successFile, format: "excel", blob: xlsxBlob });
+      if (_successFile) setModalState({ filename: _successFile, format: "excel", blob: _xlsxBlobRef });
     }
   };
 
@@ -527,6 +528,7 @@ export default function ExportSection({ data }) {
   const exportWord = async () => {
     setExporting("word");
     let _successFile = null;
+    let _docxBlobRef = null;
     try {
       const charts = await captureAllCharts();
       const rows = kpiRows();
@@ -786,7 +788,7 @@ export default function ExportSection({ data }) {
         ],
       });
 
-      const blob = await Packer.toBlob(doc);
+      _docxBlobRef = await Packer.toBlob(doc);
       const _docxFile = `EvaluAI_Executive_Report_${exportTimestamp()}.docx`;
       _successFile = _docxFile;
     } catch (error) {
@@ -794,7 +796,7 @@ export default function ExportSection({ data }) {
       alert(t("export.error"));
     } finally {
       setExporting(null);
-      if (_successFile) setModalState({ filename: _successFile, format: "word", blob });
+      if (_successFile) setModalState({ filename: _successFile, format: "word", blob: _docxBlobRef });
     }
   };
 
