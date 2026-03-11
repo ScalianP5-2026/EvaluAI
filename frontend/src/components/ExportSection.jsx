@@ -514,6 +514,7 @@ export default function ExportSection({ data }) {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       _successFile = _xlsxFile;
+      _xlsxBlobRef = xlsxBlob;
     } catch (error) {
       console.error("Excel export error:", error);
       alert(t("export.error"));
