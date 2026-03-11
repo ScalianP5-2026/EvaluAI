@@ -8,6 +8,7 @@ export default function ChatPage() {
   const [userId] = useState("1XVWCBPH");
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sendError, setSendError] = useState(null);
 
   useEffect(() => {
     loadHistory();
@@ -24,6 +25,7 @@ export default function ChatPage() {
 
   const handleSendMessage = async (message) => {
     setLoading(true);
+    setSendError(null);
     try {
       const response = await chatAPI.sendMessage(userId, message);
       setHistory([
@@ -37,6 +39,7 @@ export default function ChatPage() {
       ]);
     } catch (error) {
       console.error("Failed to send message:", error);
+      setSendError(t("chat.sendError"));
     } finally {
       setLoading(false);
     }
@@ -51,6 +54,11 @@ export default function ChatPage() {
             onSendMessage={handleSendMessage}
             loading={loading}
           />
+          {sendError && (
+            <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
+              {sendError}
+            </p>
+          )}
         </div>
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">

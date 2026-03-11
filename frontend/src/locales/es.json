@@ -225,7 +225,8 @@
     "messages": "Mensajes",
     "status": "Estado",
     "processing": "Procesando...",
-    "ready": "Listo"
+    "ready": "Listo",
+    "sendError": "Error al enviar el mensaje. Por favor, inténtalo de nuevo."
   },
   "insights": {
     "adoptionLow": "La adopción de IA es baja ({{rate}}%). Priorizar formación y casos prácticos.",
