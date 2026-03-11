@@ -1,6 +1,6 @@
 /**
  * App Layout Component
- * Main application layout with collapsible sidebar and responsive content area
+ * Main application layout with sidebar and responsive content area
  */
 
 import Sidebar from "./Sidebar";

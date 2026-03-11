@@ -8,6 +8,7 @@ export default function ChatPage() {
   const [userId] = useState("1XVWCBPH");
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sendError, setSendError] = useState(null);
 
   useEffect(() => {
     loadHistory();
@@ -24,6 +25,7 @@ export default function ChatPage() {
 
   const handleSendMessage = async (message) => {
     setLoading(true);
+    setSendError(null);
     try {
       const response = await chatAPI.sendMessage(userId, message);
       setHistory([
@@ -37,6 +39,7 @@ export default function ChatPage() {
       ]);
     } catch (error) {
       console.error("Failed to send message:", error);
+      setSendError(t("chat.sendError"));
     } finally {
       setLoading(false);
     }
@@ -44,6 +47,11 @@ export default function ChatPage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
+      {sendError && (
+        <div className="mb-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg px-4 py-3 text-sm">
+          {sendError}
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <ChatBox
@@ -51,6 +59,11 @@ export default function ChatPage() {
             onSendMessage={handleSendMessage}
             loading={loading}
           />
+          {sendError && (
+            <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
+              {sendError}
+            </p>
+          )}
         </div>
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">

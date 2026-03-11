@@ -26,7 +26,8 @@
     "uploading": "Subiendo...",
     "uploadSuccess": "Encuesta subida exitosamente",
     "uploadError": "Error al subir encuesta",
-    "refreshData": "↻ Actualizar Datos"
+    "refreshData": "↻ Actualizar Datos",
+    "loadError": "Error al cargar los datos de análisis"
   },
   "executive": {
     "snapshot": "Resumen Ejecutivo",
@@ -127,7 +128,7 @@
   },
   "common": {
     "years": "años",
-    "respondents": "respondentes",
+    "respondents": "respondientes",
     "participants": "participantes",
     "employees": "empleados",
     "departments": "departamentos",
@@ -226,7 +227,8 @@
     "messages": "Mensajes",
     "status": "Estado",
     "processing": "Procesando...",
-    "ready": "Listo"
+    "ready": "Listo",
+    "sendError": "Error al enviar el mensaje. Por favor, inténtalo de nuevo."
   },
   "insights": {
     "adoptionLow": "La adopción de IA es baja ({{rate}}%). Priorizar formación y casos prácticos.",
