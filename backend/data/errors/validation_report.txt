@@ -1,0 +1,5 @@
+REPORTE VALIDACIÓN
+-----------------
+Filas totales: 100
+Filas válidas: 100
+Filas con error: 0
