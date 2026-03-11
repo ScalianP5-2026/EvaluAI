@@ -46,7 +46,7 @@ export default function KPIDashboard({ data }) {
 
         {/* 3️⃣ BEHAVIORAL & ADOPTION ANALYTICS */}
         <div className="mb-12">
-          <h2 className="text-xl font-600 text-gray-900 dark:text-white mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
             {t("dashboard.analyticsTitle")}
           </h2>
 
@@ -127,7 +127,7 @@ export default function KPIDashboard({ data }) {
 
         {/* 4️⃣ RISK & CORRELATION ANALYSIS */}
         <div className="mb-12">
-          <h2 className="text-xl font-600 text-gray-900 dark:text-white mb-2">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             {t("correlation.title")}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
