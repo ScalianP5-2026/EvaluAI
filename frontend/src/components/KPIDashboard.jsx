@@ -25,7 +25,7 @@ export default function KPIDashboard({ data }) {
     return (
       <div className="p-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <p className="text-gray-500 dark:text-gray-400">
-          {t("dashboard.loading")}
+          {t("common.noData")}
         </p>
       </div>
     );
