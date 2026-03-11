@@ -45,7 +45,6 @@ export default function DependencyChart({ data }) {
     },
   ];
 
-  const gridColor = isDark ? "#374151" : "#e5e7eb";
   const textColor = isDark ? "#d1d5db" : "#6b7280";
 
   return (
@@ -56,7 +55,11 @@ export default function DependencyChart({ data }) {
           cx="50%"
           cy="50%"
           labelLine={false}
-          label={({ name, value }) => `${name}: ${value}`}
+          label={({ name, value, x, y, textAnchor }) => (
+            <text x={x} y={y} fill={textColor} textAnchor={textAnchor} fontSize={12}>
+              {`${name}: ${value}`}
+            </text>
+          )}
           outerRadius={100}
           innerRadius={60}
           fill="#8884d8"
@@ -70,7 +73,7 @@ export default function DependencyChart({ data }) {
           formatter={(value) => `${value} ${t("common.respondents")}`}
           content={<CustomTooltip isDark={isDark} />}
         />
-        <Legend />
+        <Legend wrapperStyle={{ color: textColor }} />
       </PieChart>
     </ResponsiveContainer>
   );

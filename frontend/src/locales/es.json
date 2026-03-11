@@ -19,13 +19,15 @@
     "title": "Panel de Análisis Ejecutivo",
     "analyticsTitle": "Análisis de Comportamiento y Adopción",
     "loading": "Cargando datos de análisis...",
+    "loadError": "Error al cargar los datos de análisis. Por favor, inténtalo de nuevo.",
     "uploadTitle": "Subir Encuesta de Formación",
     "uploadDescription": "Importar datos de evaluación de formación de empleados",
     "dragDrop": "Arrastra y suelta archivo CSV o haz clic para seleccionar",
     "uploading": "Subiendo...",
     "uploadSuccess": "Encuesta subida exitosamente",
     "uploadError": "Error al subir encuesta",
-    "refreshData": "↻ Actualizar Datos"
+    "refreshData": "↻ Actualizar Datos",
+    "loadError": "Error al cargar los datos de análisis"
   },
   "executive": {
     "snapshot": "Resumen Ejecutivo",
@@ -126,7 +128,7 @@
   },
   "common": {
     "years": "años",
-    "respondents": "respondentes",
+    "respondents": "respondientes",
     "participants": "participantes",
     "employees": "empleados",
     "departments": "departamentos",
@@ -225,7 +227,8 @@
     "messages": "Mensajes",
     "status": "Estado",
     "processing": "Procesando...",
-    "ready": "Listo"
+    "ready": "Listo",
+    "sendError": "Error al enviar el mensaje. Por favor, inténtalo de nuevo."
   },
   "insights": {
     "adoptionLow": "La adopción de IA es baja ({{rate}}%). Priorizar formación y casos prácticos.",

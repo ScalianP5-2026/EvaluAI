@@ -19,13 +19,15 @@
     "title": "Executive Analytics Dashboard",
     "analyticsTitle": "Behavioral & Adoption Analytics",
     "loading": "Loading analytics data...",
+    "loadError": "Failed to load analytics data. Please try again.",
     "uploadTitle": "Upload Training Survey",
     "uploadDescription": "Import employee training assessment data",
     "dragDrop": "Drag & drop CSV file or click to select",
     "uploading": "Uploading...",
     "uploadSuccess": "Survey uploaded successfully",
     "uploadError": "Error uploading survey",
-    "refreshData": "↻ Refresh Data"
+    "refreshData": "↻ Refresh Data",
+    "loadError": "Failed to load analytics data"
   },
   "executive": {
     "snapshot": "Executive Snapshot",
@@ -225,7 +227,8 @@
     "messages": "Messages",
     "status": "Status",
     "processing": "Processing...",
-    "ready": "Ready"
+    "ready": "Ready",
+    "sendError": "Failed to send message. Please try again."
   },
   "insights": {
     "adoptionLow": "AI adoption is low ({{rate}}%). Prioritize practical training cases.",
