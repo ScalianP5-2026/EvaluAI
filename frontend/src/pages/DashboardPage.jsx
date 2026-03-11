@@ -22,7 +22,7 @@ export default function DashboardPage() {
       setError(null);
     } catch (err) {
       console.error("Failed to load KPIs:", err);
-      setError(t("dashboard.loading"));
+      setError(t("dashboard.loadError"));
     } finally {
       setLoading(false);
     }

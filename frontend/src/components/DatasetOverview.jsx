@@ -128,7 +128,7 @@ export default function DatasetOverview({ data }) {
           onClick={() => setIsOpen(!isOpen)}
           className="w-full px-8 py-5 flex items-center justify-between bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-colors select-none"
         >
-          <h3 className="text-lg font-600 text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             {t("dataset.overview")}
           </h3>
           <span
