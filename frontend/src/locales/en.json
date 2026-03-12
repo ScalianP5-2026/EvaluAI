@@ -172,6 +172,13 @@
     "riskInsight1": "• 64% in medium risk category (manageable)",
     "riskInsight2": "• 5% high risk requiring direct intervention"
   },
+  "usageFrequency": {
+    "1_never": "1 Never",
+    "2_rare": "2 Rare",
+    "3_sometimes": "3 Sometimes",
+    "4_frequent": "4 Frequent",
+    "5_very_frequent": "5 Very Frequent"
+  },
   "correlation": {
     "title": "Strategic Correlations & Analysis",
     "subtitle": "AI Usage Frequency Relationships",

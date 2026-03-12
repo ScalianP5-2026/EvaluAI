@@ -172,6 +172,13 @@
     "riskInsight1": "• 64% en categoría de riesgo medio (manejable)",
     "riskInsight2": "• 5% riesgo alto requiere intervención directa"
   },
+  "usageFrequency": {
+    "1_never": "1 Nunca",
+    "2_rare": "2 Rara vez",
+    "3_sometimes": "3 A veces",
+    "4_frequent": "4 Frecuente",
+    "5_very_frequent": "5 Muy frecuente"
+  },
   "correlation": {
     "title": "Correlaciones Estratégicas & Análisis",
     "subtitle": "Relaciones de Frecuencia de Uso de IA",
