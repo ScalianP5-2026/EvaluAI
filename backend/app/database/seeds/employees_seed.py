@@ -3,7 +3,6 @@ Employees Seed: Inserta empleados desde CSV en Supabase
 """
 
 import asyncio
-import csv
 import logging
 from pathlib import Path
 
@@ -23,59 +22,60 @@ async def seed_employees(supabase: Client) -> bool:
         True si se insertaron todos o parcialmente; False si hay error crítico
     """
     
-    csv_path = Path(__file__).parent.parent.parent.parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas Excel.csv"
+    data_path = Path(__file__).parent.parent.parent.parent / "data" / "raw" / "survey_raw.xlsx"
     
-    if not csv_path.exists():
-        logger.error(f"CSV file not found: {csv_path}")
+    if not data_path.exists():
+        logger.error(f"Dataset file not found: {data_path}")
         return False
     
     employees = []
     errors = []
     
     try:
-        logger.info(f"Reading employees from CSV: {csv_path}")
+        logger.info(f"Reading employees from dataset: {data_path}")
         
-        with open(csv_path, 'r', encoding='utf-8-sig') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=';')
-            
-            if reader.fieldnames is None:
-                logger.error("CSV file is empty or malformed")
-                return False
-            
-            logger.info(f"CSV columns: {reader.fieldnames}")
-            
-            for row_num, row in enumerate(reader, start=2):
-                try:
-                    employee = {
-                        "employee_id": row.get('id_empleado', '').strip(),
-                        "age": int(row.get('edad', 0)) if row.get('edad') else None,
-                        "gender": row.get('genero', '').strip() or None,
-                        "department": row.get('departamento', '').strip() or None,
-                        "years_in_company": int(row.get('antiguedad_empresa', 0)) if row.get('antiguedad_empresa') else None,
-                        "education_level": row.get('nivel_educativo', '').strip() or None,
-                    }
-                    
-                    if not employee['employee_id']:
-                        errors.append(f"Row {row_num}: Missing employee_id")
-                        continue
-                    
-                    employees.append(employee)
-                
-                except ValueError as e:
-                    errors.append(f"Row {row_num}: Invalid data type - {e}")
-                    continue
-                except Exception as e:
-                    errors.append(f"Row {row_num}: Unexpected error - {e}")
-                    continue
-                
-        if not employees:
-            logger.error("No valid employees found in CSV")
+        import pandas as pd
+        df = pd.read_excel(data_path, engine="openpyxl")
+        
+        if df.empty:
+            logger.error("Dataset file is empty or malformed")
             return False
         
-        logger.info(f"Loaded {len(employees)} employees from CSV")
+        logger.info(f"Dataset columns: {list(df.columns)}")
+        records = df.to_dict(orient='records')
+        
+        for row_num, row in enumerate(records, start=2):
+            try:
+                employee = {
+                    "employee_id": str(row.get('id_empleado', '')).strip(),
+                    "age": int(row.get('edad', 0)) if row.get('edad') else None,
+                    "gender": str(row.get('genero', '')).strip() or None,
+                    "department": str(row.get('departamento', '')).strip() or None,
+                    "years_in_company": int(row.get('antiguedad_empresa', 0)) if row.get('antiguedad_empresa') else None,
+                    "education_level": str(row.get('nivel_educativo', '')).strip() or None,
+                }
+                
+                if not employee['employee_id']:
+                    errors.append(f"Row {row_num}: Missing employee_id")
+                    continue
+                
+                employees.append(employee)
+            
+            except ValueError as e:
+                errors.append(f"Row {row_num}: Invalid data type - {e}")
+                continue
+            except Exception as e:
+                errors.append(f"Row {row_num}: Unexpected error - {e}")
+                continue
+                
+        if not employees:
+            logger.error("No valid employees found in dataset")
+            return False
+        
+        logger.info(f"Loaded {len(employees)} employees from dataset")
         
         if errors:
-            logger.warning(f"Errors during CSV parsing ({len(errors)}): {errors[:5]}")
+            logger.warning(f"Errors during dataset parsing ({len(errors)}): {errors[:5]}")
             
         logger.info(f"Inserting {len(employees)} employees into Supabase...")
                     
@@ -107,7 +107,7 @@ async def seed_employees(supabase: Client) -> bool:
                 return False
             
     except FileNotFoundError:
-        logger.error(f"CSV file not found: {csv_path}")
+        logger.error(f"Dataset file not found: {data_path}")
         return False
     except Exception as e:
         # If it's a duplicate key error, that's ok - employees already exist

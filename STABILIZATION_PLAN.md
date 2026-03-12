@@ -235,17 +235,17 @@ const [userId] = useState("1XVWCBPH"); // Demo user
 **File**: [backend/app/database/seeds/employees_seed.py](backend/app/database/seeds/employees_seed.py) line 26
 
 ```python
-csv_path = Path(__file__).parent.parent.parent.parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas Excel.csv"
+data_path = Path(__file__).parent.parent.parent.parent / "data" / "raw" / "survey_raw.xlsx"
 ```
 
 **Decision**: ⚠️ KEEP (works reliably due to relative path traversal)  
 **Risk**: If file is moved, seeding silently fails  
-**Future**: [ ] Add logging + error early-exit + document CSV requirements
+**Future**: [ ] Add logging + error early-exit + document dataset requirements
 
 **Doc**:
 ```python
 # TODO: Make dataset path configurable via env var
-# ENV: EVALUAI_EMPLOYEES_CSV_PATH=data/raw/...
+# ENV: EVALUAI_EMPLOYEES_DATA_PATH=data/raw/...
 # With fallback to relative path as current
 ```
 

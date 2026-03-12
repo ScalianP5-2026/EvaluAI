@@ -12,20 +12,22 @@ from scipy.stats import pearsonr
 
 logger = logging.getLogger(__name__)
 
-# Ruta al CSV (ajusta según tu estructura)
-CSV_PATH = Path(__file__).parent.parent.parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas Excel.csv"
+# Ruta al dataset (ajusta según tu estructura)
+DATA_PATH = Path(__file__).parent.parent.parent / "data" / "raw" / "survey_raw.xlsx"
 
 
 class KPIEngine:
     """Calcula KPIs MVP."""
     
     def __init__(self):
-        """Load CSV on init."""
+        """Load dataset on init."""
         try:
-            self.df = pd.read_csv(CSV_PATH, delimiter=';', encoding='utf-8-sig')
-            logger.info(f"Loaded {len(self.df)} employees from CSV")
+            if not DATA_PATH.exists():
+                raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
+            self.df = pd.read_excel(DATA_PATH, engine="openpyxl")
+            logger.info(f"Loaded {len(self.df)} employees from dataset: {DATA_PATH}")
         except Exception as e:
-            logger.error(f"Error loading CSV: {e}")
+            logger.error(f"Error loading dataset: {e}")
             self.df = pd.DataFrame()
             
     def calculate_acceptance_distribution(self) -> Dict:

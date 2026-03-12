@@ -54,8 +54,8 @@ Arquitectura por capas:
                                |--> nlp.py
                                '--> data_store.py
 
-[CSV data]
-  - backend/data/raw/EIPIA_FO_dataset_100_personas.csv
+[Data files]
+  - backend/data/raw/survey_raw.xlsx
   - backend/data/courses.csv
   - backend/data/mentors.csv
 ```
@@ -84,8 +84,8 @@ Layered architecture:
                                |--> nlp.py
                                '--> data_store.py
 
-[CSV data]
-  - backend/data/raw/EIPIA_FO_dataset_100_personas.csv
+[Data files]
+  - backend/data/raw/survey_raw.xlsx
   - backend/data/courses.csv
   - backend/data/mentors.csv
 ```
@@ -130,7 +130,7 @@ Components:
 
 Dataset principal:
 
-- Archivo: `backend/data/raw/EIPIA_FO_dataset_100_personas.csv`
+- Archivo: `backend/data/raw/survey_raw.xlsx`
 - Grano: 1 fila = 1 respuesta
 - Incluye: perfil, uso de IA, índices, bloque Likert, feedback cualitativo
 
@@ -143,7 +143,7 @@ Normalización interna (backend):
 
 Main dataset:
 
-- File: `backend/data/raw/EIPIA_FO_dataset_100_personas.csv`
+- File: `backend/data/raw/survey_raw.xlsx`
 - Grain: 1 row = 1 response
 - Contains: profile, AI usage, indexes, Likert block, qualitative feedback
 
@@ -232,7 +232,7 @@ backend/
     main.py
     config.py
   data/
-    raw/EIPIA_FO_dataset_100_personas.csv
+    raw/survey_raw.xlsx
     courses.csv
     mentors.csv
   tests/test_api.py
@@ -296,7 +296,7 @@ Covers smoke tests for health, dashboard, chat, and nlp.
 - `EVALUAI_APP_VERSION` (default: `0.1.0`)
 - `EVALUAI_API_PREFIX` (default: `/api/v1`)
 - `EVALUAI_ALLOWED_ORIGINS` (default: `*`)
-- `EVALUAI_SURVEYS_PATH` (default: `data/raw/EIPIA_FO_dataset_100_personas.csv`)
+- `EVALUAI_SURVEYS_PATH` (default: `data/raw/survey_raw.xlsx`)
 - `EVALUAI_COURSES_PATH` (default: `data/courses.csv`)
 - `EVALUAI_MENTORS_PATH` (default: `data/mentors.csv`)
 - `EVALUAI_CHAT_PROVIDER` (`rule_based` or `azure_foundry`, default: `rule_based`)
