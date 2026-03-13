@@ -15,21 +15,22 @@ df.columns = df.columns.str.lower().str.strip()
 # 2. Renombrar las columnas del PDF a las que espera el sistema
 df = df.rename(columns={
     "tutor": "mentor_id",
-    "tecnología - módulos individuales de formación": "expertise"
+    "tecnología - módulos individuales de formación": "especialidades"
 })
 
+
 # 3. Crear las columnas faltantes con valores por defecto para evitar el error
-if "name" not in df.columns:
-    df["name"] = "" # Lo dejamos vacío para que el validador lo detecte luego si es obligatorio
+if "nombre" not in df.columns:
+    df["nombre"] = ""
 if "department" not in df.columns:
     df["department"] = "Sin asignar" # Valor por defecto
 
 # A partir de aquí sigue tu código original
 expected_columns = [
     "mentor_id",
-    "name",
+    "nombre",
     "department",
-    "expertise"
+    "especialidades"
 ]
 
 
@@ -48,8 +49,8 @@ for _, row in df.iterrows():
     if pd.isna(row["mentor_id"]):
         row_errors.append("mentor_id vacío")
 
-    if pd.isna(row["name"]):
-        row_errors.append("name vacío")
+    if pd.isna(row["nombre"]):
+        row_errors.append("nombre vacío")
 
     if row_errors:
         error_row = row.copy()
@@ -58,6 +59,9 @@ for _, row in df.iterrows():
 
     else:
         valid_rows.append(row)
+
+df["nombre"] = df["nombre"].astype(str).str.strip()
+df["department"] = df["department"].astype(str).str.strip()
 
 valid_df = pd.DataFrame(valid_rows)
 error_df = pd.DataFrame(errors)
