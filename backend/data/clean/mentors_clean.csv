@@ -1,0 +1,58 @@
+mentor_id,expertise,name,department
+JAA ,Advanced Analytics ,,Sin asignar
+MRD ,Snowflake ,,Sin asignar
+DPS ,13er Programa ,,Sin asignar
+JJO ,"13er Programa, C++, SQL, IA, Profesor de estadistica, accesibilidad web ",,Sin asignar
+ÁÁZ ,Agile ,,Sin asignar
+AAS ,Agile ,,Sin asignar
+MDO ,"Agile, Scrum ",,Sin asignar
+ÁEO ,Airflow ,,Sin asignar
+MRO ,Angular ,,Sin asignar
+DGO ,"Arq- Big Data. Desarrollo. Devops (Docker, Kubernetes)",,Sin asignar
+DAO ,"Azure, Databricks ",,Sin asignar
+PRO ,Big Data,,Sin asignar
+SHO ,C++ ,,Sin asignar
+COZ ,Cloud ,,Sin asignar
+ASS ,"Comunicación, Python, etc ",,Sin asignar
+ACO ,"Data, Kubernetes, Docker, Openshift, IA",,Sin asignar
+ÁSZ ,Databricks ,,Sin asignar
+SPO ,Databricks,,Sin asignar
+CPE ,Desarrollo ,,Sin asignar
+IGA ,"Flink, Kafka Streams, hablar en público",,Sin asignar
+CDO ,"Frontend, UX/UI, Javascript, React, Java, Angular",,Sin asignar
+VNV ,"Full Stack, Java, mongoDB, noSQL,",,Sin asignar
+AOA ,Fullstack,,Sin asignar
+ÓCO ,"Grafana/ Prom, Linux / Grafos / nosql/RUST",,Sin asignar
+CAS ,IA,,Sin asignar
+JAS ,IA,,Sin asignar
+BME ,"IA, Databricks",,Sin asignar
+YES ,"IA, NLP,",,Sin asignar
+JHZ ,Ingeniero medioambiental,,Sin asignar
+JGZ ,"Java backend, Excel medio avanzado",,Sin asignar
+AAZ ,"Java backend, Springboot, Git, ",,Sin asignar
+LAS ,"Kafka, Python, Scala, Flink",,Sin asignar
+JMZ ,Microstrategy,,Sin asignar
+IMS ,Microstrategy,,Sin asignar
+BFA ,"MongoDB, Fullstack",,Sin asignar
+RJZ ,"Neo4j, Ogma",,Sin asignar
+JMZ ,Power BI,,Sin asignar
+MÁZ ,Power BI,,Sin asignar
+AAA ,"Power BI, Visual Analytics",,Sin asignar
+AIS ,QA,,Sin asignar
+MBT ,QA,,Sin asignar
+DCS ,"QT C++, CUDA, Python, IA,",,Sin asignar
+CTO ,"Scrum, PMP",,Sin asignar
+RPZ ,Snowflake,,Sin asignar
+EMR ,Soft skills,,Sin asignar
+AGN ,"Soft skills: comunicación, logística, cadenas de suministro",,Sin asignar
+BMA ,Spark,,Sin asignar
+SAO ,SQL,,Sin asignar
+CAR ,SQL,,Sin asignar
+JSA ,SQL,,Sin asignar
+ÁSA ,SQL DevOps,,Sin asignar
+EAN ,Supra,,Sin asignar
+JMA ,"Supra, Scala",,Sin asignar
+SPA ,"Supra, Scala",,Sin asignar
+JCN ,Vision por Computadora,,Sin asignar
+CEI ,IA Generativa,,Sin asignar
+MLS ,IA Generativa,,Sin asignar
