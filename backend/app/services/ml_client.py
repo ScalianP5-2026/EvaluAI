@@ -31,13 +31,13 @@ class MLClient:
         if rf_path.exists():
             try:
                 with open(rf_path, 'rb') as f:
-                    self.rf_model = pickle.load(f)
+                    model_data = pickle.load(f)
                     # Espera dict: {"model": rf, "scaler": scaler, "feature_names": [...]}
                     if isinstance(model_data, dict):
                         self.rf_model = model_data.get("model")
                         self.scaler = model_data.get("scaler")
                     else:
-                        self.rf_model = model_data # Legacy: solo el modelo
+                        self.rf_model = model_data  # Legacy: solo el modelo
                 logger.info("✓ RandomForest model loaded")
             except Exception as e:
                 logger.warning(f"⚠ RF model load failed: {e}")
