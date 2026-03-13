@@ -91,7 +91,7 @@ class MLClient:
             
             return {
                 "recommendation_score": float(scores[0]),
-                "risck_score": float(scores[1]) if len(scores) > 1 else 0.5,
+                "risk_score": float(scores[1]) if len(scores) > 1 else 0.5,
                 "course_affinity": self._map_scores_to_courses(scores),
                 "confidence": self._calculate_confidence(scores), # Desde modelo
                 "model_available": True
