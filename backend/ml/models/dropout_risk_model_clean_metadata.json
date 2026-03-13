@@ -1,0 +1,55 @@
+{
+  "model_type": "RandomForestClassifier",
+  "parameters": {
+    "n_estimators": 200,
+    "max_depth": 8,
+    "min_samples_split": 5,
+    "min_samples_leaf": 2,
+    "class_weight": "balanced",
+    "random_state": 42
+  },
+  "n_features": 28,
+  "feature_names": [
+    "edad",
+    "antiguedad_empresa",
+    "rol_tecnico",
+    "frecuencia_uso_ia",
+    "usa_chatgpt",
+    "usa_gemini",
+    "usa_copilot",
+    "usa_lms_ia",
+    "usa_otra_ia",
+    "prefiere_humano_vs_ia",
+    "nivel_integracion_ia",
+    "genero_Mujer",
+    "genero_No binario",
+    "genero_Prefiero no decirlo",
+    "departamento_IT",
+    "departamento_Marketing",
+    "departamento_Operaciones",
+    "departamento_RRHH",
+    "sector_Industria",
+    "sector_Servicios",
+    "sector_Tecnolog\u00eda",
+    "nivel_educativo_FP Superior",
+    "nivel_educativo_Grado",
+    "nivel_educativo_M\u00e1ster",
+    "herramienta_principal_Copilot",
+    "herramienta_principal_Gemini",
+    "herramienta_principal_LMS IA",
+    "herramienta_principal_Otra"
+  ],
+  "class_distribution": {
+    "1": 63,
+    "0": 37
+  },
+  "CV metrics": {
+    "accuracy": 0.5599999999999999,
+    "precision": 0.6264425770308123,
+    "recall": 0.7474358974358974,
+    "f1": 0.6780391562460528,
+    "roc_auc": 0.48871336996337
+  },
+  "note": "Leakage-free version",
+  "timestamp": "2026-03-13T02:34:34.421584+00:00"
+}
