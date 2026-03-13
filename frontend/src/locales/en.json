@@ -11,6 +11,9 @@
     "topicDistribution": "Topic Distribution",
     "psychologicalIndex": "Psychological Risk Index",
     "executiveInsight": "Executive Behavioral Insight",
+    "strategicLayerBadge": "STRATEGIC LAYER",
+    "strategicLayerTitle": "Strategic Intelligence Layer",
+    "strategicLayerSubtitle": "Cross-link NLP signals with ML risk models to brief leadership teams.",
     "topic": "Topic",
     "sentimentDescription": "Distribution of employee perception regarding AI integration.",
     "topicDescription": "Ranked frequency of dominant conversational themes detected by NLP.",
@@ -21,7 +24,49 @@
     "noSentimentData": "No sentiment data available.",
     "noTopicData": "No topic data available.",
     "noNpiData": "No NPI distribution data available.",
-    "executiveUnavailable": "Executive summary is not available."
+    "executiveUnavailable": "Executive summary is not available.",
+    "strategicKpis": {
+      "highPsychRisk": "High Psychological Risk",
+      "highPsychRiskCaption": "Share of employees flagged as high dependency risk",
+      "neutralSentiment": "Neutral Sentiment Share",
+      "neutralSentimentCaption": "Portion of workforce reporting neutral tonality",
+      "avgNpiScore": "Avg NPI Score",
+      "avgNpiScoreCaption": "Mean psychological index (0-1 scale)",
+      "topRiskTopic": "Top Risk Topic",
+      "topRiskTopicCaption": "Theme concentrating the highest risk weight",
+      "noTopic": "No dominant topic"
+    },
+    "mlCorrelation": {
+      "title": "ML ↔ NLP Alignment",
+      "subtitle": "Overlap of employees marked high dropout risk and high behavioral risk.",
+      "overlapLabel": "High dropout & high risk overlap"
+    },
+    "radar": {
+      "title": "Behavioral Signal Radar",
+      "description": "Scores normalized 0-1 across sentiment, autonomy, dependency, motivation, and risk.",
+      "sentiment": "Sentiment Positivity",
+      "autonomy": "Autonomy Signal",
+      "dependency": "Dependency Signal",
+      "motivation": "Motivation Proxy",
+      "risk": "Risk Level"
+    },
+    "topTopics": {
+      "title": "Critical Topic Signals",
+      "topic": "Topic",
+      "percent": "% Mentions",
+      "riskScore": "Avg Risk Score",
+      "riskLevel": "Risk Band",
+      "implication": "Implication",
+      "empty": "No dominant topics detected.",
+      "implicationHigh": "High dependency or autonomy erosion risk",
+      "implicationMedium": "Moderate behavioral impact",
+      "implicationLow": "Low strategic concern"
+    },
+    "strategicInsight": {
+      "title": "Strategic Insight",
+      "body": "High-risk psychological signals represent {{risk}} of responses. Focus interventions on {{topic}} while addressing ML dropout overlap of {{overlap}} and stabilizing the average NPI score ({{npi}}).",
+      "default": "Strategic summary is not available."
+    }
   },
   "sentiment": {
     "positive": "Positive",

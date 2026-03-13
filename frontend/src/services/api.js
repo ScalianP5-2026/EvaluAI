@@ -120,6 +120,15 @@ export const nlpAPI = {
     }
   },
 
+  getStrategicSummary: async () => {
+    try {
+      const response = await nlpClient.get("/strategic-summary");
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Strategic Summary");
+    }
+  },
+
   getExecutive: async () => {
     try {
       const response = await nlpClient.get("/executive");

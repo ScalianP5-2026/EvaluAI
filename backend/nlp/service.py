@@ -28,10 +28,13 @@ _APP_ROOT = _SERVICE_DIR.parent  # /app or /backend
 # In Docker: _APP_ROOT is /app, so path is /app/data/processed/survey_nlp_enriched.csv
 # Locally: _APP_ROOT is /backend, so path is /backend/data/processed/survey_nlp_enriched.csv
 _ENRICHED_DATASET_PATH = _APP_ROOT / "data" / "processed" / "survey_nlp_enriched.csv"
+_ENGINEERED_DATASET_PATH = _APP_ROOT / "data" / "processed" / "survey_engineered.csv"
 
 # Keep dataframe and load error cached in memory for fast repeated reads.
 _DF_CACHE: pd.DataFrame | None = None
 _CACHE_ERROR: str | None = None
+_ENGINEERED_DF_CACHE: pd.DataFrame | None = None
+_ENGINEERED_CACHE_ERROR: str | None = None
 _EXECUTIVE_CACHE: dict[str, str | None] = {"en": None, "es": None}
 _LLM_CLIENT: GeminiChatClient | None = None
 _DEFAULT_LANGUAGE = "en"
@@ -83,6 +86,38 @@ def _dataset_error_payload() -> dict[str, Any]:
         "message": _CACHE_ERROR or "NLP dataset is not available.",
         "dataset_path": str(_ENRICHED_DATASET_PATH),
     }
+
+
+def _engineered_dataset_error_payload() -> dict[str, Any]:
+    """Return error payload when engineered dataset cannot be loaded."""
+    return {
+        "status": "error",
+        "message": _ENGINEERED_CACHE_ERROR
+        or "Engineered dataset is not available.",
+        "dataset_path": str(_ENGINEERED_DATASET_PATH),
+    }
+
+
+def _load_engineered_dataframe() -> pd.DataFrame | None:
+    """Load engineered dataset with caching and graceful errors."""
+    global _ENGINEERED_DF_CACHE, _ENGINEERED_CACHE_ERROR
+
+    if _ENGINEERED_DF_CACHE is not None:
+        return _ENGINEERED_DF_CACHE
+
+    if not _ENGINEERED_DATASET_PATH.exists():
+        _ENGINEERED_CACHE_ERROR = (
+            f"Engineered dataset not found: {_ENGINEERED_DATASET_PATH}"
+        )
+        return None
+
+    try:
+        _ENGINEERED_DF_CACHE = pd.read_csv(_ENGINEERED_DATASET_PATH)
+        _ENGINEERED_CACHE_ERROR = None
+        return _ENGINEERED_DF_CACHE
+    except Exception as exc:
+        _ENGINEERED_CACHE_ERROR = f"Failed to read engineered dataset: {exc}"
+        return None
 
 
 def _normalize_language(lang: str | None) -> str:
@@ -160,6 +195,94 @@ def _format_percentage(value: float, total: float) -> float:
     return round((value / total) * 100, 1)
 
 
+def _percent_of_category(df: pd.DataFrame, column: str, match_value: str) -> float:
+    if column not in df.columns or df.empty:
+        return 0.0
+    series = df[column].fillna("" ).astype(str).str.lower()
+    target = str(match_value).lower()
+    percent = (series == target).sum() / len(df) * 100
+    return round(float(percent), 2)
+
+
+def _safe_numeric_series(df: pd.DataFrame, column: str) -> pd.Series:
+    if column not in df.columns:
+        return pd.Series(dtype=float)
+    return pd.to_numeric(df[column], errors="coerce")
+
+
+def _normalized_mean(series: pd.Series) -> float:
+    numeric = series.dropna()
+    if numeric.empty:
+        return 0.0
+    min_val = float(numeric.min())
+    max_val = float(numeric.max())
+    if max_val - min_val <= 0:
+        return 0.0
+    normalized = (numeric - min_val) / (max_val - min_val)
+    return float(normalized.mean())
+
+
+def _classify_topic_risk(score: float) -> str:
+    if score is None:
+        return "low"
+    if score > 0.66:
+        return "high"
+    if score >= 0.33:
+        return "medium"
+    return "low"
+
+
+def _determine_top_risk_topic(df: pd.DataFrame) -> str | None:
+    if df.empty or "topic_id" not in df.columns or "topic_risk_score" not in df.columns:
+        return None
+
+    prepared = df.dropna(subset=["topic_id", "topic_risk_score"])
+    if prepared.empty:
+        return None
+
+    total = len(prepared)
+    grouped = prepared.groupby("topic_id")
+    weighted_scores = grouped["topic_risk_score"].mean() * (grouped.size() / total)
+    if weighted_scores.empty:
+        return None
+    try:
+        best_topic = weighted_scores.idxmax()
+    except Exception:
+        return None
+    return str(best_topic)
+
+
+def _build_top_topics_table(df: pd.DataFrame) -> list[dict[str, Any]]:
+    if df.empty or "topic_id" not in df.columns:
+        return []
+
+    topic_counts = df["topic_id"].value_counts(dropna=False)
+    total_mentions = float(topic_counts.sum() or len(df) or 1)
+
+    avg_risk = (
+        df.groupby("topic_id")["topic_risk_score"].mean()
+        if "topic_risk_score" in df.columns
+        else pd.Series(dtype=float)
+    )
+
+    rows: list[dict[str, Any]] = []
+    for topic_id, count in topic_counts.head(5).items():
+        avg_value = float(avg_risk.get(topic_id)) if topic_id in avg_risk else None
+        risk_level = _classify_topic_risk(avg_value or 0.0)
+        percent = round(float(count) / total_mentions * 100, 2)
+        rows.append(
+            {
+                "topic": str(topic_id),
+                "percent": percent,
+                "avg_topic_risk_score": round(avg_value, 3) if avg_value is not None else None,
+                "risk_level": risk_level,
+                "implication": _TOPIC_IMPLICATIONS.get(risk_level, _TOPIC_IMPLICATIONS["low"]),
+            }
+        )
+
+    return rows
+
+
 _SENTIMENT_TERMS = {
     "positive": {"en": "positive sentiment", "es": "sentimiento positivo"},
     "neutral": {"en": "neutral sentiment", "es": "sentimiento neutral"},
@@ -170,6 +293,12 @@ _RISK_TERMS = {
     "high_risk": {"en": "high dependency risk", "es": "riesgo alto de dependencia"},
     "medium_risk": {"en": "medium dependency risk", "es": "riesgo medio de dependencia"},
     "low_risk": {"en": "low dependency risk", "es": "riesgo bajo de dependencia"},
+}
+
+_TOPIC_IMPLICATIONS = {
+    "high": "High dependency or autonomy erosion risk",
+    "medium": "Moderate behavioral impact",
+    "low": "Low strategic concern",
 }
 
 
@@ -437,6 +566,90 @@ def get_executive_summary(lang: str = "en") -> dict[str, Any]:
     return {
         "status": "ok",
         "executive_summary": summary_text,
+    }
+
+
+def get_strategic_summary() -> dict[str, Any]:
+    """Return high-level strategic analytics combining NLP + ML signals."""
+    df = _load_dataframe()
+    if df is None:
+        return _dataset_error_payload()
+
+    engineered_df = _load_engineered_dataframe()
+    if engineered_df is None:
+        return _engineered_dataset_error_payload()
+
+    total_rows = len(df)
+    if total_rows == 0:
+        return {
+            "status": "ok",
+            "kpis": {},
+            "ml_nlp_correlation": {},
+            "radar_metrics": {},
+            "top_topics_table": [],
+        }
+
+    high_risk_percent = _percent_of_category(df, "nlp_psychological_category", "high")
+    neutral_sentiment_percent = _percent_of_category(df, "sentiment_label", "neutral")
+    npi_series = _safe_numeric_series(df, "nlp_psychological_index")
+    avg_npi_score = float(round(npi_series.mean(), 2)) if not npi_series.empty else 0.0
+    top_risk_topic = _determine_top_risk_topic(df) or ""
+
+    kpis = {
+        "high_psychological_risk_percent": high_risk_percent,
+        "neutral_sentiment_percent": neutral_sentiment_percent,
+        "avg_npi_score": avg_npi_score,
+        "top_risk_topic": top_risk_topic,
+    }
+
+    engineered_total = len(engineered_df)
+    ml_overlap = 0.0
+    if (
+        engineered_total > 0
+        and "dropout_risk" in engineered_df.columns
+        and "nlp_psychological_category" in engineered_df.columns
+    ):
+        dropout_series = pd.to_numeric(engineered_df["dropout_risk"], errors="coerce").fillna(0)
+        npi_series_engineered = (
+            engineered_df["nlp_psychological_category"]
+            .fillna("")
+            .astype(str)
+            .str.lower()
+        )
+        overlap = ((dropout_series == 1) & (npi_series_engineered == "high")).sum()
+        ml_overlap = round(float(overlap) / engineered_total * 100, 2)
+
+    ml_nlp_correlation = {
+        "dropout_high_and_npi_high_percent": ml_overlap,
+    }
+
+    sentiment_positive = 0.0
+    if "sentiment_label" in df.columns and not df.empty:
+        sentiment_positive = (
+            df["sentiment_label"].fillna("").astype(str).str.lower() == "positive"
+        ).sum()
+        sentiment_positive = round(float(sentiment_positive) / len(df), 4)
+
+    autonomy_mean = _normalized_mean(_safe_numeric_series(df, "autonomy_signal_score"))
+    dependency_mean = _normalized_mean(_safe_numeric_series(df, "topic_risk_score"))
+    motivation_mean = _normalized_mean(_safe_numeric_series(df, "delta_motivation_score"))
+
+    radar_metrics = {
+        "sentiment_positivity": sentiment_positive,
+        "autonomy_signal": autonomy_mean,
+        "dependency_signal": dependency_mean,
+        "motivation_proxy": motivation_mean,
+        "risk_level": round(high_risk_percent / 100, 4),
+    }
+
+    top_topics_table = _build_top_topics_table(df)
+
+    return {
+        "status": "ok",
+        "kpis": _to_json_ready(kpis),
+        "ml_nlp_correlation": _to_json_ready(ml_nlp_correlation),
+        "radar_metrics": _to_json_ready(radar_metrics),
+        "top_topics_table": _to_json_ready(top_topics_table),
     }
 
 
