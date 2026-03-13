@@ -8,7 +8,14 @@ import { chatAPI } from "../services/api";
 export default function ChatPage() {
   const { t } = useTranslation();
   const [userId] = useState("1XVWCBPH");
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState([
+    {
+      role: "assistant",
+      content:
+        "¡Hola! Soy tu asistente de EvaluAI. Cuéntame sobre tus objetivos para empezar a diseñar tu ruta formativa con IA hoy mismo.",
+      timestamp: new Date().toISOString(),
+    },
+  ]);
   const [loading, setLoading] = useState(false);
   const [sendError, setSendError] = useState(null);
 
