@@ -97,7 +97,7 @@ async def nlp_analysis(
         # TODO: Implementar con pysentimiento/BERTopic
         return {
             "status": "pending",
-            "message": "NLP analysis coming soong",
+            "message": "NLP analysis coming soon",
             "analysis_type": analysis_type
         }
     
