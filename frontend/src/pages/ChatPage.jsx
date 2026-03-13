@@ -11,8 +11,7 @@ export default function ChatPage() {
   const initialHistory = [
     {
       role: "assistant",
-      content:
-        "¡Hola! Soy tu asistente de EvaluAI. Cuéntame sobre tus objetivos para empezar a diseñar tu ruta formativa con IA hoy mismo.",
+      content: t("chat.welcomeMessage"),
       timestamp: new Date().toISOString(),
     },
   ];
