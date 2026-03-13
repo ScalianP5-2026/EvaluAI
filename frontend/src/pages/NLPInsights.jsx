@@ -39,13 +39,9 @@ export default function NLPInsights() {
         setLoading(true);
         setError(null);
 
-        const [summaryResponse, executiveResponse] = await Promise.all([
-          nlpAPI.getSummary(),
-          nlpAPI.getExecutive(),
-        ]);
+        const summaryResponse = await nlpAPI.getSummary();
 
         console.log("NLP summary response:", summaryResponse);
-        console.log("NLP executive response:", executiveResponse);
 
         // Read summary payload safely and provide fallback empty objects.
         const sentimentPayload = summaryResponse?.sentiment ?? {};
@@ -74,12 +70,6 @@ export default function NLPInsights() {
         setSentiment(sentimentPayload);
         setTopic(topicPayload);
         setNpiDistribution(npiPayload);
-
-        const executiveText =
-          executiveResponse?.executive_summary ||
-          executiveResponse?.message ||
-          t("nlp.executiveUnavailable");
-        setExecutiveSummary(String(executiveText));
       } catch (requestError) {
         console.error("NLP insights request error:", requestError);
         const backendMessage =
@@ -97,6 +87,51 @@ export default function NLPInsights() {
 
     loadNLPInsights();
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const langParam = encodeURIComponent(i18n.language || "en");
+
+    const loadExecutiveSummary = async () => {
+      try {
+        const response = await fetch(`/api/nlp/executive?lang=${langParam}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Executive summary request failed (${response.status})`,
+          );
+        }
+
+        const data = await response.json();
+        if (!isMounted) return;
+
+        const executiveText =
+          data?.executive_summary ||
+          data?.message ||
+          t("nlp.executiveUnavailable");
+        setExecutiveSummary(String(executiveText));
+      } catch (execError) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        console.error("NLP executive summary request error:", execError);
+        if (isMounted) {
+          setExecutiveSummary("");
+        }
+      }
+    };
+
+    setExecutiveSummary("");
+    loadExecutiveSummary();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [i18n.language, t]);
 
   useEffect(() => {
     setLanguageKey(i18n.language);

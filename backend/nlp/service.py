@@ -1,9 +1,23 @@
 from __future__ import annotations
 
+import asyncio
+import logging
+import textwrap
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+try:  # pragma: no cover - import path differs between runtimes
+    from backend.app.chatbot.gemini_client import GeminiChatClient
+except ImportError:  # pragma: no cover
+    try:
+        from app.chatbot.gemini_client import GeminiChatClient  # type: ignore
+    except ImportError:  # pragma: no cover
+        GeminiChatClient = None  # type: ignore
+
+
+logger = logging.getLogger(__name__)
 
 # Build dataset path relative to this file to avoid hardcoded absolute paths.
 # When running in Docker, __file__ is /app/nlp/service.py, so go up 2 levels to /app
@@ -18,6 +32,10 @@ _ENRICHED_DATASET_PATH = _APP_ROOT / "data" / "processed" / "survey_nlp_enriched
 # Keep dataframe and load error cached in memory for fast repeated reads.
 _DF_CACHE: pd.DataFrame | None = None
 _CACHE_ERROR: str | None = None
+_EXECUTIVE_CACHE: dict[str, str | None] = {"en": None, "es": None}
+_LLM_CLIENT: GeminiChatClient | None = None
+_DEFAULT_LANGUAGE = "en"
+_SUPPORTED_LANGS = {"en": "English", "es": "Spanish"}
 
 
 def _to_json_ready(value: Any) -> Any:
@@ -65,6 +83,169 @@ def _dataset_error_payload() -> dict[str, Any]:
         "message": _CACHE_ERROR or "NLP dataset is not available.",
         "dataset_path": str(_ENRICHED_DATASET_PATH),
     }
+
+
+def _normalize_language(lang: str | None) -> str:
+    """Normalize requested language to supported set."""
+    if not lang:
+        return _DEFAULT_LANGUAGE
+    lang_code = lang.lower()
+    return lang_code if lang_code in _EXECUTIVE_CACHE else _DEFAULT_LANGUAGE
+
+
+def _get_llm_client() -> GeminiChatClient | None:
+    """Lazy-load Gemini client, logging failures but keeping service alive."""
+    global _LLM_CLIENT
+
+    if _LLM_CLIENT is not None:
+        return _LLM_CLIENT
+
+    if GeminiChatClient is None:
+        logger.warning(
+            "GeminiChatClient not available; executive summaries will use fallback text."
+        )
+        return None
+
+    try:
+        _LLM_CLIENT = GeminiChatClient()
+    except Exception as exc:  # pragma: no cover - depends on env secrets
+        logger.warning("Failed to initialize GeminiChatClient: %s", exc)
+        _LLM_CLIENT = None
+
+    return _LLM_CLIENT
+
+
+def call_llm(prompt: str) -> str | None:
+    """Send prompt to LLM, returning None when unavailable or failing."""
+    client = _get_llm_client()
+    if client is None or not prompt.strip():
+        return None
+
+    async def _invoke() -> str:
+        return await client.query(prompt)
+
+    try:
+        return asyncio.run(_invoke())
+    except RuntimeError as exc:
+        # Happens inside notebook contexts with running loop; fall back to manual loop.
+        if "asyncio.run() cannot be called" in str(exc):
+            loop = asyncio.new_event_loop()
+            try:
+                asyncio.set_event_loop(loop)
+                return loop.run_until_complete(_invoke())
+            finally:
+                asyncio.set_event_loop(None)
+                loop.close()
+        logger.warning("LLM execution failed: %s", exc)
+    except Exception as exc:  # pragma: no cover - external API failures
+        logger.warning("LLM execution failed: %s", exc)
+
+    return None
+
+
+def _top_entry(distribution: dict[str, Any]) -> tuple[str, float]:
+    if not distribution:
+        return "unknown", 0.0
+    key, value = max(distribution.items(), key=lambda item: item[1])
+    try:
+        numeric_value = float(value)
+    except (TypeError, ValueError):
+        numeric_value = 0.0
+    return str(key), numeric_value
+
+
+def _format_percentage(value: float, total: float) -> float:
+    if total <= 0:
+        return 0.0
+    return round((value / total) * 100, 1)
+
+
+_SENTIMENT_TERMS = {
+    "positive": {"en": "positive sentiment", "es": "sentimiento positivo"},
+    "neutral": {"en": "neutral sentiment", "es": "sentimiento neutral"},
+    "negative": {"en": "negative sentiment", "es": "sentimiento negativo"},
+}
+
+_RISK_TERMS = {
+    "high_risk": {"en": "high dependency risk", "es": "riesgo alto de dependencia"},
+    "medium_risk": {"en": "medium dependency risk", "es": "riesgo medio de dependencia"},
+    "low_risk": {"en": "low dependency risk", "es": "riesgo bajo de dependencia"},
+}
+
+
+def _localize_term(mapping: dict[str, dict[str, str]], label: str, lang: str) -> str:
+    normalized = str(label).strip().lower()
+    if normalized in mapping:
+        entry = mapping[normalized]
+        return entry.get(lang, entry.get("en", normalized))
+    readable = normalized.replace("_", " ")
+    if lang == "es":
+        return readable
+    return readable
+
+
+def _format_topic_label(topic_id: str, lang: str) -> str:
+    prefix = "Tema" if lang == "es" else "Topic"
+    try:
+        numeric = int(str(topic_id).strip())
+        index = numeric + 1 if numeric >= 0 else numeric
+        return f"{prefix} {index}"
+    except (TypeError, ValueError):
+        safe_value = str(topic_id).strip() or "?"
+        return f"{prefix} {safe_value}"
+
+
+def _build_topic_sentence(topic_distribution: dict[str, Any], lang: str) -> str:
+    if not topic_distribution:
+        return "No dominant topics" if lang == "en" else "Sin temas dominantes"
+
+    top_items = list(topic_distribution.items())[:3]
+    fragments: list[str] = []
+    for topic_id, count in top_items:
+        try:
+            safe_count = int(count)
+        except (TypeError, ValueError):
+            safe_count = 0
+        fragments.append(f"{_format_topic_label(topic_id, lang)} ({safe_count})")
+
+    prefix = "Top themes" if lang == "en" else "Temas principales"
+    return f"{prefix}: {', '.join(fragments)}"
+
+
+def _build_fallback_summary(
+    lang: str,
+    sentiment_distribution: dict[str, Any],
+    topic_distribution: dict[str, Any],
+    npi_distribution: dict[str, Any],
+) -> str:
+    sentiment_label, sentiment_value = _top_entry(sentiment_distribution)
+    topic_sentence = _build_topic_sentence(topic_distribution, lang)
+    risk_label, risk_value = _top_entry(npi_distribution)
+
+    total_sentiment = sum(float(v or 0) for v in sentiment_distribution.values()) or 1.0
+    total_risk = sum(float(v or 0) for v in npi_distribution.values()) or 1.0
+
+    sentiment_percent = _format_percentage(sentiment_value, total_sentiment)
+    risk_percent = _format_percentage(risk_value, total_risk)
+
+    if lang == "es":
+        lines = [
+            "Insight Ejecutivo NLP (fallback)",
+            f"- Sentimiento dominante: {_localize_term(_SENTIMENT_TERMS, sentiment_label, lang)} ({sentiment_percent}%).",
+            f"- {topic_sentence}.",
+            f"- Riesgo psicológico más frecuente: {_localize_term(_RISK_TERMS, risk_label, lang)} ({risk_percent}%).",
+            "- Acción sugerida: reforzar la alfabetización en IA, supervisar equipos con riesgo alto y preservar la autonomía de decisiones.",
+        ]
+    else:
+        lines = [
+            "Executive NLP Insight (fallback)",
+            f"- Predominant sentiment: {_localize_term(_SENTIMENT_TERMS, sentiment_label, lang)} ({sentiment_percent}%).",
+            f"- {topic_sentence}.",
+            f"- Psychological risk trend: {_localize_term(_RISK_TERMS, risk_label, lang)} ({risk_percent}%).",
+            "- Recommended action: reinforce AI literacy coaching, monitor high-risk cohorts, and protect human autonomy checkpoints.",
+        ]
+
+    return "\n".join(lines)
 
 
 def get_sentiment_summary() -> dict[str, Any]:
@@ -166,31 +347,96 @@ def get_npi_distribution() -> dict[str, Any]:
     return response
 
 
-def get_executive_summary() -> dict[str, Any]:
-    """Return one executive summary text generated by the NLP pipeline."""
+def get_executive_summary(lang: str = "en") -> dict[str, Any]:
+    """Generate (and cache) an executive summary based on NLP distributions."""
     df = _load_dataframe()
     if df is None:
         return _dataset_error_payload()
 
-    if "executive_summary" not in df.columns:
+    normalized_lang = _normalize_language(lang)
+
+    cached = _EXECUTIVE_CACHE.get(normalized_lang)
+    if cached:
+        return {"status": "ok", "executive_summary": cached}
+
+    required_columns = [
+        "sentiment_label",
+        "topic_id",
+        "nlp_psychological_category",
+    ]
+    missing = [col for col in required_columns if col not in df.columns]
+    if missing:
         return {
             "status": "error",
-            "message": "Column 'executive_summary' not found in dataset.",
+            "message": f"Missing columns for executive summary: {', '.join(missing)}.",
         }
 
-    non_empty = df["executive_summary"].dropna().astype(str)
-    non_empty = non_empty[non_empty.str.strip() != ""]
+    sentiment_distribution = _to_json_ready(
+        df["sentiment_label"]
+        .fillna("unknown")
+        .astype(str)
+        .value_counts(dropna=False)
+        .to_dict()
+    )
+    topic_distribution = _to_json_ready(
+        df["topic_id"]
+        .fillna("unknown")
+        .astype(str)
+        .value_counts(dropna=False)
+        .head(5)
+        .to_dict()
+    )
+    npi_distribution = _to_json_ready(
+        df["nlp_psychological_category"]
+        .fillna("unknown")
+        .astype(str)
+        .value_counts(dropna=False)
+        .to_dict()
+    )
 
-    if non_empty.empty:
-        return {
-            "status": "ok",
-            "executive_summary": None,
-            "message": "No executive summary text available in dataset.",
-        }
+    language_instruction = (
+        "Generate the executive summary in Spanish."
+        if normalized_lang == "es"
+        else "Generate the executive summary in English."
+    )
+
+    prompt = textwrap.dedent(
+        f"""
+        {language_instruction}
+
+        You are an AI organizational behavior analyst.
+
+        Sentiment distribution: {sentiment_distribution}
+        Top topics: {topic_distribution}
+        Psychological risk distribution: {npi_distribution}
+
+        Provide:
+        1. Key sentiment insights
+        2. Dominant discussion themes
+        3. Behavioral risk implications
+        4. Recommended leadership actions
+
+        Structure clearly.
+        """
+    ).strip()
+
+    summary_text = call_llm(prompt)
+    if summary_text is not None:
+        summary_text = summary_text.strip()
+
+    if not summary_text:
+        summary_text = _build_fallback_summary(
+            normalized_lang,
+            sentiment_distribution,
+            topic_distribution,
+            npi_distribution,
+        )
+
+    _EXECUTIVE_CACHE[normalized_lang] = summary_text
 
     return {
         "status": "ok",
-        "executive_summary": non_empty.iloc[0],
+        "executive_summary": summary_text,
     }
 
 
