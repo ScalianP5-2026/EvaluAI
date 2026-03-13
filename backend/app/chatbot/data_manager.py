@@ -254,4 +254,130 @@ class DataManager:
         except Exception as e:
             logger.error(f"Error loading courses by skills: {e}")
             return []
+    
+    def get_mentor_recommendations(
+        self, especialidades: List[str], limit: int = 2
+    ) -> List[Dict]:
+        """
+        Obtitne mentores recomendados basado en especialidades.
         
+        Args:
+            especialidades: Lista de especialidades requeridas (ej: ["Python", "ML"])
+            limit: Número máximo de mentores a retornar
+        
+        Returns:
+            [
+                {
+                    "mentor_id": "M001",
+                    "nombre": "Carlos", 
+                    "especialidades": ["Python", "ML"],
+                    "competencia_level": 4,
+                    "disponibilidad": 3
+                },
+                ...
+            ]
+        """
+        try:
+            # Fetch ALL mentores primero
+            response = self.db.table("mentores").select(
+                "mentor_id, nombre, especialidades, competencia_level, disponibilidad"
+            ).gt("disponibilidad", 0).execute()
+            
+            mentores_data = response.data if response.data else []
+            
+            if not mentores_data:
+                logger.info("No mentores found in database")
+                return []
+            
+            # filtrar mentores que tengan match con especialidades requeridas
+            matching_mentores = []
+            for mentor in mentores_data:
+                mentor_specs = mentor.get("especialidades", [])
+                # Verificar si hay overlap entre especialidades del mentor y las requeridas
+                if any(spec in mentor_specs for spec in especialidades):
+                    matching_mentores.append(mentor)
+                    
+            # Retornar top N por competencia_level (descendiente)
+            sorted_mentores = sorted(
+                matching_mentores,
+                key=lambda x: x.get("competencia_level", 0),
+                reverse = True
+            )
+            
+            result = sorted_mentores[:limit]
+            logger.info(f"Found {len(result)} mentores matching specialties: {especialidades}")
+            return result
+        
+        except Exception as e:
+            logger.error(f"Error loading mentor recommendations: {e}")
+            return []
+        
+    def get_relevant_programs(
+        self,
+        tecnologias: List[str],
+        nivel: Optional[str] = None, 
+        limit: int = 3
+    ) -> List[Dict]:
+        """
+        Obtiene programas de formación relevantes.
+        
+        Args:
+            tecnologias: Lista de tecnologías (ej: ["Python", "AWS"])
+            nivel: Nivel optional (ej: "Intermedio", "Avanzado")
+            limit: Número máximo de programas
+            
+        Returns:
+            [
+                {
+                    "title": "Python Advanced",
+                    "department": "Tech",
+                    "skill_level": "Avanzado",
+                    "avg_autoeficacia_improvement": 1.5,
+                    "avg_completion_rate": 0.85
+                },
+                ...
+            ]
+        """
+        try:
+            # Fetch ALL cursos
+            query = self.db.table("courses").select(
+                "title, department, skill_level, avg_autoeficacia_improvement, avg_completion_rate"
+            )
+            
+            # Filtrar por nivel si se proporciona
+            if nivel:
+                query = query.eq("skill_level", nivel)
+                
+            response = query.order(
+                "avg_completion_rate", desc=True
+            ).limit(limit * 2).execute()    # Fetch más para filtrar despues
+            
+            courses = response.data if response.data else []
+            
+            if not courses:
+                logger.info(f"No programs found for technologies: {tecnologias}")
+                return []
+            
+            # Post-filter por tecnologías (simple: check title contains tech keywords)
+            matching_programs = []
+            for course in courses:
+                course_title = course.get("title", "").lower()
+                # Verificar si title contiene alguna tecnología
+                if any(tech.lower() in course_title for tech in tecnologias):
+                    matching_programs.append(course)
+                # Si no hay matches por título, igual incluir (no ser muy restrictivo)
+                elif len(matching_programs) < limit:
+                    matching_programs.append(course)
+                    
+            result = matching_programs[:limit]
+            logger.info(f"Found {len(result)} relevant programs for technologies: {tecnologias}")
+            return result
+        
+        except Exception as e:
+            logger.error(f"Error loading relevant programs: {e}")
+            return []
+            
+            
+            
+        
+            
