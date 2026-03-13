@@ -4,6 +4,35 @@
     "chatbot": "Chatbot Inteligente",
     "nlp": "Analizador de Opiniones NLP"
   },
+  "nlp": {
+    "title": "Insights de NLP",
+    "subtitle": "Inteligencia de comportamiento basada en sentimiento, tópicos y señales psicológicas NLP.",
+    "sentimentOverview": "Resumen de Sentimiento",
+    "topicDistribution": "Distribución de Temas",
+    "psychologicalIndex": "Índice de Riesgo Psicológico",
+    "executiveInsight": "Insight Ejecutivo Conductual",
+    "topic": "Tema",
+    "sentimentDescription": "Distribución de la percepción de los empleados sobre la integración de IA.",
+    "topicDescription": "Frecuencia ordenada de los temas conversacionales predominantes detectados por NLP.",
+    "psychologicalDescription": "Segmentación de riesgo basada en indicadores psicológicos detectados por NLP.",
+    "loading": "Cargando datos...",
+    "errorLoading": "Error al cargar los insights NLP",
+    "noData": "No hay datos disponibles",
+    "noSentimentData": "No hay datos de sentimiento disponibles.",
+    "noTopicData": "No hay datos de tópicos disponibles.",
+    "noNpiData": "No hay datos de distribución del NPI disponibles.",
+    "executiveUnavailable": "El resumen ejecutivo no está disponible."
+  },
+  "sentiment": {
+    "positive": "Positivo",
+    "neutral": "Neutral",
+    "negative": "Negativo"
+  },
+  "risk": {
+    "high": "Alto",
+    "medium": "Medio",
+    "low": "Bajo"
+  },
   "sidebar": {
     "subtitle": "Inteligencia en Formación",
     "uploadCSV": "Subir CSV",

@@ -16,6 +16,7 @@ export default function Sidebar() {
   const navItems = [
     { path: "/dashboard", text: t("nav.dashboard") },
     { path: "/chat", text: t("nav.chatbot") },
+    { path: "/nlp", text: t("nav.nlp") },
   ];
 
   const isActive = (path) => location.pathname === path;

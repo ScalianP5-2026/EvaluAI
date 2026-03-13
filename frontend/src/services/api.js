@@ -4,8 +4,8 @@ import axios from "axios";
 // Configuration
 // ═══════════════════════════════════════════════════════════════
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "/api/v1";
+const API_BASE_URL = "/api/v1";
+const NLP_BASE_URL = "/api/nlp";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -14,9 +14,22 @@ const apiClient = axios.create({
   },
 });
 
+const nlpClient = axios.create({
+  baseURL: NLP_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 // Error handler
 const handleError = (error, context) => {
-  console.error(`${context} Error:`, error);
+  console.error(`${context} Error:`, {
+    message: error?.message,
+    status: error?.response?.status,
+    data: error?.response?.data,
+    url: error?.config?.url,
+    baseURL: error?.config?.baseURL,
+  });
   throw error;
 };
 
@@ -98,6 +111,33 @@ export const kpiAPI = {
 // ═══════════════════════════════════════════════════════════════
 
 export const nlpAPI = {
+  getSummary: async () => {
+    try {
+      const response = await nlpClient.get("/summary");
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Summary");
+    }
+  },
+
+  getExecutive: async () => {
+    try {
+      const response = await nlpClient.get("/executive");
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Executive Summary");
+    }
+  },
+
+  getEmployee: async (employeeId) => {
+    try {
+      const response = await nlpClient.get(`/employee/${employeeId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Employee Profile");
+    }
+  },
+
   analyze: async (payload) => {
     try {
       const response = await apiClient.post("/nlp/analyze", payload);

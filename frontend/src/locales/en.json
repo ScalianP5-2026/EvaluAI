@@ -4,6 +4,35 @@
     "chatbot": "Intelligent Chatbot",
     "nlp": "NLP Opinion Analyzer"
   },
+  "nlp": {
+    "title": "NLP Insights",
+    "subtitle": "Behavioral intelligence from sentiment, topics, and psychological NLP signals.",
+    "sentimentOverview": "Sentiment Overview",
+    "topicDistribution": "Topic Distribution",
+    "psychologicalIndex": "Psychological Risk Index",
+    "executiveInsight": "Executive Behavioral Insight",
+    "topic": "Topic",
+    "sentimentDescription": "Distribution of employee perception regarding AI integration.",
+    "topicDescription": "Ranked frequency of dominant conversational themes detected by NLP.",
+    "psychologicalDescription": "Risk segmentation based on NLP psychological indicators.",
+    "loading": "Loading data...",
+    "errorLoading": "Failed to load NLP insights",
+    "noData": "No data available",
+    "noSentimentData": "No sentiment data available.",
+    "noTopicData": "No topic data available.",
+    "noNpiData": "No NPI distribution data available.",
+    "executiveUnavailable": "Executive summary is not available."
+  },
+  "sentiment": {
+    "positive": "Positive",
+    "neutral": "Neutral",
+    "negative": "Negative"
+  },
+  "risk": {
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
   "sidebar": {
     "subtitle": "Training Intelligence",
     "uploadCSV": "Upload CSV",
