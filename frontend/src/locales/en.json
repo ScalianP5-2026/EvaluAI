@@ -14,7 +14,7 @@
     "topic": "Topic",
     "sentimentDescription": "Distribution of employee perception regarding AI integration.",
     "topicDescription": "Ranked frequency of dominant conversational themes detected by NLP.",
-    "psychologicalDescription": "Risk segmentation based on NLP psychological indicators.",
+    "psychologicalDescription": "This index estimates behavioral risk related to AI dependency, autonomy loss and reduced critical thinking.",
     "loading": "Loading data...",
     "errorLoading": "Failed to load NLP insights",
     "noData": "No data available",

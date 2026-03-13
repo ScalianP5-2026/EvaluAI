@@ -21,28 +21,12 @@ import { useTranslation } from "react-i18next";
 
 const NPI_COLORS = ["#10b981", "#f59e0b", "#ef4444", "#6b7280"];
 
-function toPercentData(dataObject) {
-  if (!dataObject || typeof dataObject !== "object") return [];
-  return Object.entries(dataObject).map(([name, value]) => ({
-    name,
-    value: Number(value || 0),
-    percent: `${(Number(value || 0) * 100).toFixed(1)}%`,
-  }));
-}
-
-function toTopicData(dataObject) {
-  if (!dataObject || typeof dataObject !== "object") return [];
-  return Object.entries(dataObject).map(([topic, count]) => ({
-    topic: `#${topic}`,
-    count: Number(count || 0),
-  }));
-}
-
 export default function NLPInsights() {
   const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [languageKey, setLanguageKey] = useState(i18n.language);
 
   const [sentiment, setSentiment] = useState({});
   const [topic, setTopic] = useState({});
@@ -114,6 +98,10 @@ export default function NLPInsights() {
     loadNLPInsights();
   }, []);
 
+  useEffect(() => {
+    setLanguageKey(i18n.language);
+  }, [i18n.language]);
+
   const translateSentimentLabel = (label) => t(`sentiment.${label}`) || label;
   const translateRiskLabel = (label) => {
     if (!label) return label;
@@ -129,27 +117,34 @@ export default function NLPInsights() {
   };
 
   const sentimentChartData = useMemo(() => {
-    const chartData = toPercentData(sentiment?.sentiment_percentages);
-    return chartData.map((entry) => ({
-      ...entry,
-      label: translateSentimentLabel(entry.name),
-    }));
+    if (!sentiment?.sentiment_percentages) return [];
+
+    return Object.entries(sentiment.sentiment_percentages).map(
+      ([label, value]) => ({
+        label: translateSentimentLabel(label),
+        value: Number(value || 0),
+      }),
+    );
   }, [sentiment, i18n.language]);
 
   const topicChartData = useMemo(() => {
-    const data = toTopicData(topic?.top_10_topics);
-    return data.map((entry) => ({
-      ...entry,
-      topic: translateTopicLabel(entry.topic.replace(/^#/, "")),
+    if (!topic?.top_10_topics) return [];
+
+    return Object.entries(topic.top_10_topics).map(([topicId, count]) => ({
+      topic: translateTopicLabel(topicId),
+      count: Number(count || 0),
     }));
   }, [topic, i18n.language]);
 
   const npiChartData = useMemo(() => {
-    const chartData = toPercentData(npiDistribution?.npi_category_percentages);
-    return chartData.map((entry) => ({
-      ...entry,
-      label: translateRiskLabel(entry.name),
-    }));
+    if (!npiDistribution?.npi_category_percentages) return [];
+
+    return Object.entries(npiDistribution.npi_category_percentages).map(
+      ([label, value]) => ({
+        label: translateRiskLabel(label),
+        value: Number(value || 0),
+      }),
+    );
   }, [npiDistribution, i18n.language]);
 
   const sentimentReady =
@@ -195,7 +190,7 @@ export default function NLPInsights() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={sentimentChartData}>
+              <BarChart key={languageKey} data={sentimentChartData}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke={isDark ? "#374151" : "#e5e7eb"}
@@ -228,7 +223,7 @@ export default function NLPInsights() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topicChartData}>
+              <BarChart key={languageKey} data={topicChartData}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke={isDark ? "#374151" : "#e5e7eb"}
@@ -261,7 +256,7 @@ export default function NLPInsights() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
+              <PieChart key={languageKey}>
                 <Pie
                   data={npiChartData}
                   dataKey="value"
@@ -289,18 +284,21 @@ export default function NLPInsights() {
               </PieChart>
             </ResponsiveContainer>
           )}
-          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+          <p className="chart-description mt-4 text-sm text-gray-500 dark:text-gray-400">
             {t("nlp.psychologicalDescription")}
           </p>
         </ChartCard>
 
-        <ChartCard title={t("nlp.executiveInsight")}>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            {t("nlp.executiveInsight")}
+          </h2>
           <div className="min-h-[300px] rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-5">
             <p className="text-sm leading-7 text-gray-700 dark:text-gray-200 whitespace-pre-wrap">
               {executiveSummary || t("nlp.executiveUnavailable")}
             </p>
           </div>
-        </ChartCard>
+        </div>
       </div>
     </div>
   );

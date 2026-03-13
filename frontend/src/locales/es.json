@@ -14,7 +14,7 @@
     "topic": "Tema",
     "sentimentDescription": "Distribución de la percepción de los empleados sobre la integración de IA.",
     "topicDescription": "Frecuencia ordenada de los temas conversacionales predominantes detectados por NLP.",
-    "psychologicalDescription": "Segmentación de riesgo basada en indicadores psicológicos detectados por NLP.",
+    "psychologicalDescription": "Este índice estima el riesgo conductual relacionado con dependencia a la IA, pérdida de autonomía y reducción del pensamiento crítico.",
     "loading": "Cargando datos...",
     "errorLoading": "Error al cargar los insights NLP",
     "noData": "No hay datos disponibles",
