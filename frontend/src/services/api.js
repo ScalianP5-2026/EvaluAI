@@ -4,7 +4,11 @@ import axios from "axios";
 // Configuration
 // ═══════════════════════════════════════════════════════════════
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL =
+  (typeof import.meta !== "undefined" &&
+    import.meta.env &&
+    import.meta.env.VITE_API_BASE_URL) ||
+  "/api/v1";
 const NLP_BASE_URL = "/api/nlp";
 
 const apiClient = axios.create({
