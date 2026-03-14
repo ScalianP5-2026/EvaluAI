@@ -67,9 +67,6 @@ export default function NLPInsights() {
           nlpAPI.getStrategicSummary(),
         ]);
 
-        console.log("NLP summary response:", summaryResponse);
-        console.log("NLP strategic response:", strategicResponse);
-
         const sentimentPayload = summaryResponse?.sentiment ?? {};
         const topicPayload = summaryResponse?.topic ?? {};
         const npiPayload = summaryResponse?.npi_distribution ?? {};
