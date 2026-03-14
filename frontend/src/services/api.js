@@ -10,6 +10,12 @@ const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL) ||
   "/api/v1";
 const NLP_BASE_URL = "/api/nlp";
+const VERBOSE_API_ERROR_LOGGING =
+  typeof import.meta !== "undefined" &&
+  import.meta.env &&
+  (import.meta.env.DEV ||
+    String(import.meta.env.VITE_VERBOSE_API_ERRORS || "").toLowerCase() ===
+      "true");
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -27,13 +33,26 @@ const nlpClient = axios.create({
 
 // Error handler
 const handleError = (error, context) => {
+  const requestId =
+    error?.response?.headers?.["x-request-id"] ||
+    error?.response?.headers?.["x-correlation-id"] ||
+    null;
+
   console.error(`${context} Error:`, {
     message: error?.message,
     status: error?.response?.status,
-    data: error?.response?.data,
     url: error?.config?.url,
     baseURL: error?.config?.baseURL,
+    requestId,
   });
+
+  if (VERBOSE_API_ERROR_LOGGING) {
+    console.debug(`${context} Error details:`, {
+      responseData: error?.response?.data,
+      requestBody: error?.config?.data,
+    });
+  }
+
   throw error;
 };
 
