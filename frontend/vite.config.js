@@ -6,8 +6,7 @@ import react from "@vitejs/plugin-react";
 //   docker-compose (e.g. a local dev environment or VS Code dev container).
 // - Leave unset (or set to http://backend:8000) when running inside
 //   docker-compose, where the backend container is reachable by hostname.
-const backendTarget =
-  process.env.BACKEND_PROXY_TARGET || "http://backend:8000";
+const backendTarget = process.env.BACKEND_PROXY_TARGET || "http://backend:8000";
 
 export default defineConfig({
   /**
