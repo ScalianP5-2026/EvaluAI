@@ -152,9 +152,11 @@ export const nlpAPI = {
     }
   },
 
-  getExecutive: async () => {
+  getExecutive: async (lang) => {
     try {
-      const response = await nlpClient.get("/executive");
+      const response = await nlpClient.get("/executive", {
+        params: lang ? { lang } : undefined,
+      });
       return response.data;
     } catch (error) {
       handleError(error, "NLP Executive Summary");

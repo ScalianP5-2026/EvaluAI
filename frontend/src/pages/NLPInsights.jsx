@@ -122,22 +122,10 @@ export default function NLPInsights() {
 
   useEffect(() => {
     let isMounted = true;
-    const controller = new AbortController();
-    const langParam = encodeURIComponent(i18n.language || "en");
 
     const loadExecutiveSummary = async () => {
       try {
-        const response = await fetch(`/api/nlp/executive?lang=${langParam}`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Executive summary request failed (${response.status})`,
-          );
-        }
-
-        const data = await response.json();
+        const data = await nlpAPI.getExecutive(i18n.language || "en");
         if (!isMounted) return;
 
         const executiveText =
@@ -146,9 +134,6 @@ export default function NLPInsights() {
           t("nlp.executiveUnavailable");
         setExecutiveSummary(String(executiveText));
       } catch (execError) {
-        if (controller.signal.aborted) {
-          return;
-        }
         console.error("NLP executive summary request error:", execError);
         if (isMounted) {
           setExecutiveSummary("");
@@ -161,7 +146,6 @@ export default function NLPInsights() {
 
     return () => {
       isMounted = false;
-      controller.abort();
     };
   }, [i18n.language, t]);
 
