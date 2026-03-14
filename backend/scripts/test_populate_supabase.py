@@ -5,6 +5,8 @@ import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
+OPEN_TEXT_MAX_LENGTH = 500
+
 # Cargar variables de entorno desde el .env en la raiz del proyecto.
 ROOT_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT_DIR / ".env")
@@ -43,6 +45,12 @@ for col in [
 ]:
     if col not in df.columns:
         df[col] = ""
+    df[col] = (
+        df[col]
+        .fillna("")
+        .astype(str)
+        .str.slice(0, OPEN_TEXT_MAX_LENGTH)
+    )
 
 # Convertir rol_tecnico de 0/1 a booleano True/False
 

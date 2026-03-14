@@ -19,6 +19,8 @@ REQUIRED_SURVEY_COLUMNS = [
     "last_goal",
 ]
 
+OPEN_TEXT_MAX_LENGTH = 500
+
 
 class DataRepository:
     def __init__(self, surveys_path: str, courses_path: str, mentors_path: str) -> None:
@@ -135,7 +137,12 @@ class DataRepository:
         for column in official_open_text_columns:
             if column not in normalized.columns:
                 normalized[column] = ""
-            normalized[column] = normalized[column].fillna("").astype(str)
+            normalized[column] = (
+                normalized[column]
+                .fillna("")
+                .astype(str)
+                .str.slice(0, OPEN_TEXT_MAX_LENGTH)
+            )
 
         if (
             "comment" not in normalized.columns

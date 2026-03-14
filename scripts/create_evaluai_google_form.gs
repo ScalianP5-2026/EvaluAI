@@ -43,6 +43,7 @@ const CSV_COLUMNS = [
 
 const EXPORT_FOLDER_NAME = "EvaluAI_exports";
 const EXPORT_FILE_NAME = "evaluai_responses.csv";
+const OPEN_TEXT_MAX_LENGTH = 500;
 
 const Q = {
   empleado_id: "ID de empleado",
@@ -77,6 +78,7 @@ const Q = {
   p10_ia_util_desarrollo_profesional:
     "P10. La IA es util para mi desarrollo profesional",
   open_experience_ai_learning: "Comentarios sobre tu experiencia con IA",
+  open_challenges_ai_usage: "Principales desafios al usar IA",
   open_training_needs: "Sugerencias de mejora",
 };
 
@@ -168,8 +170,18 @@ function buildCsvRow_(formResponse) {
     Session.getScriptTimeZone(),
     "yyyy-MM-dd HH:mm:ss"
   );
-  const openExperienceText = asText_(answers[Q.open_experience_ai_learning]);
-  const openTrainingNeedsText = asText_(answers[Q.open_training_needs]);
+  const openExperienceText = asBoundedText_(
+    answers[Q.open_experience_ai_learning],
+    OPEN_TEXT_MAX_LENGTH
+  );
+  const openChallengesText = asBoundedText_(
+    answers[Q.open_challenges_ai_usage],
+    OPEN_TEXT_MAX_LENGTH
+  );
+  const openTrainingNeedsText = asBoundedText_(
+    answers[Q.open_training_needs],
+    OPEN_TEXT_MAX_LENGTH
+  );
 
   return [
     asText_(answers[Q.empleado_id]),
@@ -199,7 +211,7 @@ function buildCsvRow_(formResponse) {
     asInt_(answers[Q.p9_confio_uso_ia_aprendizaje]),
     asInt_(answers[Q.p10_ia_util_desarrollo_profesional]),
     openExperienceText,
-    openExperienceText,
+    openChallengesText,
     openTrainingNeedsText,
   ];
 }
@@ -351,11 +363,19 @@ function addOpenSection_(form) {
   form
     .addParagraphTextItem()
     .setTitle(Q.open_experience_ai_learning)
+    .setHelpText(`Maximo ${OPEN_TEXT_MAX_LENGTH} caracteres`)
+    .setRequired(true);
+
+  form
+    .addParagraphTextItem()
+    .setTitle(Q.open_challenges_ai_usage)
+    .setHelpText(`Maximo ${OPEN_TEXT_MAX_LENGTH} caracteres`)
     .setRequired(true);
 
   form
     .addParagraphTextItem()
     .setTitle(Q.open_training_needs)
+    .setHelpText(`Maximo ${OPEN_TEXT_MAX_LENGTH} caracteres`)
     .setRequired(false);
 }
 
@@ -489,6 +509,12 @@ function installSubmitTrigger_(form) {
 
 function asText_(value) {
   return value == null ? "" : String(value).trim();
+}
+
+function asBoundedText_(value, maxLength) {
+  const text = asText_(value);
+  if (!maxLength || maxLength < 1) return text;
+  return text.slice(0, maxLength);
 }
 
 function asInt_(value) {
