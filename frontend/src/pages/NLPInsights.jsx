@@ -170,10 +170,18 @@ export default function NLPInsights() {
   }, [i18n.language]);
 
   const translateSentimentLabel = (label) => t(`sentiment.${label}`) || label;
+  const normalizeRiskKey = (label) => {
+    if (!label) return "low";
+    const normalized = String(label)
+      .replace(/_risk$/i, "")
+      .toLowerCase();
+    if (normalized === "moderate") return "medium";
+    return normalized;
+  };
   const translateRiskLabel = (label) => {
     if (!label) return label;
-    const normalized = label.replace(/_risk$/i, "");
-    return t(`risk.${normalized}`) || t(`risk.${label}`) || normalized || label;
+    const normalized = normalizeRiskKey(label);
+    return t(`risk.${normalized}`) || normalized || label;
   };
   const translateTopicLabel = (topicId) => {
     const numericId = Number(topicId);
@@ -228,7 +236,7 @@ export default function NLPInsights() {
     if (!strategicSummary?.kpis) return [];
 
     const {
-      high_psychological_risk_percent,
+      high_ai_autonomy_dependency_risk_percent,
       neutral_sentiment_percent,
       avg_npi_score,
       top_risk_topic,
@@ -236,13 +244,13 @@ export default function NLPInsights() {
 
     return [
       {
-        key: "high_psychological_risk_percent",
-        label: t("nlp.strategicKpis.highPsychRisk"),
+        key: "high_ai_autonomy_dependency_risk_percent",
+        label: t("nlp.strategicKpis.highAiAutonomyDependencyRisk"),
         value: formatPercentageValue(
-          high_psychological_risk_percent ?? null,
+          high_ai_autonomy_dependency_risk_percent ?? null,
           1,
         ),
-        caption: t("nlp.strategicKpis.highPsychRiskCaption"),
+        caption: t("nlp.strategicKpis.highAiAutonomyDependencyRiskCaption"),
         tone: "risk",
       },
       {
@@ -254,9 +262,9 @@ export default function NLPInsights() {
       },
       {
         key: "avg_npi_score",
-        label: t("nlp.strategicKpis.avgNpiScore"),
+        label: t("nlp.strategicKpis.avgAiAutonomyDependencyScore"),
         value: formatNumberValue(avg_npi_score ?? null, 2),
-        caption: t("nlp.strategicKpis.avgNpiScoreCaption"),
+        caption: t("nlp.strategicKpis.avgAiAutonomyDependencyScoreCaption"),
         tone: "metric",
       },
       {
@@ -319,7 +327,7 @@ export default function NLPInsights() {
   const strategicInsightText = useMemo(() => {
     if (!strategicSummary?.kpis) return "";
     const riskShare = formatPercentageValue(
-      strategicSummary.kpis.high_psychological_risk_percent ?? null,
+      strategicSummary.kpis.high_ai_autonomy_dependency_risk_percent ?? null,
       1,
     );
     const overlapShare = formatPercentageValue(mlOverlapValue ?? null, 1);
@@ -555,7 +563,7 @@ export default function NLPInsights() {
                               )}
                             </td>
                             <td className="py-3 pr-4 text-slate-600 dark:text-slate-300">
-                              {t(`risk.${row.risk_level || "low"}`)}
+                              {translateRiskLabel(row.risk_level || "low")}
                             </td>
                             <td className="py-3 text-slate-600 dark:text-slate-300">
                               {t(implicationKey)}
@@ -648,7 +656,7 @@ export default function NLPInsights() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <ChartCard title={t("nlp.psychologicalIndex")}>
+        <ChartCard title={t("nlp.aiAutonomyDependencyIndex")}>
           {!npiReady || npiChartData.length === 0 ? (
             <div className="h-72 flex items-center justify-center text-gray-400 dark:text-gray-500">
               {t("nlp.noData")}
@@ -684,7 +692,7 @@ export default function NLPInsights() {
             </ResponsiveContainer>
           )}
           <p className="chart-description mt-4 text-sm text-gray-500 dark:text-gray-400">
-            {t("nlp.psychologicalDescription")}
+            {t("nlp.aiAutonomyDependencyDescription")}
           </p>
         </ChartCard>
 

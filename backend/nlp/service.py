@@ -362,7 +362,7 @@ def _build_fallback_summary(
             "Insight Ejecutivo NLP (fallback)",
             f"- Sentimiento dominante: {_localize_term(_SENTIMENT_TERMS, sentiment_label, lang)} ({sentiment_percent}%).",
             f"- {topic_sentence}.",
-            f"- Riesgo psicológico más frecuente: {_localize_term(_RISK_TERMS, risk_label, lang)} ({risk_percent}%).",
+            f"- Riesgo de autonomía/dependencia IA más frecuente: {_localize_term(_RISK_TERMS, risk_label, lang)} ({risk_percent}%).",
             "- Acción sugerida: reforzar la alfabetización en IA, supervisar equipos con riesgo alto y preservar la autonomía de decisiones.",
         ]
     else:
@@ -370,7 +370,7 @@ def _build_fallback_summary(
             "Executive NLP Insight (fallback)",
             f"- Predominant sentiment: {_localize_term(_SENTIMENT_TERMS, sentiment_label, lang)} ({sentiment_percent}%).",
             f"- {topic_sentence}.",
-            f"- Psychological risk trend: {_localize_term(_RISK_TERMS, risk_label, lang)} ({risk_percent}%).",
+            f"- AI autonomy/dependency risk trend: {_localize_term(_RISK_TERMS, risk_label, lang)} ({risk_percent}%).",
             "- Recommended action: reinforce AI literacy coaching, monitor high-risk cohorts, and protect human autonomy checkpoints.",
         ]
 
@@ -441,18 +441,18 @@ def get_topic_summary() -> dict[str, Any]:
 
 
 def get_npi_distribution() -> dict[str, Any]:
-    """Return NLP Psychological Index distribution and descriptive statistics."""
+    """Return AI Autonomy & Dependency Index distribution and descriptive statistics."""
     df = _load_dataframe()
     if df is None:
         return _dataset_error_payload()
 
-    if "nlp_psychological_category" not in df.columns:
+    if "ai_autonomy_dependency_category" not in df.columns:
         return {
             "status": "error",
-            "message": "Column 'nlp_psychological_category' not found in dataset.",
+            "message": "Column 'ai_autonomy_dependency_category' not found in dataset.",
         }
 
-    category_counts = df["nlp_psychological_category"].fillna("unknown").astype(str).value_counts(dropna=False)
+    category_counts = df["ai_autonomy_dependency_category"].fillna("unknown").astype(str).value_counts(dropna=False)
     category_percentages = (category_counts / len(df)).round(4)
 
     response: dict[str, Any] = {
@@ -462,15 +462,15 @@ def get_npi_distribution() -> dict[str, Any]:
         "npi_category_percentages": _to_json_ready(category_percentages.to_dict()),
     }
 
-    if "nlp_psychological_index" in df.columns:
+    if "ai_autonomy_dependency_index" in df.columns:
         response["npi_score_stats"] = {
-            "mean": _to_json_ready(df["nlp_psychological_index"].mean()),
-            "std": _to_json_ready(df["nlp_psychological_index"].std()),
-            "min": _to_json_ready(df["nlp_psychological_index"].min()),
-            "max": _to_json_ready(df["nlp_psychological_index"].max()),
-            "q25": _to_json_ready(df["nlp_psychological_index"].quantile(0.25)),
-            "q50": _to_json_ready(df["nlp_psychological_index"].quantile(0.50)),
-            "q75": _to_json_ready(df["nlp_psychological_index"].quantile(0.75)),
+            "mean": _to_json_ready(df["ai_autonomy_dependency_index"].mean()),
+            "std": _to_json_ready(df["ai_autonomy_dependency_index"].std()),
+            "min": _to_json_ready(df["ai_autonomy_dependency_index"].min()),
+            "max": _to_json_ready(df["ai_autonomy_dependency_index"].max()),
+            "q25": _to_json_ready(df["ai_autonomy_dependency_index"].quantile(0.25)),
+            "q50": _to_json_ready(df["ai_autonomy_dependency_index"].quantile(0.50)),
+            "q75": _to_json_ready(df["ai_autonomy_dependency_index"].quantile(0.75)),
         }
 
     return response
@@ -491,7 +491,7 @@ def get_executive_summary(lang: str = "en") -> dict[str, Any]:
     required_columns = [
         "sentiment_label",
         "topic_id",
-        "nlp_psychological_category",
+        "ai_autonomy_dependency_category",
     ]
     missing = [col for col in required_columns if col not in df.columns]
     if missing:
@@ -516,7 +516,7 @@ def get_executive_summary(lang: str = "en") -> dict[str, Any]:
         .to_dict()
     )
     npi_distribution = _to_json_ready(
-        df["nlp_psychological_category"]
+        df["ai_autonomy_dependency_category"]
         .fillna("unknown")
         .astype(str)
         .value_counts(dropna=False)
@@ -537,7 +537,7 @@ def get_executive_summary(lang: str = "en") -> dict[str, Any]:
 
         Sentiment distribution: {sentiment_distribution}
         Top topics: {topic_distribution}
-        Psychological risk distribution: {npi_distribution}
+        AI autonomy/dependency risk distribution: {npi_distribution}
 
         Provide:
         1. Key sentiment insights
@@ -589,14 +589,14 @@ def get_strategic_summary() -> dict[str, Any]:
             "top_topics_table": [],
         }
 
-    high_risk_percent = _percent_of_category(df, "nlp_psychological_category", "high")
+    high_risk_percent = _percent_of_category(df, "ai_autonomy_dependency_category", "high")
     neutral_sentiment_percent = _percent_of_category(df, "sentiment_label", "neutral")
-    npi_series = _safe_numeric_series(df, "nlp_psychological_index")
+    npi_series = _safe_numeric_series(df, "ai_autonomy_dependency_index")
     avg_npi_score = float(round(npi_series.mean(), 2)) if not npi_series.empty else 0.0
     top_risk_topic = _determine_top_risk_topic(df) or ""
 
     kpis = {
-        "high_psychological_risk_percent": high_risk_percent,
+        "high_ai_autonomy_dependency_risk_percent": high_risk_percent,
         "neutral_sentiment_percent": neutral_sentiment_percent,
         "avg_npi_score": avg_npi_score,
         "top_risk_topic": top_risk_topic,
@@ -607,11 +607,11 @@ def get_strategic_summary() -> dict[str, Any]:
     if (
         engineered_total > 0
         and "dropout_risk" in engineered_df.columns
-        and "nlp_psychological_category" in engineered_df.columns
+        and "ai_autonomy_dependency_category" in engineered_df.columns
     ):
         dropout_series = pd.to_numeric(engineered_df["dropout_risk"], errors="coerce").fillna(0)
         npi_series_engineered = (
-            engineered_df["nlp_psychological_category"]
+            engineered_df["ai_autonomy_dependency_category"]
             .fillna("")
             .astype(str)
             .str.lower()
@@ -687,8 +687,8 @@ def get_employee_nlp(employee_id: Any) -> dict[str, Any]:
         "topic_probability": _to_json_ready(row.get("topic_probability")),
         "topic_risk_score": _to_json_ready(row.get("topic_risk_score")),
         "autonomy_signal_score": _to_json_ready(row.get("autonomy_signal_score")),
-        "nlp_psychological_index": _to_json_ready(row.get("nlp_psychological_index")),
-        "nlp_psychological_category": _to_json_ready(row.get("nlp_psychological_category")),
+        "ai_autonomy_dependency_index": _to_json_ready(row.get("ai_autonomy_dependency_index")),
+        "ai_autonomy_dependency_category": _to_json_ready(row.get("ai_autonomy_dependency_category")),
         "full_text": _to_json_ready(row.get("full_text")),
     }
 

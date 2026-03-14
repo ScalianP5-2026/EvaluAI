@@ -6,10 +6,9 @@
   },
   "nlp": {
     "title": "Insights de NLP",
-    "subtitle": "Inteligencia de comportamiento basada en sentimiento, tópicos y señales psicológicas NLP.",
+    "subtitle": "Inteligencia de comportamiento basada en sentimiento, tópicos y señales de autonomía/dependencia de IA.",
     "sentimentOverview": "Resumen de Sentimiento",
     "topicDistribution": "Distribución de Temas",
-    "psychologicalIndex": "Índice de Riesgo Psicológico",
     "executiveInsight": "Insight Ejecutivo Conductual",
     "strategicLayerBadge": "CAPA ESTRATÉGICA",
     "strategicLayerTitle": "Capa de Inteligencia Estratégica",
@@ -17,7 +16,6 @@
     "topic": "Tema",
     "sentimentDescription": "Distribución de la percepción de los empleados sobre la integración de IA.",
     "topicDescription": "Frecuencia ordenada de los temas conversacionales predominantes detectados por NLP.",
-    "psychologicalDescription": "Este índice estima el riesgo conductual relacionado con dependencia a la IA, pérdida de autonomía y reducción del pensamiento crítico.",
     "loading": "Cargando datos...",
     "errorLoading": "Error al cargar los insights NLP",
     "noData": "No hay datos disponibles",
@@ -26,15 +24,15 @@
     "noNpiData": "No hay datos de distribución del NPI disponibles.",
     "executiveUnavailable": "El resumen ejecutivo no está disponible.",
     "strategicKpis": {
-      "highPsychRisk": "Riesgo Psicológico Alto",
-      "highPsychRiskCaption": "Porcentaje de colaboradores marcados como alto riesgo de dependencia",
       "neutralSentiment": "Sentimiento Neutral",
       "neutralSentimentCaption": "Parte de la fuerza laboral con tono neutral",
-      "avgNpiScore": "Promedio NPI",
-      "avgNpiScoreCaption": "Media del índice psicológico (escala 0-1)",
       "topRiskTopic": "Tema de Mayor Riesgo",
       "topRiskTopicCaption": "Tema que concentra el mayor peso de riesgo",
-      "noTopic": "Sin tema dominante"
+      "noTopic": "Sin tema dominante",
+      "highAiAutonomyDependencyRisk": "Riesgo Alto de Autonomía/Dependencia IA",
+      "highAiAutonomyDependencyRiskCaption": "Porcentaje de colaboradores marcados como alto riesgo de dependencia",
+      "avgAiAutonomyDependencyScore": "Promedio NPI",
+      "avgAiAutonomyDependencyScoreCaption": "Media del índice de autonomía/dependencia IA (escala 0-1)"
     },
     "mlCorrelation": {
       "title": "Alineación ML ↔ NLP",
@@ -64,9 +62,11 @@
     },
     "strategicInsight": {
       "title": "Insight Estratégico",
-      "body": "Las señales psicológicas de alto riesgo representan {{risk}} de las respuestas. Enfoca intervenciones en {{topic}} mientras atiendes el solapamiento ML de abandono {{overlap}} y estabilizas el promedio NPI ({{npi}}).",
+      "body": "Las señales de alto riesgo de autonomía/dependencia IA representan {{risk}} de las respuestas. Enfoca intervenciones en {{topic}} mientras atiendes el solapamiento ML de abandono {{overlap}} y estabilizas el promedio NPI ({{npi}}).",
       "default": "El resumen estratégico no está disponible."
-    }
+    },
+    "aiAutonomyDependencyIndex": "Índice de Autonomía y Dependencia IA",
+    "aiAutonomyDependencyDescription": "Este índice estima el riesgo conductual relacionado con dependencia a la IA, pérdida de autonomía profesional y reducción del pensamiento crítico."
   },
   "sentiment": {
     "positive": "Positivo",
@@ -75,7 +75,8 @@
   },
   "risk": {
     "high": "Alto",
-    "medium": "Medio",
+    "moderate": "Riesgo Moderado",
+    "medium": "Riesgo Moderado",
     "low": "Bajo"
   },
   "sidebar": {
@@ -93,15 +94,14 @@
     "title": "Panel de Análisis Ejecutivo",
     "analyticsTitle": "Análisis de Comportamiento y Adopción",
     "loading": "Cargando datos de análisis...",
-    "loadError": "Error al cargar los datos de análisis. Por favor, inténtalo de nuevo.",
+    "loadError": "Error al cargar los datos de análisis",
     "uploadTitle": "Subir Encuesta de Formación",
     "uploadDescription": "Importar datos de evaluación de formación de empleados",
     "dragDrop": "Arrastra y suelta archivo CSV o haz clic para seleccionar",
     "uploading": "Subiendo...",
     "uploadSuccess": "Encuesta subida exitosamente",
     "uploadError": "Error al subir encuesta",
-    "refreshData": "↻ Actualizar Datos",
-    "loadError": "Error al cargar los datos de análisis"
+    "refreshData": "↻ Actualizar Datos"
   },
   "executive": {
     "snapshot": "Resumen Ejecutivo",
@@ -115,7 +115,7 @@
     "dependencyRiskDesc": "empleados en rango de riesgo manejable",
     "summaryTitle": "Resumen del Impacto Ejecutivo",
     "summaryParagraph1": "La formación integrada con IA muestra una adopción moderada en toda la organización, con el 46% de los empleados usando herramientas de IA frecuentemente o muy frecuentemente. El uso ocasional o infrecuente representa el resto de la plantilla, indicando una oportunidad clara de escalar la adopción.",
-    "summaryParagraph2": "Los niveles de motivación se mantienen estables en 3,95/5, sosteniendo el interés de los empleados en el aprendizaje asistido por IA. El riesgo de dependencia es manejable: un 5% de empleados se clasifica como alto riesgo y un 64% en riesgo medio.",
+    "summaryParagraph2": "Los niveles de motivación se mantienen estables en 3,95/5, sosteniendo el interés de los empleados en el aprendizaje asistido por IA. El riesgo de dependencia es manejable: un 5% de empleados se clasifica como alto riesgo y un 64% en riesgo moderado.",
     "summaryParagraph3": "Recomendación: Continuar la inversión en infraestructura de formación con IA mientras se implementan actividades de mitigación de riesgos enfocadas en el desarrollo de autoeficacia de los empleados.",
     "status": "Estado",
     "lastUpdated": "Última Actualización"
@@ -135,7 +135,7 @@
     "primaryTool": "Herramienta de IA Principal",
     "departmentCount": "Departamentos",
     "highRisk": "Riesgo Alto",
-    "mediumRisk": "Riesgo Medio",
+    "mediumRisk": "Riesgo Moderado",
     "lowRisk": "Riesgo Bajo",
     "riskDistributionNote": "Empleados por nivel de riesgo de dependencia. Mayor valor indica mayor dependencia de herramientas de IA.",
     "frequencyDistributes": "Distribución de Frecuencia de Uso de IA",
@@ -243,7 +243,7 @@
     "dependencyRiskDistribution": "Distribución del Riesgo de Dependencia",
     "riskDistribution": "Distribución del Riesgo de Dependencia",
     "riskExplanation": "Evaluación de la dependencia excesiva de herramientas de IA vs. capacidad independiente. Empleados categorizados por nivel de dependencia.",
-    "riskInsight1": "• 64% en categoría de riesgo medio (manejable)",
+    "riskInsight1": "• 64% en categoría de riesgo moderado (manejable)",
     "riskInsight2": "• 5% riesgo alto requiere intervención directa"
   },
   "usageFrequency": {
