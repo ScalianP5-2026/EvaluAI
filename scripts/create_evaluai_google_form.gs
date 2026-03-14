@@ -360,23 +360,23 @@ function addLikertSection_(form) {
 function addOpenSection_(form) {
   form.addSectionHeaderItem().setTitle("Feedback cualitativo");
 
-  form
-    .addParagraphTextItem()
-    .setTitle(Q.open_experience_ai_learning)
+  addOpenTextItem_(form, Q.open_experience_ai_learning, true);
+  addOpenTextItem_(form, Q.open_challenges_ai_usage, true);
+  addOpenTextItem_(form, Q.open_training_needs, false);
+}
+
+function addOpenTextItem_(form, title, required) {
+  const validation = FormApp.createTextValidation()
+    .requireTextLengthLessThanOrEqualTo(OPEN_TEXT_MAX_LENGTH)
     .setHelpText(`Maximo ${OPEN_TEXT_MAX_LENGTH} caracteres`)
-    .setRequired(true);
+    .build();
 
   form
     .addParagraphTextItem()
-    .setTitle(Q.open_challenges_ai_usage)
+    .setTitle(title)
     .setHelpText(`Maximo ${OPEN_TEXT_MAX_LENGTH} caracteres`)
-    .setRequired(true);
-
-  form
-    .addParagraphTextItem()
-    .setTitle(Q.open_training_needs)
-    .setHelpText(`Maximo ${OPEN_TEXT_MAX_LENGTH} caracteres`)
-    .setRequired(false);
+    .setValidation(validation)
+    .setRequired(required);
 }
 
 function addNumericTextItem_(form, title, min, max) {
