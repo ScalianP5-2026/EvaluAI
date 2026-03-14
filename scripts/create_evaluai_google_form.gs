@@ -36,8 +36,9 @@ const CSV_COLUMNS = [
   "p8_preparado_aplicar_conocimientos",
   "p9_confio_uso_ia_aprendizaje",
   "p10_ia_util_desarrollo_profesional",
-  "comentarios_experiencia_ia",
-  "sugerencias_mejora",
+  "open_experience_ai_learning",
+  "open_challenges_ai_usage",
+  "open_training_needs",
 ];
 
 const EXPORT_FOLDER_NAME = "EvaluAI_exports";
@@ -75,8 +76,8 @@ const Q = {
   p9_confio_uso_ia_aprendizaje: "P9. Confio en el uso de IA para aprender",
   p10_ia_util_desarrollo_profesional:
     "P10. La IA es util para mi desarrollo profesional",
-  comentarios_experiencia_ia: "Comentarios sobre tu experiencia con IA",
-  sugerencias_mejora: "Sugerencias de mejora",
+  open_experience_ai_learning: "Comentarios sobre tu experiencia con IA",
+  open_training_needs: "Sugerencias de mejora",
 };
 
 /**
@@ -167,6 +168,8 @@ function buildCsvRow_(formResponse) {
     Session.getScriptTimeZone(),
     "yyyy-MM-dd HH:mm:ss"
   );
+  const openExperienceText = asText_(answers[Q.open_experience_ai_learning]);
+  const openTrainingNeedsText = asText_(answers[Q.open_training_needs]);
 
   return [
     asText_(answers[Q.empleado_id]),
@@ -195,8 +198,9 @@ function buildCsvRow_(formResponse) {
     asInt_(answers[Q.p8_preparado_aplicar_conocimientos]),
     asInt_(answers[Q.p9_confio_uso_ia_aprendizaje]),
     asInt_(answers[Q.p10_ia_util_desarrollo_profesional]),
-    asText_(answers[Q.comentarios_experiencia_ia]),
-    asText_(answers[Q.sugerencias_mejora]),
+    openExperienceText,
+    openExperienceText,
+    openTrainingNeedsText,
   ];
 }
 
@@ -346,12 +350,12 @@ function addOpenSection_(form) {
 
   form
     .addParagraphTextItem()
-    .setTitle(Q.comentarios_experiencia_ia)
+    .setTitle(Q.open_experience_ai_learning)
     .setRequired(true);
 
   form
     .addParagraphTextItem()
-    .setTitle(Q.sugerencias_mejora)
+    .setTitle(Q.open_training_needs)
     .setRequired(false);
 }
 

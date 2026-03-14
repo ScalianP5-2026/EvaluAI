@@ -70,8 +70,16 @@ class DataRepository:
             "indice_desarrollo_talento": "talent_development",
             "antiguedad_empresa": "experience_years",
             "indice_aceptacion_ia": "acceptance",
-            "comentarios_experiencia_ia": "comment",
-            "sugerencias_mejora": "last_goal",
+            "comentarios_experiencia_ia": "open_experience_ai_learning",
+            "sugerencias_mejora": "open_training_needs",
+            "comment": "open_experience_ai_learning",
+            "last_goal": "open_training_needs",
+            "open_experience": "open_experience_ai_learning",
+            "experience_ai": "open_experience_ai_learning",
+            "ai_learning_comment": "open_experience_ai_learning",
+            "open_challenge": "open_challenges_ai_usage",
+            "ai_challenges_comment": "open_challenges_ai_usage",
+            "training_comment": "open_training_needs",
             "sector": "role",
         }
 
@@ -118,6 +126,27 @@ class DataRepository:
             if column in normalized.columns:
                 continue
             normalized[column] = "" if column in {"ai_usage", "last_goal", "comment", "role"} else 0
+
+        official_open_text_columns = [
+            "open_experience_ai_learning",
+            "open_challenges_ai_usage",
+            "open_training_needs",
+        ]
+        for column in official_open_text_columns:
+            if column not in normalized.columns:
+                normalized[column] = ""
+            normalized[column] = normalized[column].fillna("").astype(str)
+
+        if (
+            "comment" not in normalized.columns
+            or normalized["comment"].fillna("").astype(str).str.strip().eq("").all()
+        ):
+            normalized["comment"] = normalized["open_experience_ai_learning"]
+        if (
+            "last_goal" not in normalized.columns
+            or normalized["last_goal"].fillna("").astype(str).str.strip().eq("").all()
+        ):
+            normalized["last_goal"] = normalized["open_training_needs"]
 
         normalized["role"] = normalized["role"].fillna("Unknown").astype(str)
         normalized["ai_usage"] = (

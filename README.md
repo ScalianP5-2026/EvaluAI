@@ -136,7 +136,7 @@ Dataset principal:
 
 Normalización interna (backend):
 
-- `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `comment`, `last_goal`
+- `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `open_experience_ai_learning`, `open_challenges_ai_usage`, `open_training_needs`
 - `ai_usage` normalizado a: `never`, `rarely`, `sometimes`, `frequently`, `always`
 
 **EN**
@@ -149,7 +149,7 @@ Main dataset:
 
 Internal backend normalization:
 
-- `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `comment`, `last_goal`
+- `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `open_experience_ai_learning`, `open_challenges_ai_usage`, `open_training_needs`
 - `ai_usage` normalized to: `never`, `rarely`, `sometimes`, `frequently`, `always`
 
 ## 6) API / Endpoints
