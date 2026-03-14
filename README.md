@@ -262,10 +262,10 @@ uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## 11) Collaborators / Colaboradores
 
-- Kirutasu Sánchez Serrano — https://github.com/Kirutasu
-- Ignacio Castillo Franco — https://github.com/IgnacioCastilloFranco
-- Bunty Nanwani Nanwani — https://github.com/buntynanwani
-- Alfonso Bermúdez Torres — https://github.com/GHalfbbt
+- Kirutasu Sánchez Serrano — @Kirutasu
+- Ignacio Castillo Franco — @IgnacioCastilloFranco
+- Bunty Nanwani Nanwani — @buntynanwani
+- Alfonso Bermúdez Torres — @GHalfbbt
 
 3. React (optional / opcional):
 
