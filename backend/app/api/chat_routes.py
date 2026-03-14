@@ -175,7 +175,6 @@ async def chat_query(
         
         programas = dm.get_relevant_programs(
             tecnologias=tecnologias,
-            nivel=employee_ctx.get("education_level"),
             limit=3
         )
         rag_ctx["relevant_programs"] = programas
