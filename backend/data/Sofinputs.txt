@@ -1,4 +1,4 @@
-El cuestionario definitivo tiene 24 ítems psicológicos organizados en 6 escalas (Aceptación, Autoeficacia, Motivación, Experiencia, Desarrollo y Dependencia), pero el dataset inicial incluía menos ítems y algunos índices ya calculados.
+El cuestionario definitivo tiene 24 ítems de evaluación organizados en 6 escalas (Aceptación, Autoeficacia, Motivación, Experiencia, Desarrollo y Dependencia), pero el dataset inicial incluía menos ítems y algunos índices ya calculados.
 Para que el análisis sea correcto, necesitamos:
 Incluir los 24 ítems individuales (escala 1–7)
 Mantener las variables de uso de IA (1–5)
@@ -7,7 +7,7 @@ Calcular los índices automáticamente a partir de los ítems
 En la escala de Dependencia hay dos preguntas que deben invertirse (8 – respuesta original) antes de calcular la media.
 Adjunto un Excel con datos ficticios de 100 personas que refleja exactamente la estructura definitiva que utilizaré. Puede servir como referencia para el desarrollo técnico.
 1 ESTRUCTURA DEL INSTRUMENTO Y CÁLCULO DE ÍNDICES
-El instrumento consta de 24 ítems psicológicos distribuidos en 6 escalas:
+El instrumento consta de 24 ítems distribuidos en 6 escalas:
  Aceptación Tecnológica
 Ítems: AT1–AT4
 Cálculo: media de los 4 ítems
@@ -33,7 +33,7 @@ Cálculo final:
 Media (C1 + C2 + C3 invertido + C4 invertido)
 Una puntuación alta indica mayor dependencia tecnológica.
 2 ÍNDICES GLOBALES
- Índice Impacto Psicológico IA
+ Índice de Autonomía y Dependencia IA
 Media de:
 Aceptación
 Autoeficacia
@@ -55,7 +55,7 @@ No contener índices precalculados
 Permitir que los índices se generen automáticamente en backend
 Adjunto un Excel con un dataset ficticio de 100 participantes que refleja exactamente la estructura definitiva que utilizaremos. Este archivo puede utilizarse como referencia para modelado y pruebas técnicas.
 4 ESCALAS Y CODIFICACIÓN
-Escala Likert principal (ítems psicológicos):
+Escala Likert principal (ítems):
 1 = Totalmente en desacuerdo
 7 = Totalmente de acuerdo
 Frecuencia de uso IA (1–5):

@@ -94,7 +94,7 @@ export default function ExportSection({ data }) {
       (acc.very_high ?? 0);
     const acceptanceRate =
       total > 0
-        ? Math.round(((acc.high ?? 0) + (acc.very_high ?? 0)) / total * 100)
+        ? Math.round((((acc.high ?? 0) + (acc.very_high ?? 0)) / total) * 100)
         : 0;
     return {
       acceptanceRate,
@@ -188,7 +188,11 @@ export default function ExportSection({ data }) {
         doc.rect(0, PH - 14, PW, 14, "F");
         doc.setTextColor(100, 116, 139);
         doc.setFontSize(8);
-        doc.text(`${t("export.page")} ${pageNum} / ${totalPages}`, margin, PH - 6);
+        doc.text(
+          `${t("export.page")} ${pageNum} / ${totalPages}`,
+          margin,
+          PH - 6,
+        );
         doc.text(
           "EvaluAI \u2013 SCALIAN Intelligence 2026",
           PW - margin,
@@ -260,10 +264,16 @@ export default function ExportSection({ data }) {
       doc.setFont(undefined, "normal");
       doc.setFontSize(9);
       doc.setTextColor(51, 65, 85);
-      const p1 = doc.splitTextToSize(t("executive.summaryParagraph1"), contentW);
+      const p1 = doc.splitTextToSize(
+        t("executive.summaryParagraph1"),
+        contentW,
+      );
       doc.text(p1, margin, y);
       y += p1.length * 4.5 + 4;
-      const p2 = doc.splitTextToSize(t("executive.summaryParagraph2"), contentW);
+      const p2 = doc.splitTextToSize(
+        t("executive.summaryParagraph2"),
+        contentW,
+      );
       doc.text(p2, margin, y);
 
       // ── Page 3: Charts ──
@@ -305,7 +315,12 @@ export default function ExportSection({ data }) {
       alert(t("export.error"));
     } finally {
       setExporting(null);
-      if (_successFile) setModalState({ filename: _successFile, format: "pdf", blob: _pdfBlobRef });
+      if (_successFile)
+        setModalState({
+          filename: _successFile,
+          format: "pdf",
+          blob: _pdfBlobRef,
+        });
     }
   };
 
@@ -383,7 +398,11 @@ export default function ExportSection({ data }) {
       };
       ws1.addRow([]);
 
-      ws1.addRow([t("export.kpiMetric"), t("export.kpiValue"), t("export.kpiStatus")]);
+      ws1.addRow([
+        t("export.kpiMetric"),
+        t("export.kpiValue"),
+        t("export.kpiStatus"),
+      ]);
       styleHeader(ws1, 4, 3);
 
       kpiRows().forEach((row, i) => {
@@ -433,7 +452,12 @@ export default function ExportSection({ data }) {
 
       // ── Sheet 2: Correlation Analysis ──
       const ws2 = workbook.addWorksheet(t("export.correlationTable"));
-      ws2.columns = [{ width: 36 }, { width: 14 }, { width: 14 }, { width: 22 }];
+      ws2.columns = [
+        { width: 36 },
+        { width: 14 },
+        { width: 14 },
+        { width: 22 },
+      ];
 
       ws2.addRow([t("export.correlationTable")]);
       ws2.getRow(1).getCell(1).font = {
@@ -444,14 +468,34 @@ export default function ExportSection({ data }) {
       };
       ws2.addRow([]);
 
-      ws2.addRow([t("correlation.metric1Label"), "r", "p-value", t("kpi.statusLabel")]);
+      ws2.addRow([
+        t("correlation.metric1Label"),
+        "r",
+        "p-value",
+        t("kpi.statusLabel"),
+      ]);
       styleHeader(ws2, 3, 4);
 
       const corrData = [
-        [t("executive.trainingAdoption"), "0.340", "0.085", t("kpi.statusMonitor")],
-        [t("executive.aiUsageIntensity"), "0.280", "0.142", t("kpi.statusMonitor")],
+        [
+          t("executive.trainingAdoption"),
+          "0.340",
+          "0.085",
+          t("kpi.statusMonitor"),
+        ],
+        [
+          t("executive.aiUsageIntensity"),
+          "0.280",
+          "0.142",
+          t("kpi.statusMonitor"),
+        ],
         [t("executive.employeeMotivation"), "-0.070", "0.518", t("kpi.weak")],
-        [t("executive.dependencyRiskLevel"), "0.150", "0.301", t("kpi.statusMonitor")],
+        [
+          t("executive.dependencyRiskLevel"),
+          "0.150",
+          "0.301",
+          t("kpi.statusMonitor"),
+        ],
         ["AI-Self-Efficacy", "0.420", "0.028", t("kpi.statusHealthy")],
       ];
       corrData.forEach((row, i) => {
@@ -514,13 +558,17 @@ export default function ExportSection({ data }) {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       _successFile = _xlsxFile;
-      _xlsxBlobRef = xlsxBlob;
     } catch (error) {
       console.error("Excel export error:", error);
       alert(t("export.error"));
     } finally {
       setExporting(null);
-      if (_successFile) setModalState({ filename: _successFile, format: "excel", blob: _xlsxBlobRef });
+      if (_successFile)
+        setModalState({
+          filename: _successFile,
+          format: "excel",
+          blob: _xlsxBlobRef,
+        });
     }
   };
 
@@ -653,7 +701,10 @@ export default function ExportSection({ data }) {
                 heading: HeadingLevel.HEADING_1,
                 spacing: { after: 200 },
                 children: [
-                  new TextRun({ text: t("executive.summaryTitle"), bold: true }),
+                  new TextRun({
+                    text: t("executive.summaryTitle"),
+                    bold: true,
+                  }),
                 ],
               }),
               new Paragraph({
@@ -758,9 +809,7 @@ export default function ExportSection({ data }) {
                             new TableCell({
                               children: [
                                 new Paragraph({
-                                  children: [
-                                    new TextRun({ text, size: 20 }),
-                                  ],
+                                  children: [new TextRun({ text, size: 20 })],
                                 }),
                               ],
                             }),
@@ -797,7 +846,12 @@ export default function ExportSection({ data }) {
       alert(t("export.error"));
     } finally {
       setExporting(null);
-      if (_successFile) setModalState({ filename: _successFile, format: "word", blob: _docxBlobRef });
+      if (_successFile)
+        setModalState({
+          filename: _successFile,
+          format: "word",
+          blob: _docxBlobRef,
+        });
     }
   };
 
@@ -851,7 +905,7 @@ export default function ExportSection({ data }) {
       <ExportSuccessModal
         state={modalState}
         onClose={() => setModalState(null)}
-        />
+      />
     </div>
   );
 }
@@ -928,7 +982,11 @@ function ExportSuccessModal({ state, onClose }) {
                   strokeWidth={2.5}
                   stroke="currentColor"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.5 12.75l6 6 9-13.5"
+                  />
                 </svg>
               </div>
               <h3
@@ -943,8 +1001,18 @@ function ExportSuccessModal({ state, onClose }) {
               className="ml-4 flex-shrink-0 rounded-md p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
               aria-label="Close"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>

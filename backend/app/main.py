@@ -18,6 +18,11 @@ from app.database.seeds.mentores_seed import seed_mentores
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+try:
+    from backend.routes.nlp_routes import router as nlp_router
+except ImportError:
+    from routes.nlp_routes import router as nlp_router
+
 logger = logging.getLogger(__name__)
 
 # ═══════════════════════════════════════════════════════════════
@@ -111,6 +116,7 @@ def create_app() -> FastAPI:
     app.include_router(kpi_routes.router)
     app.include_router(surveys_routes.router)
     app.include_router(ml_routes.router)
+    app.include_router(nlp_router)
     
     # ━━━━━━━━━━━━━━━━━ Health Check Endpoints ━━━━━━━━━━━━━━━━━
     @app.get("/api/v1/health", tags=["health"])
@@ -145,6 +151,9 @@ def create_app() -> FastAPI:
                 "history": "/api/v1/chat/history",
                 "kpi": "/api/v1/kpi/summary",
                 "upload": "/api/v1/upload/surveys",
+                "nlp_summary": "/api/nlp/summary",
+                "nlp_executive": "/api/nlp/executive",
+                "nlp_employee": "/api/nlp/employee/{employee_id}",
                 "health": "/api/v1/health"
             }
         }
