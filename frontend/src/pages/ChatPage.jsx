@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ChatBox from "../components/Chatbox";
 import { chatAPI } from "../services/api";
@@ -6,7 +6,14 @@ import { chatAPI } from "../services/api";
 export default function ChatPage() {
   const { t } = useTranslation();
   const [userId] = useState("1XVWCBPH");
-  const [history, setHistory] = useState([]);
+  const initialHistory = [
+    {
+      role: "assistant",
+      content: t("chat.welcomeMessage"),
+      timestamp: new Date().toISOString(),
+    },
+  ];
+  const [history, setHistory] = useState(initialHistory);
   const [loading, setLoading] = useState(false);
   const [sendError, setSendError] = useState(null);
 
@@ -17,7 +24,14 @@ export default function ChatPage() {
   const loadHistory = async () => {
     try {
       const data = await chatAPI.getHistory(userId);
-      setHistory(data.conversation_history || []);
+      const conversationHistory = data && Array.isArray(data.conversation_history)
+        ? data.conversation_history
+        : null;
+      if (conversationHistory && conversationHistory.length > 0) {
+        setHistory(conversationHistory);
+      } else {
+        setHistory(initialHistory);
+      }
     } catch (error) {
       console.error("Failed to load history:", error);
     }
