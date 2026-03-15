@@ -125,18 +125,27 @@ async def chat_query(
             limit=3
         )
         
+        # 1. Obtenemos los datos puros
+        similar_prof_data = dm.get_similar_profiles(
+            department=employee_ctx.get("department", "Unknown"),
+            ai_usage_frequency=employee_ctx.get("ai_usage_frequency", 3),
+            education_level=employee_ctx.get("education_level", "Unknown")
+        )
+        dept_insights_raw = dm.get_department_insights(
+            department=employee_ctx.get("department", "Unknown")
+        )
+        
+        # 2. Aplanamos (Flatten) el diccionario de insights a un String legible para la IA
+        dept_insights_text = "; ".join(f"{k}: {v}" for k, v in dept_insights_raw.items()) if dept_insights_raw else "N/A"
+        
+        # 3. Construimos el RAG context EXACTO que espera el PromptBuilder
         rag_ctx = {
-            "similar_profiles": dm.get_similar_profiles(
-                department=employee_ctx.get("department", "Unknown"),
-                ai_usage_frequency=employee_ctx.get("ai_usage_frequency", 3),
-                education_level=employee_ctx.get("education_level", "Unknown")
-            ),
-            "dept_insights": dm.get_department_insights(
-                department=employee_ctx.get("department", "Unknown")
-            ),
+            "similar_profiles_summary": similar_prof_data.get("summary", "N/A"),
+            "department_insights": dept_insights_text,
             "top_courses": top_courses,
-            "avg_improvement": 24 # Placeholder
-        }   
+            "avg_improvement": similar_prof_data.get("avg_improvement", 24),
+            "risk_flags": [] # Lo inicializamos para que el LLM no falle al buscarlo
+        }
         
         logger.info(f"RAG context loaded: {len(rag_ctx.get('top_courses', []))} courses")
 
@@ -175,6 +184,10 @@ async def chat_query(
         
         programas = dm.get_relevant_programs(
             tecnologias=tecnologias,
+<<<<<<< HEAD
+=======
+            nivel=None, # FIX: Evitamos cruzar nivel académico con dificultad de curso
+>>>>>>> 520fb0d (fix(chatbot): harmonize RAG context keys and fix strict academic level filtering)
             limit=3
         )
         rag_ctx["relevant_programs"] = programas
