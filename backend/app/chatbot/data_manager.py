@@ -255,59 +255,36 @@ class DataManager:
             logger.error(f"Error loading courses by skills: {e}")
             return []
     
-    def get_mentor_recommendations(
-        self, especialidades: List[str], limit: int = 2
-    ) -> List[Dict]:
+    def get_mentor_recommendations(self, especialidades: list[str], limit: int = 2) -> list[dict]:
         """
-        Obtitne mentores recomendados basado en especialidades.
-        
-        Args:
-            especialidades: Lista de especialidades requeridas (ej: ["Python", "ML"])
-            limit: Número máximo de mentores a retornar
-        
-        Returns:
-            [
-                {
-                    "mentor_id": "M001",
-                    "nombre": "Carlos", 
-                    "especialidades": ["Python", "ML"],
-                    "competencia_level": 4,
-                    "disponibilidad": 3
-                },
-                ...
-            ]
+        Obtiene recomendaciones de mentores basados en especialidades de cursos.
+        Filtra, ordena y limita directamente en Supabase para mayor rendimiento.
         """
         try:
-            # Fetch ALL mentores primero
-            response = self.db.table("mentores").select(
-                "mentor_id, nombre, especialidades, competencia_level, disponibilidad"
-            ).gt("disponibilidad", 0).execute()
+            if not especialidades:
+                logger.info("No specialties provided for mentor recommendations")
+                return []
+                
+            # Delegamos carga a Supabase: Overlap (&& en SQL), Sort y Limit
+            response = (
+                self.db.table("mentores")
+                .select("mentor_id, nombre, especialidades, competencia_level, disponibilidad")
+                .gt("disponibilidad", 0)
+                .overlaps("especialidades", especialidades)
+                .order("competencia_level", desc=True)
+                .limit(limit)
+                .execute()
+            )
             
             mentores_data = response.data if response.data else []
             
             if not mentores_data:
-                logger.info("No mentores found in database")
+                logger.info(f"No mentores found in database for specialties: {especialidades}")
                 return []
+                
+            logger.info(f"Found {len(mentores_data)} mentores matching specialties: {especialidades}")
+            return mentores_data
             
-            # filtrar mentores que tengan match con especialidades requeridas
-            matching_mentores = []
-            for mentor in mentores_data:
-                mentor_specs = mentor.get("especialidades", [])
-                # Verificar si hay overlap entre especialidades del mentor y las requeridas
-                if any(spec in mentor_specs for spec in especialidades):
-                    matching_mentores.append(mentor)
-                    
-            # Retornar top N por competencia_level (descendiente)
-            sorted_mentores = sorted(
-                matching_mentores,
-                key=lambda x: x.get("competencia_level", 0),
-                reverse = True
-            )
-            
-            result = sorted_mentores[:limit]
-            logger.info(f"Found {len(result)} mentores matching specialties: {especialidades}")
-            return result
-        
         except Exception as e:
             logger.error(f"Error loading mentor recommendations: {e}")
             return []
