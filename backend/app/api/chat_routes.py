@@ -184,10 +184,7 @@ async def chat_query(
         
         programas = dm.get_relevant_programs(
             tecnologias=tecnologias,
-<<<<<<< HEAD
-=======
             nivel=None, # FIX: Evitamos cruzar nivel académico con dificultad de curso
->>>>>>> 520fb0d (fix(chatbot): harmonize RAG context keys and fix strict academic level filtering)
             limit=3
         )
         rag_ctx["relevant_programs"] = programas
