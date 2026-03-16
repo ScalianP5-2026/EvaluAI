@@ -14,10 +14,64 @@ const apiClient = axios.create({
   },
 });
 
+// ═══════════════════════════════════════════════════════════════
+// Auth Interceptor - Auto-attach JWT token
+// ═══════════════════════════════════════════════════════════════
+
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("evaluai_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Error handler
 const handleError = (error, context) => {
   console.error(`${context} Error:`, error);
   throw error;
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Auth API
+// ═══════════════════════════════════════════════════════════════
+
+export const authAPI = {
+  login: async (email, password) => {
+    try {
+      const response = await apiClient.post("/auth/login", {
+        email,
+        password: password || "",
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, "Auth Login");
+    }
+  },
+
+  setPassword: async (email, password, passwordConfirm) => {
+    try {
+      const response = await apiClient.post("/auth/set-password", {
+        email,
+        password,
+        password_confirm: passwordConfirm,
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, "Auth Set Password");
+    }
+  },
+
+  getMe: async (token) => {
+    try {
+      const response = await apiClient.get("/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, "Auth Me");
+    }
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════

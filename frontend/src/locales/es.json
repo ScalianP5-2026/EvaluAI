@@ -241,5 +241,29 @@
     "topDept": "Departamento líder en motivación: {{dept}} ({{val}}/5).",
     "riskAlert": "{{pct}}% de empleados muestran dependencia alta de IA. Se recomienda coaching estructurado.",
     "riskOk": "El riesgo de dependencia de IA es manejable ({{pct}}% riesgo alto). Autonomía equilibrada."
+  },
+  "auth": {
+    "title": "Bienvenido a EvaluAI",
+    "subtitle": "Evaluación de Formación con IA",
+    "createPasswordSubtitle": "Crea Tu Contraseña",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "newPassword": "Nueva contraseña",
+    "newPasswordPlaceholder": "Mín. 6 caracteres",
+    "confirmPassword": "Confirmar contraseña",
+    "confirmPasswordPlaceholder": "Repite tu contraseña",
+    "login": "Iniciar Sesión",
+    "loggingIn": "Iniciando sesión...",
+    "logout": "Cerrar Sesión",
+    "setPasswordButton": "Crear Contraseña e Iniciar Sesión",
+    "settingPassword": "Creando contraseña...",
+    "invalidCredentials": "Correo o contraseña inválidos",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden",
+    "errorSettingPassword": "Error al crear la contraseña. Inténtalo de nuevo.",
+    "sessionExpired": "Sesión expirada. Inicia sesión de nuevo.",
+    "loggedInAs": "Conectado como",
+    "firstTimeMessage": "Es tu primer inicio de sesión. Por favor, crea una contraseña para tu cuenta.",
+    "backToLogin": "Volver al inicio de sesión"
   }
 }
