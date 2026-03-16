@@ -19,7 +19,7 @@ import CustomTooltip from "../ui/CustomTooltip";
 
 export default function MotivationChart({ data }) {
   const { isDark } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   if (!data?.motivation_by_usage) {
     return (
@@ -29,17 +29,15 @@ export default function MotivationChart({ data }) {
     );
   }
 
-  const chartData = Object.entries(data.motivation_by_usage).map(
-    ([key, value]) => ({
-      name: key
-        .replace(/_/g, " ")
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" "),
+  const chartData = Object.entries(data.motivation_by_usage)
+    .sort(([leftKey], [rightKey]) =>
+      leftKey.localeCompare(rightKey, undefined, { numeric: true }),
+    )
+    .map(([key, value]) => ({
+      usageKey: key,
       motivation: value.avg_motivation || 0,
       count: value.count || 0,
-    }),
-  );
+    }));
 
   const textColor = isDark ? "#d1d5db" : "#6b7280";
   const gridColor = isDark ? "#374151" : "#e5e7eb";
@@ -47,14 +45,20 @@ export default function MotivationChart({ data }) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart
+        key={i18n.language}
         data={chartData}
         margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-        <XAxis dataKey="name" style={{ fontSize: "12px", color: textColor }} />
+        <XAxis
+          dataKey="usageKey"
+          tickFormatter={(value) => t(`usageFrequency.${value}`)}
+          style={{ fontSize: "12px", color: textColor }}
+        />
         <YAxis style={{ fontSize: "12px", color: textColor }} domain={[0, 5]} />
         <Tooltip
           content={<CustomTooltip isDark={isDark} />}
+          labelFormatter={(value) => t(`usageFrequency.${value}`)}
           formatter={(value) => value.toFixed(2)}
         />
         <Legend />

@@ -1,0 +1,57 @@
+id_mentor,nombre,especialidades,competencia_level,disponibilidad
+JAA,JAA,Advanced Analytics,3,5
+MRD,MRD,Snowflake,4,4
+DPS,DPS,13er Programa,2,3
+JJO,JJO,13er Programa|C++|SQL|IA|Estadística|Accesibilidad Web,5,5
+ÁÁZ,ÁÁZ,Agile,3,4
+AAS,AAS,Agile,3,4
+MDO,MDO,Agile|Scrum,4,5
+ÁEO,ÁEO,Airflow,3,4
+MRO,MRO,Angular,3,4
+DGO,DGO,Big Data|Docker|Kubernetes|DevOps,5,5
+DAO,DAO,Azure|Databricks,4,4
+PRO,PRO,Big Data,3,3
+SHO,SHO,C++,3,4
+COZ,COZ,Cloud,4,5
+ASS,ASS,Comunicación|Python,3,4
+ACO,ACO,Data|Kubernetes|Docker|OpenShift|IA,5,5
+ÁSZ,ÁSZ,Databricks,4,4
+SPO,SPO,Databricks,4,4
+CPE,CPE,Desarrollo,3,4
+IGA,IGA,Flink|Kafka Streams|Oratoria,4,5
+CDO,CDO,Frontend|UX/UI|Javascript|React|Java|Angular,5,5
+VNV,VNV,Full Stack|Java|MongoDB|NoSQL,4,5
+AOA,AOA,Fullstack,4,4
+ÓCO,ÓCO,Grafana|Prometheus|Linux|Grafos|NoSQL|Rust,5,5
+CAS,CAS,IA,4,5
+JAS,JAS,IA,4,5
+BME,BME,IA|Databricks,4,5
+YES,YES,IA|NLP,4,5
+JHZ,JHZ,Sostenibilidad Ambiental,2,3
+JGZ,JGZ,Java Backend|Excel Avanzado,3,4
+AAZ,AAZ,Java Backend|Spring Boot|Git,4,5
+LAS,LAS,Kafka|Python|Scala|Flink,4,5
+JMZ,JMZ,Microstrategy,3,4
+IMS,IMS,Microstrategy,3,4
+BFA,BFA,MongoDB|Fullstack,4,4
+RJZ,RJZ,Neo4j|Ogma,3,4
+MÁZ,MÁZ,Power BI,3,4
+AAA,AAA,Power BI|Visual Analytics,4,4
+AIS,AIS,QA,3,4
+MBT,MBT,QA,3,4
+DCS,DCS,QT C++|CUDA|Python|IA,5,5
+CTO,CTO,Scrum|PMP,4,5
+RPZ,RPZ,Snowflake,4,4
+EMR,EMR,Soft Skills,3,4
+AGN,AGN,Soft Skills|Comunicación|Logística|Cadenas de Suministro,4,5
+BMA,BMA,Spark,3,4
+SAO,SAO,SQL,3,4
+CAR,CAR,SQL,3,4
+JSA,JSA,SQL,3,4
+ÁSA,ÁSA,SQL DevOps,4,4
+EAN,EAN,Supra,3,4
+JMA,JMA,Supra|Scala,4,4
+SPA,SPA,Supra|Scala,4,4
+JCN,JCN,Computer Vision,4,5
+CEI,CEI,Generative AI,5,5
+MLS,MLS,Generative AI,5,5

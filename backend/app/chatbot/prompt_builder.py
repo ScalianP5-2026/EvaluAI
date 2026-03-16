@@ -6,7 +6,7 @@ The goal is to force deterministic, parseable JSON output from the LLM.
 """
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from . import settings
 
@@ -34,7 +34,11 @@ class PromptBuilder:
             "No markdown, no explanations, no preamble."
         )
 
-    def build_initial_prompt(self, user_context: Dict[str, Any]) -> str:
+    def build_initial_prompt(
+        self, 
+        user_context: Dict[str, Any],
+        ml_scores: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Build initial prompt before conversation history exists.
 
@@ -50,6 +54,19 @@ class PromptBuilder:
         Returns:
             Formatted prompt string ready for Gemini API.
         """
+        # Format ML scores
+        if ml_scores:
+            ml_context = f"""--- ML MODEL SIGNALS ---
+Recommendation Score: {ml_scores.get('recommendation_score', 0.0):.2f}
+Risk Score (lower is better): {ml_scores.get('risk_score', 0.0):.2f}
+Confidence: {ml_scores.get('confidence', 0.0):.2f}
+Model Available: {ml_scores.get('model_available', False)}
+"""
+        else:
+            ml_context = """--- ML MODEL SIGNALS ---
+Model not available yet (loading...)
+"""
+        
         prompt = f"""{self.system_role}
 
 --- EMPLOYEE CONTEXT ---
@@ -60,6 +77,7 @@ AI Usage Frequency: {user_context.get('ai_usage', 3)}/5
 Seniority: {user_context.get('seniority', 'Mid-level')}
 Education Level: {user_context.get('education_level', 'Bachelor')}
 
+{ml_context}
 --- INITIAL INSTRUCTION ---
 This is the beginning of a training consultation.
 Based on the employee profile, provide an initial assessment and recommendations.
@@ -107,6 +125,7 @@ CRITICAL RULES:
         user_context: Dict[str, Any],
         rag_context: Optional[Dict[str, Any]],
         history: List[Dict[str, str]],
+        ml_scores: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Build contextual prompt for subsequent conversation turns.
@@ -155,8 +174,28 @@ CRITICAL RULES:
                 content = turn.get("content", "")
                 conversation_block += f"{role}: {content}\n"
 
+        # Format ML scores
+        if ml_scores:
+            ml_context = f"""--- ML MODEL SIGNALS ---
+Recommendation Score: {ml_scores.get('recommendation_score', 0.0):.2f}
+Risk Score (lower is better): {ml_scores.get('risk_score', 0.0):.2f}
+Confidence: {ml_scores.get('confidence', 0.0):.2f}
+Model Available: {ml_scores.get('model_available', False)}
+"""
+        else:
+            ml_context = """--- ML MODEL SIGNALS ---
+Model not available yet
+"""
+        
+        # Format mentores and programas
+        mentores = rag_context.get("recommended_mentors", []) if rag_context else []
+        programas = rag_context.get("relevant_programs", []) if rag_context else []
+        
+        mentores_text = ", ".join([m.get("nombre", "Unknown") for m in mentores]) if mentores else "None available"
+        programas_text = ", ".join([p.get("title", "Unknown") for p in programas]) if programas else "None available"
+        
         prompt = f"""{self.system_role}
-
+        
 --- EMPLOYEE CONTEXT ---
 Department: {user_context.get('department', 'Unknown')}
 Motivation Level: {user_context.get('motivation', 5)}/7
@@ -165,12 +204,17 @@ AI Usage Frequency: {user_context.get('ai_usage', 3)}/5
 Seniority: {user_context.get('seniority', 'Mid-level')}
 Education Level: {user_context.get('education_level', 'Bachelor')}
 
+{ml_context}
 --- RAG ENRICHED CONTEXT (from SQL data) ---
 Similar Profiles Summary: {rag_context.get('similar_profiles_summary', 'N/A')}
 Department Insights: {rag_context.get('department_insights', 'N/A')}
 Average Improvement: {rag_context.get('avg_improvement', 0)}%
 Top Recommended Courses: {courses_text}
 Risk Flags: {', '.join(rag_context.get('risk_flags', [])) if rag_context.get('risk_flags') else 'None'}
+
+--- MENTORS & PROGRAMS ---
+Available Mentors: {mentores_text}
+Relevant Programs: {programas_text}
 
 {conversation_block}
 

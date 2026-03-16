@@ -254,4 +254,107 @@ class DataManager:
         except Exception as e:
             logger.error(f"Error loading courses by skills: {e}")
             return []
+    
+    def get_mentor_recommendations(self, especialidades: list[str], limit: int = 2) -> list[dict]:
+        """
+        Obtiene recomendaciones de mentores basados en especialidades de cursos.
+        Filtra, ordena y limita directamente en Supabase para mayor rendimiento.
+        """
+        try:
+            if not especialidades:
+                logger.info("No specialties provided for mentor recommendations")
+                return []
+                
+            # Delegamos carga a Supabase: Overlap (&& en SQL), Sort y Limit
+            response = (
+                self.db.table("mentores")
+                .select("mentor_id, nombre, especialidades, competencia_level, disponibilidad")
+                .gt("disponibilidad", 0)
+                .overlaps("especialidades", especialidades)
+                .order("competencia_level", desc=True)
+                .limit(limit)
+                .execute()
+            )
+            
+            mentores_data = response.data if response.data else []
+            
+            if not mentores_data:
+                logger.info(f"No mentores found in database for specialties: {especialidades}")
+                return []
+                
+            logger.info(f"Found {len(mentores_data)} mentores matching specialties: {especialidades}")
+            return mentores_data
+            
+        except Exception as e:
+            logger.error(f"Error loading mentor recommendations: {e}")
+            return []
         
+    def get_relevant_programs(
+        self,
+        tecnologias: List[str],
+        nivel: Optional[str] = None, 
+        limit: int = 3
+    ) -> List[Dict]:
+        """
+        Obtiene programas de formación relevantes.
+        
+        Args:
+            tecnologias: Lista de tecnologías (ej: ["Python", "AWS"])
+            nivel: Nivel optional (ej: "Intermedio", "Avanzado")
+            limit: Número máximo de programas
+            
+        Returns:
+            [
+                {
+                    "title": "Python Advanced",
+                    "department": "Tech",
+                    "skill_level": "Avanzado",
+                    "avg_autoeficacia_improvement": 1.5,
+                    "avg_completion_rate": 0.85
+                },
+                ...
+            ]
+        """
+        try:
+            # Fetch ALL cursos
+            query = self.db.table("courses").select(
+                "title, department, skill_level, avg_autoeficacia_improvement, avg_completion_rate"
+            )
+            
+            # Filtrar por nivel si se proporciona
+            if nivel:
+                query = query.eq("skill_level", nivel)
+                
+            response = query.order(
+                "avg_completion_rate", desc=True
+            ).limit(limit * 2).execute()    # Fetch más para filtrar despues
+            
+            courses = response.data if response.data else []
+            
+            if not courses:
+                logger.info(f"No programs found for technologies: {tecnologias}")
+                return []
+            
+            # Post-filter por tecnologías (simple: check title contains tech keywords)
+            matching_programs = []
+            for course in courses:
+                course_title = course.get("title", "").lower()
+                # Verificar si title contiene alguna tecnología
+                if any(tech.lower() in course_title for tech in tecnologias):
+                    matching_programs.append(course)
+                # Si no hay matches por título, igual incluir (no ser muy restrictivo)
+                elif len(matching_programs) < limit:
+                    matching_programs.append(course)
+                    
+            result = matching_programs[:limit]
+            logger.info(f"Found {len(result)} relevant programs for technologies: {tecnologias}")
+            return result
+        
+        except Exception as e:
+            logger.error(f"Error loading relevant programs: {e}")
+            return []
+            
+            
+            
+        
+            
