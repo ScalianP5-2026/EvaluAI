@@ -4,6 +4,7 @@ import AppLayout from "./components/AppLayout";
 import ChatPage from "./pages/ChatPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import NLPInsights from "./pages/NLPInsights";
 
 /**
  * Protected Route wrapper - redirects to /login if not authenticated.
@@ -66,6 +67,13 @@ function AppRoutes() {
         <ProtectedRoute>
           <AppLayout>
             <ChatPage />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/nlp" element={
+        <ProtectedRoute>
+          <AppLayout>
+            <NLPInsights />
           </AppLayout>
         </ProtectedRoute>
       } />

@@ -31,6 +31,7 @@ from app.services.kpi_engine import (
     calculate_dependency_risk_distribution,
     calculate_motivation_by_ai_usage,
 )
+from app.services.ml_client import get_ml_client
 from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
 
@@ -119,23 +120,76 @@ async def chat_query(
         # 2. LOAD RAG CONTEXT (SQL)
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
+        top_courses = dm.get_top_courses(
+            department=employee_ctx.get("department", "Unknown"),
+            limit=3
+        )
+        
+        # 1. Obtenemos los datos puros
+        similar_prof_data = dm.get_similar_profiles(
+            department=employee_ctx.get("department", "Unknown"),
+            ai_usage_frequency=employee_ctx.get("ai_usage_frequency", 3),
+            education_level=employee_ctx.get("education_level", "Unknown")
+        )
+        dept_insights_raw = dm.get_department_insights(
+            department=employee_ctx.get("department", "Unknown")
+        )
+        
+        # 2. Aplanamos (Flatten) el diccionario de insights a un String legible para la IA
+        dept_insights_text = "; ".join(f"{k}: {v}" for k, v in dept_insights_raw.items()) if dept_insights_raw else "N/A"
+        
+        # 3. Construimos el RAG context EXACTO que espera el PromptBuilder
         rag_ctx = {
-            "similar_profiles": dm.get_similar_profiles(
-                department=employee_ctx.get("department", "Unknown"),
-                ai_usage_frequency=employee_ctx.get("ai_usage_frequency", 3),
-                education_level=employee_ctx.get("education_level", "Unknown")
-            ),
-            "dept_insights": dm.get_department_insights(
-                department=employee_ctx.get("department", "Unknown")
-            ),
-            "top_courses": dm.get_top_courses(
-                department=employee_ctx.get("department", "Unknown"),
-                limit=3
-            ),
-            "avg_improvement": 24 # Placeholder
-        }   
+            "similar_profiles_summary": similar_prof_data.get("summary", "N/A"),
+            "department_insights": dept_insights_text,
+            "top_courses": top_courses,
+            "avg_improvement": similar_prof_data.get("avg_improvement", 24),
+            "risk_flags": [] # Lo inicializamos para que el LLM no falle al buscarlo
+        }
         
         logger.info(f"RAG context loaded: {len(rag_ctx.get('top_courses', []))} courses")
+
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 2.5 GET ML SCORES
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        ml_client = get_ml_client()
+        employee_profile = {
+            "motivation": employee_ctx.get("motivation", 5.0),
+            "autoeficacia": employee_ctx.get("self_efficacy", 5.0),
+            "ai_usage": employee_ctx.get("ai_usage_frequency", 3),
+            "edad": employee_ctx.get("age", 30),
+            "antiguedad": employee_ctx.get("years_in_company", 5)
+        }
+        ml_scores = ml_client.get_employee_scores(employee_profile)
+        rag_ctx["ml_scores"] = ml_scores
+        
+        logger.info(f"ML scores obtained: recommendation={ml_scores.get('recommendation_score')}, "
+                   f"risk={ml_scores.get('risk_score')}, confidence={ml_scores.get('confidence')}")
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 2.6 GET MENTOR RECOMMENDATIONS
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        # Extract tecnologías from top courses titles
+        tecnologias = [c.get("title", "").split()[0] for c in top_courses]  # Simple: first word
+        mentores = dm.get_mentor_recommendations(especialidades=tecnologias, limit=2)
+        rag_ctx["recommended_mentors"] = mentores
+        
+        logger.info(f"Found {len(mentores)} mentor recommendations")
+        
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 2.7 GET RELEVANT PROGRAMS
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        programas = dm.get_relevant_programs(
+            tecnologias=tecnologias,
+            nivel=None, # FIX: Evitamos cruzar nivel académico con dificultad de curso
+            limit=3
+        )
+        rag_ctx["relevant_programs"] = programas
+        
+        logger.info(f"Found {len(programas)} relevant programs")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # 3. INITIALIZE SESSION OBJECTS
@@ -149,12 +203,20 @@ async def chat_query(
         # 4. BUILD PROMPT (INITIAL)
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
-        prompt = pb.build_contextual_prompt(
-            user_message=request.message,
-            user_context=employee_ctx,
-            rag_context=rag_ctx,
-            history=memory.get_history()
-        )
+        # Use initial prompt if no history, contextual if history exists
+        if not memory.get_history():
+            prompt = pb.build_initial_prompt(
+                user_context=employee_ctx,
+                ml_scores=rag_ctx.get("ml_scores")
+            )
+        else:
+            prompt = pb.build_contextual_prompt(
+                user_message=request.message,
+                user_context=employee_ctx,
+                rag_context=rag_ctx,
+                history=memory.get_history(),
+                ml_scores=rag_ctx.get("ml_scores")
+            )
         
         logger.info("Prompt built, querying Gemini...")
         

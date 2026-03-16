@@ -4,6 +4,81 @@
     "chatbot": "Intelligent Chatbot",
     "nlp": "NLP Opinion Analyzer"
   },
+  "nlp": {
+    "title": "NLP Insights",
+    "subtitle": "Behavioral intelligence from sentiment, topics, and AI autonomy/dependency signals.",
+    "sentimentOverview": "Sentiment Overview",
+    "topicDistribution": "Topic Distribution",
+    "executiveInsight": "Executive Behavioral Insight",
+    "strategicLayerBadge": "STRATEGIC LAYER",
+    "strategicLayerTitle": "Strategic Intelligence Layer",
+    "strategicLayerSubtitle": "Cross-link NLP signals with ML risk models to brief leadership teams.",
+    "topic": "Topic",
+    "sentimentDescription": "Distribution of employee perception regarding AI integration.",
+    "topicDescription": "Ranked frequency of dominant conversational themes detected by NLP.",
+    "loading": "Loading data...",
+    "errorLoading": "Failed to load NLP insights",
+    "noData": "No data available",
+    "noSentimentData": "No sentiment data available.",
+    "noTopicData": "No topic data available.",
+    "noNpiData": "No NPI distribution data available.",
+    "executiveUnavailable": "Executive summary is not available.",
+    "strategicKpis": {
+      "neutralSentiment": "Neutral Sentiment Share",
+      "neutralSentimentCaption": "Portion of workforce reporting neutral tonality",
+      "topRiskTopic": "Top Risk Topic",
+      "topRiskTopicCaption": "Theme concentrating the highest risk weight",
+      "noTopic": "No dominant topic",
+      "highAiAutonomyDependencyRisk": "High AI Autonomy/Dependency Risk",
+      "highAiAutonomyDependencyRiskCaption": "Share of employees flagged as high dependency risk",
+      "avgAiAutonomyDependencyScore": "Avg NPI Score",
+      "avgAiAutonomyDependencyScoreCaption": "Mean AI autonomy/dependency index (0-1 scale)"
+    },
+    "mlCorrelation": {
+      "title": "ML ↔ NLP Alignment",
+      "subtitle": "Overlap of employees marked high dropout risk and high behavioral risk.",
+      "overlapLabel": "High dropout & high risk overlap"
+    },
+    "radar": {
+      "title": "Behavioral Signal Radar",
+      "description": "Scores normalized 0-1 across sentiment, autonomy, dependency, motivation, and risk.",
+      "sentiment": "Sentiment Positivity",
+      "autonomy": "Autonomy Signal",
+      "dependency": "Dependency Signal",
+      "motivation": "Motivation Proxy",
+      "risk": "Risk Level"
+    },
+    "topTopics": {
+      "title": "Critical Topic Signals",
+      "topic": "Topic",
+      "percent": "% Mentions",
+      "riskScore": "Avg Risk Score",
+      "riskLevel": "Risk Band",
+      "implication": "Implication",
+      "empty": "No dominant topics detected.",
+      "implicationHigh": "High dependency or autonomy erosion risk",
+      "implicationMedium": "Moderate behavioral impact",
+      "implicationLow": "Low strategic concern"
+    },
+    "strategicInsight": {
+      "title": "Strategic Insight",
+      "body": "High AI autonomy/dependency risk signals represent {{risk}} of responses. Focus interventions on {{topic}} while addressing ML dropout overlap of {{overlap}} and stabilizing the average NPI score ({{npi}}).",
+      "default": "Strategic summary is not available."
+    },
+    "aiAutonomyDependencyIndex": "AI Autonomy & Dependency Index",
+    "aiAutonomyDependencyDescription": "This index estimates behavioral risk related to AI dependency, reduced autonomy, and diminished critical thinking."
+  },
+  "sentiment": {
+    "positive": "Positive",
+    "neutral": "Neutral",
+    "negative": "Negative"
+  },
+  "risk": {
+    "high": "High",
+    "moderate": "Moderate Risk",
+    "medium": "Moderate Risk",
+    "low": "Low"
+  },
   "sidebar": {
     "subtitle": "Training Intelligence",
     "uploadCSV": "Upload CSV",
@@ -19,15 +94,14 @@
     "title": "Executive Analytics Dashboard",
     "analyticsTitle": "Behavioral & Adoption Analytics",
     "loading": "Loading analytics data...",
-    "loadError": "Failed to load analytics data. Please try again.",
+    "loadError": "Failed to load analytics data",
     "uploadTitle": "Upload Training Survey",
     "uploadDescription": "Import employee training assessment data",
     "dragDrop": "Drag & drop CSV file or click to select",
     "uploading": "Uploading...",
     "uploadSuccess": "Survey uploaded successfully",
     "uploadError": "Error uploading survey",
-    "refreshData": "↻ Refresh Data",
-    "loadError": "Failed to load analytics data"
+    "refreshData": "↻ Refresh Data"
   },
   "executive": {
     "snapshot": "Executive Snapshot",
@@ -41,7 +115,7 @@
     "dependencyRiskDesc": "employees in manageable risk range",
     "summaryTitle": "Executive Impact Summary",
     "summaryParagraph1": "AI-integrated training shows moderate adoption across the organisation, with 46% of employees engaging with AI tools frequently or very frequently. Occasional or rare usage accounts for the remaining workforce, indicating a clear opportunity to scale adoption.",
-    "summaryParagraph2": "Motivation levels remain stable at 3.95/5, sustaining employee interest in AI-supported learning. Dependency risk is manageable, with 5% of employees classified as high-risk and 64% in the medium-risk range.",
+    "summaryParagraph2": "Motivation levels remain stable at 3.95/5, sustaining employee interest in AI-supported learning. Dependency risk is manageable, with 5% of employees classified as high-risk and 64% in the moderate-risk range.",
     "summaryParagraph3": "Recommendation: Continue investment in AI training infrastructure while implementing risk mitigation activities focused on employee self-efficacy development.",
     "status": "Status",
     "lastUpdated": "Last Updated"
@@ -61,7 +135,7 @@
     "primaryTool": "Primary AI Tool",
     "departmentCount": "Departments",
     "highRisk": "High Risk",
-    "mediumRisk": "Medium Risk",
+    "mediumRisk": "Moderate Risk",
     "lowRisk": "Low Risk",
     "riskDistributionNote": "Employees by dependency risk level. Higher indicates greater reliance on AI tools.",
     "frequencyDistributes": "AI Usage Frequency Distribution",
@@ -169,8 +243,15 @@
     "dependencyRiskDistribution": "Dependency Risk Distribution",
     "riskDistribution": "Dependency Risk Distribution",
     "riskExplanation": "Assessment of over-reliance on AI tools vs. independent capability. Employees categorized by dependency level.",
-    "riskInsight1": "• 64% in medium risk category (manageable)",
+    "riskInsight1": "• 64% in moderate risk category (manageable)",
     "riskInsight2": "• 5% high risk requiring direct intervention"
+  },
+  "usageFrequency": {
+    "1_never": "1 Never",
+    "2_rare": "2 Rare",
+    "3_sometimes": "3 Sometimes",
+    "4_frequent": "4 Frequent",
+    "5_very_frequent": "5 Very Frequent"
   },
   "correlation": {
     "title": "Strategic Correlations & Analysis",

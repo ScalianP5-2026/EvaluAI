@@ -23,6 +23,11 @@ from app.chatbot.data_manager import DataManager
 from app.main import app
 from fastapi.testclient import TestClient
 
+try:
+    from backend.routes import nlp_routes as nlp_routes_module
+except ImportError:
+    from routes import nlp_routes as nlp_routes_module  # type: ignore
+
 client = TestClient(app)
 
 
@@ -99,6 +104,100 @@ def test_chat_query_endpoint() -> None:
         assert "insights" in payload
     finally:
         app.dependency_overrides.clear()
+
+
+def test_nlp_summary_endpoint() -> None:
+    """Test NLP summary endpoint returns aggregated sentiment/topic/NPI payloads."""
+    original_get_sentiment_summary = nlp_routes_module.get_sentiment_summary
+    original_get_topic_summary = nlp_routes_module.get_topic_summary
+    original_get_npi_distribution = nlp_routes_module.get_npi_distribution
+
+    nlp_routes_module.get_sentiment_summary = lambda: {
+        "status": "ok",
+        "sentiment_counts": {"positive": 10, "neutral": 5},
+    }
+    nlp_routes_module.get_topic_summary = lambda: {
+        "status": "ok",
+        "topic_counts": {"0": 8, "1": 7},
+    }
+    nlp_routes_module.get_npi_distribution = lambda: {
+        "status": "ok",
+        "npi_category_counts": {"moderate_risk": 9, "high_risk": 6},
+    }
+
+    try:
+        response = client.get("/api/nlp/summary")
+        assert response.status_code == 200
+        payload = response.json()
+        assert "sentiment" in payload
+        assert "topic" in payload
+        assert "npi_distribution" in payload
+        assert payload["sentiment"]["status"] == "ok"
+    finally:
+        nlp_routes_module.get_sentiment_summary = original_get_sentiment_summary
+        nlp_routes_module.get_topic_summary = original_get_topic_summary
+        nlp_routes_module.get_npi_distribution = original_get_npi_distribution
+
+
+def test_nlp_strategic_summary_endpoint() -> None:
+    """Test NLP strategic summary endpoint shape and successful status."""
+    original_get_strategic_summary = nlp_routes_module.get_strategic_summary
+    nlp_routes_module.get_strategic_summary = lambda: {
+        "status": "ok",
+        "kpis": {
+            "high_ai_autonomy_dependency_risk_percent": 52.5,
+            "neutral_sentiment_percent": 47.5,
+            "avg_npi_score": 0.46,
+            "top_risk_topic": "0",
+        },
+    }
+
+    try:
+        response = client.get("/api/nlp/strategic-summary")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] == "ok"
+        assert "kpis" in payload
+    finally:
+        nlp_routes_module.get_strategic_summary = original_get_strategic_summary
+
+
+def test_nlp_employee_endpoint_found() -> None:
+    """Test NLP employee endpoint returns profile payload for existing employee."""
+    original_get_employee_nlp = nlp_routes_module.get_employee_nlp
+    nlp_routes_module.get_employee_nlp = lambda employee_id: {
+        "status": "ok",
+        "employee_id": employee_id,
+        "sentiment_label": "neutral",
+    }
+
+    try:
+        response = client.get("/api/nlp/employee/emp-001")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] == "ok"
+        assert payload["employee_id"] == "emp-001"
+    finally:
+        nlp_routes_module.get_employee_nlp = original_get_employee_nlp
+
+
+def test_nlp_employee_endpoint_not_found() -> None:
+    """Test NLP employee endpoint returns 404 when employee profile is missing."""
+    original_get_employee_nlp = nlp_routes_module.get_employee_nlp
+    nlp_routes_module.get_employee_nlp = lambda employee_id: {
+        "status": "not_found",
+        "employee_id": employee_id,
+        "message": "Employee not found",
+    }
+
+    try:
+        response = client.get("/api/nlp/employee/missing-employee")
+        assert response.status_code == 404
+        payload = response.json()
+        assert "detail" in payload
+        assert payload["detail"]["status"] == "not_found"
+    finally:
+        nlp_routes_module.get_employee_nlp = original_get_employee_nlp
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

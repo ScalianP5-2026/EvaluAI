@@ -1,0 +1,49 @@
+{
+  "model_type": "RandomForestRegressor",
+  "parameters": {
+    "n_estimators": 300,
+    "max_depth": 8,
+    "min_samples_split": 5,
+    "min_samples_leaf": 2,
+    "random_state": 42
+  },
+  "n_features": 28,
+  "feature_names": [
+    "edad",
+    "antiguedad_empresa",
+    "rol_tecnico",
+    "frecuencia_uso_ia",
+    "usa_chatgpt",
+    "usa_gemini",
+    "usa_copilot",
+    "usa_lms_ia",
+    "usa_otra_ia",
+    "prefiere_humano_vs_ia",
+    "nivel_integracion_ia",
+    "genero_Mujer",
+    "genero_No binario",
+    "genero_Prefiero no decirlo",
+    "departamento_IT",
+    "departamento_Marketing",
+    "departamento_Operaciones",
+    "departamento_RRHH",
+    "sector_Industria",
+    "sector_Servicios",
+    "sector_Tecnolog\u00eda",
+    "nivel_educativo_FP Superior",
+    "nivel_educativo_Grado",
+    "nivel_educativo_M\u00e1ster",
+    "herramienta_principal_Copilot",
+    "herramienta_principal_Gemini",
+    "herramienta_principal_LMS IA",
+    "herramienta_principal_Otra"
+  ],
+  "target": "motivation_score",
+  "cross_validation_metrics": {
+    "r2": -0.33036322078538327,
+    "mae": 0.8642746104658225,
+    "rmse": 1.0754481953362787
+  },
+  "note": "Leakage-free regression model",
+  "timestamp": "2026-03-13T02:54:40.478689+00:00"
+}

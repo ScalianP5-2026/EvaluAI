@@ -140,7 +140,7 @@ class AppConfig:
     # Model selection and behavior tuning
     GEMINI_MODEL: str = os.getenv("CHATBOT_GEMINI_MODEL", "gemini-2.5-flash")
     chatbot_gemini_temperature: float = float(os.getenv("CHATBOT_GEMINI_TEMPERATURE", "0.4"))
-    chatbot_gemini_max_tokens: int = int(os.getenv("CHATBOT_GEMINI_MAX_TOKENS", "800"))
+    chatbot_gemini_max_tokens: int = int(os.getenv("CHATBOT_GEMINI_MAX_TOKENS", "4096"))
     chatbot_gemini_timeout_seconds: int = int(os.getenv("CHATBOT_GEMINI_TIMEOUT_SECONDS", "30"))
     GEMINI_MAX_RETRIES: int = int(os.getenv("CHATBOT_GEMINI_MAX_RETRIES", "3"))
     

@@ -5,10 +5,27 @@ import axios from "axios";
 // ═══════════════════════════════════════════════════════════════
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "/api/v1";
+  (typeof import.meta !== "undefined" &&
+    import.meta.env &&
+    import.meta.env.VITE_API_BASE_URL) ||
+  "/api/v1";
+const NLP_BASE_URL = "/api/nlp";
+const VERBOSE_API_ERROR_LOGGING =
+  typeof import.meta !== "undefined" &&
+  import.meta.env &&
+  (import.meta.env.DEV ||
+    String(import.meta.env.VITE_VERBOSE_API_ERRORS || "").toLowerCase() ===
+      "true");
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const nlpClient = axios.create({
+  baseURL: NLP_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,17 +35,40 @@ const apiClient = axios.create({
 // Auth Interceptor - Auto-attach JWT token
 // ═══════════════════════════════════════════════════════════════
 
-apiClient.interceptors.request.use((config) => {
+const authInterceptor = (config) => {
   const token = localStorage.getItem("evaluai_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-});
+};
+
+// Apply auth token to both the main API and NLP clients
+apiClient.interceptors.request.use(authInterceptor);
+nlpClient.interceptors.request.use(authInterceptor);
 
 // Error handler
 const handleError = (error, context) => {
-  console.error(`${context} Error:`, error);
+  const requestId =
+    error?.response?.headers?.["x-request-id"] ||
+    error?.response?.headers?.["x-correlation-id"] ||
+    null;
+
+  console.error(`${context} Error:`, {
+    message: error?.message,
+    status: error?.response?.status,
+    url: error?.config?.url,
+    baseURL: error?.config?.baseURL,
+    requestId,
+  });
+
+  if (VERBOSE_API_ERROR_LOGGING) {
+    console.debug(`${context} Error details:`, {
+      responseData: error?.response?.data,
+      requestBody: error?.config?.data,
+    });
+  }
+
   throw error;
 };
 
@@ -152,6 +192,44 @@ export const kpiAPI = {
 // ═══════════════════════════════════════════════════════════════
 
 export const nlpAPI = {
+  getSummary: async () => {
+    try {
+      const response = await nlpClient.get("/summary");
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Summary");
+    }
+  },
+
+  getStrategicSummary: async () => {
+    try {
+      const response = await nlpClient.get("/strategic-summary");
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Strategic Summary");
+    }
+  },
+
+  getExecutive: async (lang) => {
+    try {
+      const response = await nlpClient.get("/executive", {
+        params: lang ? { lang } : undefined,
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Executive Summary");
+    }
+  },
+
+  getEmployee: async (employeeId) => {
+    try {
+      const response = await nlpClient.get(`/employee/${employeeId}`);
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Employee Profile");
+    }
+  },
+
   analyze: async (payload) => {
     try {
       const response = await apiClient.post("/nlp/analyze", payload);

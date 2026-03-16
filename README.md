@@ -136,7 +136,8 @@ Dataset principal:
 
 Normalización interna (backend):
 
-- `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `comment`, `last_goal`
+- Campos normalizados principales: `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `open_experience_ai_learning`, `open_challenges_ai_usage`, `open_training_needs`
+- Campos de compatibilidad heredados aún presentes en backend: `comment`, `last_goal` (se rellenan a partir de los campos abiertos anteriores para mantener compatibilidad con el esquema legado)
 - `ai_usage` normalizado a: `never`, `rarely`, `sometimes`, `frequently`, `always`
 
 **EN**
@@ -149,7 +150,8 @@ Main dataset:
 
 Internal backend normalization:
 
-- `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `comment`, `last_goal`
+- Main normalized fields: `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `open_experience_ai_learning`, `open_challenges_ai_usage`, `open_training_needs`
+- Legacy compatibility fields still required/produced by backend: `comment`, `last_goal` (they are backfilled from the open-text fields above to preserve compatibility with the legacy schema)
 - `ai_usage` normalized to: `never`, `rarely`, `sometimes`, `frequently`, `always`
 
 ## 6) API / Endpoints
@@ -257,6 +259,13 @@ pip install -r backend/requirements.txt
 ```bash
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+## 11) Collaborators / Colaboradores
+
+- Kirutasu Sánchez Serrano — @Kirutasu
+- Ignacio Castillo Franco — @IgnacioCastilloFranco
+- Bunty Nanwani Nanwani — @buntynanwani
+- Alfonso Bermúdez Torres — @GHalfbbt
 
 3. React (optional / opcional):
 
