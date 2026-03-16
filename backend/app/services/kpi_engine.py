@@ -12,8 +12,9 @@ from scipy.stats import pearsonr
 
 logger = logging.getLogger(__name__)
 
-# Ruta al CSV (ajusta según tu estructura)
-CSV_PATH = Path(__file__).parent.parent.parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas.csv"
+# Ruta al dataset actual (ajustado para la versión final)
+DATA_PATH = Path(__file__).parent.parent.parent / "data" / "raw" / "survey_raw.xlsx"
+CSV_PATH = DATA_PATH # Mantenemos esta variable también por si acaso alguna otra línea la usa
 
 
 class KPIEngine:
