@@ -10,10 +10,15 @@ import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 logger = logging.getLogger(__name__)
 
-# Ruta al dataset (ajusta según tu estructura)
-DATA_PATH = Path(__file__).parent.parent.parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas.csv"
+# Ruta al dataset (obtenida directamente desde .env EVALUAI_SURVEYS_PATH)
+DATA_PATH = Path(os.getenv("EVALUAI_SURVEYS_PATH", "data/raw/EIPIA_FO_dataset_100_personas.csv"))
 
 
 class KPIEngine:
@@ -24,7 +29,7 @@ class KPIEngine:
         try:
             if not DATA_PATH.exists():
                 raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
-            self.df = pd.read_csv(DATA_PATH)
+            self.df = pd.read_csv(DATA_PATH, sep=';')
             logger.info(f"Loaded {len(self.df)} employees from dataset: {DATA_PATH}")
         except Exception as e:
             logger.error(f"Error loading dataset: {e}")

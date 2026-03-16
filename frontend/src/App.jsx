@@ -45,15 +45,13 @@ function AppRoutes() {
     <Routes>
       {/* Public route */}
       <Route path="/login" element={
-        isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
+        isAuthenticated ? <Navigate to="/chat" replace /> : <LoginPage />
       } />
 
       {/* Protected routes */}
       <Route path="/" element={
         <ProtectedRoute>
-          <AppLayout>
-            <DashboardPage />
-          </AppLayout>
+          <Navigate to="/chat" replace />
         </ProtectedRoute>
       } />
       <Route path="/dashboard" element={

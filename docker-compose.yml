@@ -12,9 +12,9 @@ services:
       - DEBUG=true
       - LOG_LEVEL=INFO
       - EVALUAI_ALLOWED_ORIGINS=*
-      - EVALUAI_SURVEYS_PATH=data/raw/survey_raw.xlsx
-      - EVALUAI_COURSES_PATH=data/courses.csv
-      - EVALUAI_MENTORS_PATH=data/mentors.csv
+      - EVALUAI_SURVEYS_PATH=${EVALUAI_SURVEYS_PATH}
+      - EVALUAI_COURSES_PATH=${EVALUAI_COURSES_PATH}
+      - EVALUAI_MENTORS_PATH=${EVALUAI_MENTORS_PATH}
     volumes:
       - ./backend:/app
       - ./backend/data:/app/data

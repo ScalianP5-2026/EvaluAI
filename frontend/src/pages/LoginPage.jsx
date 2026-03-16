@@ -29,7 +29,7 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard", { replace: true });
+      navigate("/chat", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -53,8 +53,7 @@ export default function LoginPage() {
 
       if (result.mustSetPassword) {
         setMode("set-password");
-      } else if (result.success) {
-        navigate("/dashboard", { replace: true });
+        navigate("/chat", { replace: true });
       }
     } catch (err) {
       const msg =
@@ -83,7 +82,7 @@ export default function LoginPage() {
     try {
       const result = await setPassword(email, password, passwordConfirm);
       if (result.success) {
-        navigate("/dashboard", { replace: true });
+        navigate("/chat", { replace: true });
       }
     } catch (err) {
       const msg = err.response?.data?.detail || t("auth.errorSettingPassword");
