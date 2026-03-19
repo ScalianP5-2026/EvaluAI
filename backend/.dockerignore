@@ -32,3 +32,4 @@ htmlcov/
 .gitignore
 data/raw/*.csv
 data/raw/*.xlsx
+!data/raw/survey_raw.xlsx
