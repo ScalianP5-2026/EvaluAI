@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import logging
 from io import StringIO
 from pathlib import Path
 
 import pandas as pd
+from app.config import settings
 
-from backend.app.config import settings
+logger = logging.getLogger(__name__)
 
 REQUIRED_SURVEY_COLUMNS = [
     "employee_id",
@@ -20,6 +22,8 @@ REQUIRED_SURVEY_COLUMNS = [
     "last_goal",
 ]
 
+OPEN_TEXT_MAX_LENGTH = 500
+
 
 class DataRepository:
     def __init__(self, surveys_path: str, courses_path: str, mentors_path: str) -> None:
@@ -27,6 +31,9 @@ class DataRepository:
         self.surveys_path = self._resolve_path(surveys_path)
         self.courses_path = self._resolve_path(courses_path)
         self.mentors_path = self._resolve_path(mentors_path)
+
+        logger.info(f"DataRepository base_dir: {self.base_dir}")
+        logger.info(f"Surveys path resolved: {self.surveys_path} (exists={self.surveys_path.exists()})")
 
         self.surveys_df = self._load_surveys(self.surveys_path)
         self.courses_df = self._load_csv(self.courses_path)
@@ -40,17 +47,22 @@ class DataRepository:
 
     def _load_csv(self, path: Path) -> pd.DataFrame:
         if not path.exists():
+            logger.warning(f"CSV file not found: {path}")
             return pd.DataFrame()
-        return pd.read_csv(path)
+        df = pd.read_csv(path, encoding="utf-8-sig")
+        df.columns = [str(col).replace("\ufeff", "").strip() for col in df.columns]
+        return df
 
     def _load_surveys(self, path: Path) -> pd.DataFrame:
         if not path.exists():
+            logger.error(f"Survey file not found: {path}")
             return pd.DataFrame(columns=REQUIRED_SURVEY_COLUMNS)
         suffix = path.suffix.lower()
         if suffix in {".xls", ".xlsx"}:
-            dataframe = pd.read_excel(path)
+            dataframe = pd.read_excel(path, engine="openpyxl")
         else:
             dataframe = pd.read_csv(path)
+        logger.info(f"Loaded {len(dataframe)} survey rows from {path}")
         return self._normalize_surveys(dataframe)
 
     def _normalize_surveys(self, dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -69,8 +81,16 @@ class DataRepository:
             "indice_desarrollo_talento": "talent_development",
             "antiguedad_empresa": "experience_years",
             "indice_aceptacion_ia": "acceptance",
-            "comentarios_experiencia_ia": "comment",
-            "sugerencias_mejora": "last_goal",
+            "comentarios_experiencia_ia": "open_experience_ai_learning",
+            "sugerencias_mejora": "open_training_needs",
+            "comment": "open_experience_ai_learning",
+            "last_goal": "open_training_needs",
+            "open_experience": "open_experience_ai_learning",
+            "experience_ai": "open_experience_ai_learning",
+            "ai_learning_comment": "open_experience_ai_learning",
+            "open_challenge": "open_challenges_ai_usage",
+            "ai_challenges_comment": "open_challenges_ai_usage",
+            "training_comment": "open_training_needs",
             "sector": "role",
         }
 
@@ -117,6 +137,32 @@ class DataRepository:
             if column in normalized.columns:
                 continue
             normalized[column] = "" if column in {"ai_usage", "last_goal", "comment", "role"} else 0
+
+        official_open_text_columns = [
+            "open_experience_ai_learning",
+            "open_challenges_ai_usage",
+            "open_training_needs",
+        ]
+        for column in official_open_text_columns:
+            if column not in normalized.columns:
+                normalized[column] = ""
+            normalized[column] = (
+                normalized[column]
+                .fillna("")
+                .astype(str)
+                .str.slice(0, OPEN_TEXT_MAX_LENGTH)
+            )
+
+        if (
+            "comment" not in normalized.columns
+            or normalized["comment"].fillna("").astype(str).str.strip().eq("").all()
+        ):
+            normalized["comment"] = normalized["open_experience_ai_learning"]
+        if (
+            "last_goal" not in normalized.columns
+            or normalized["last_goal"].fillna("").astype(str).str.strip().eq("").all()
+        ):
+            normalized["last_goal"] = normalized["open_training_needs"]
 
         normalized["role"] = normalized["role"].fillna("Unknown").astype(str)
         normalized["ai_usage"] = (

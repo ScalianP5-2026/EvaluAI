@@ -1,0 +1,101 @@
+id_empleado,edad,genero,departamento,antiguedad_empresa,nivel_educativo,rol_tecnico,sector,frecuencia_uso_ia,usa_chatgpt,usa_gemini,usa_copilot,usa_lms_ia,usa_otra_ia,herramienta_principal,prefiere_humano_vs_ia,nivel_integracion_ia,at1_rendimiento,at2_facilita_aprendizaje,at3_facilidad_uso,at4_integracion_positiva,ae1_resolver_problemas,ae2_confianza_digital,ae3_uso_eficaz,ae4_seguridad_aplicacion,m1_estimulante,m2_aumenta_interes,m3_aporta_valor,m4_mayor_esfuerzo,e1_adaptacion,e2_feedback_util,e3_aplicable_trabajo,e4_aprendizaje_ritmo,d1_mejora_competencias,d2_preparado_retos,d3_amplia_habilidades,d4_aprendizaje_autonomo,c1_confio_sin_verificar,c2_dificil_sin_ia,c3_pensamiento_critico,c4_reflexiono_calidad
+1XVWCBPH,50,Mujer,IT,17,Máster,0,Servicios,2,1,1,0,0,0,Gemini,6,3,2,5,6,6,3,1,4,5,7,3,4,6,5,6,5,6,7,5,7,7,4,3,5,5
+MMY0MFRF,36,No binario,RRHH,1,FP Superior,1,Tecnología,4,0,1,1,1,0,ChatGPT,2,4,1,6,5,3,1,5,1,4,1,7,7,4,3,7,3,7,7,1,5,2,5,3,1,3
+5OYF5MXQ,29,Mujer,Marketing,16,Máster,0,Industria,5,0,1,1,0,0,ChatGPT,4,2,7,1,5,1,5,6,6,3,4,6,2,6,2,2,5,7,6,4,2,1,1,2,4,3
+7FADIBHD,42,No binario,Marketing,12,Máster,1,Servicios,5,1,0,1,1,0,LMS IA,1,2,1,5,7,1,3,1,5,4,3,6,1,4,3,7,4,1,3,5,2,6,4,6,3,7
+348YKIFK,40,Hombre,RRHH,19,FP Superior,1,Tecnología,5,1,0,1,0,0,Copilot,7,5,7,6,1,1,3,5,7,1,1,2,2,2,2,5,1,4,5,2,4,3,6,6,1,7
+FAPF14M6,44,No binario,Finanzas,14,Grado,0,Industria,5,1,1,0,0,0,LMS IA,7,5,4,5,1,7,1,4,2,1,6,4,3,4,3,4,7,1,2,2,6,4,2,6,2,1
+LQMU91LY,32,Mujer,IT,6,FP Superior,0,Tecnología,5,1,0,0,1,0,LMS IA,4,2,6,4,4,2,2,2,5,6,4,3,4,5,2,7,5,7,4,3,1,1,6,4,1,7
+IC212KJK,32,Mujer,Operaciones,6,Grado,1,Tecnología,3,0,0,0,1,0,LMS IA,2,5,3,1,6,4,4,6,4,4,1,3,2,5,6,6,5,2,7,5,5,2,3,5,5,5
+XS0NY8LJ,45,Hombre,IT,13,Grado,0,Consultoría,4,1,0,1,1,0,LMS IA,7,3,7,4,5,5,6,7,5,4,1,5,1,5,4,5,1,5,5,3,2,4,4,6,7,3
+UOB0BD7F,57,No binario,IT,19,Grado,0,Consultoría,5,0,1,0,1,1,Otra,5,2,5,7,2,3,7,2,4,1,3,5,7,7,2,3,7,5,4,1,5,3,4,3,7,6
+Q8BM5AHU,45,No binario,Finanzas,8,FP Superior,0,Industria,4,1,1,1,0,1,Otra,1,5,1,1,3,6,2,6,4,3,7,7,2,7,2,7,3,6,4,6,2,6,1,3,4,3
+795UT2G3,24,Hombre,IT,2,Grado,1,Consultoría,3,1,0,1,1,0,Gemini,1,2,7,2,1,3,5,7,4,5,6,3,5,1,1,3,1,5,2,6,5,7,3,6,6,3
+9DLT8ADA,43,No binario,RRHH,1,Doctorado,1,Industria,3,1,1,0,0,1,ChatGPT,7,4,5,6,3,6,3,2,6,7,5,7,7,7,2,4,5,6,6,6,3,4,2,7,4,5
+Q90LO3MT,23,No binario,RRHH,15,FP Superior,0,Consultoría,4,1,0,0,0,1,LMS IA,3,1,6,1,3,7,1,6,4,5,5,7,1,2,1,6,3,6,3,5,7,7,7,6,6,7
+56354NYY,45,Mujer,Marketing,1,Doctorado,1,Tecnología,1,1,0,0,1,0,Gemini,7,2,6,7,4,2,1,2,4,4,1,5,3,6,5,6,3,6,2,6,2,1,4,3,7,6
+WB2U52AH,51,No binario,Operaciones,5,Grado,1,Industria,2,0,0,1,0,0,ChatGPT,3,1,1,7,5,1,4,2,2,5,2,4,4,6,6,7,1,7,5,1,5,3,4,4,7,5
+JCDVVJ4R,59,No binario,IT,16,Máster,1,Industria,1,0,0,0,0,0,Copilot,7,5,2,4,1,2,2,7,1,1,6,7,2,1,1,5,5,7,6,3,1,2,1,1,1,1
+PUFFAGMR,23,Hombre,IT,19,Grado,1,Tecnología,1,1,1,1,0,1,Otra,5,1,1,5,3,7,7,2,3,1,4,1,1,7,4,5,4,4,5,5,3,3,5,1,3,4
+NHJA8WAV,42,Hombre,Finanzas,4,Doctorado,1,Industria,1,1,1,0,0,1,ChatGPT,6,2,4,1,1,4,4,2,1,4,2,4,7,4,7,6,5,3,6,3,3,3,2,6,2,3
+GMDCVHV8,54,Prefiero no decirlo,RRHH,3,Doctorado,0,Industria,5,0,1,1,1,0,Copilot,1,4,7,6,2,4,3,7,4,4,2,3,5,1,6,5,2,6,7,5,1,5,6,2,4,4
+095E5TQ1,33,Mujer,Operaciones,17,FP Superior,0,Consultoría,3,1,0,1,1,0,ChatGPT,7,5,3,1,4,7,4,4,2,7,6,3,1,4,1,6,7,6,5,3,5,3,3,6,5,5
+SF2J54CS,43,No binario,Marketing,17,Máster,0,Industria,1,1,1,0,1,0,Otra,5,2,2,3,2,6,6,1,5,7,7,7,6,4,6,7,6,3,2,2,4,3,4,7,6,5
+P8W24GGV,46,No binario,RRHH,12,FP Superior,1,Servicios,3,0,0,1,1,1,Otra,3,5,1,5,1,5,1,3,2,6,1,4,5,3,6,2,4,1,6,3,1,4,4,6,5,5
+CVYEGAZQ,48,Prefiero no decirlo,Marketing,14,Doctorado,1,Tecnología,4,1,1,1,0,1,Gemini,3,3,5,6,7,5,1,5,4,4,1,5,7,6,6,6,3,6,6,6,5,2,6,1,3,4
+MNKKD5GF,49,No binario,Finanzas,6,Grado,0,Consultoría,2,1,0,0,0,1,LMS IA,1,1,2,6,1,6,5,3,2,3,1,5,3,5,5,3,4,4,4,2,1,4,2,3,6,5
+AH70EZN4,37,Mujer,Finanzas,3,Máster,1,Consultoría,4,0,0,1,1,1,ChatGPT,4,3,7,2,5,4,5,3,7,5,1,6,4,7,4,5,7,5,4,3,1,4,5,6,4,1
+F7DKZBHH,36,Prefiero no decirlo,IT,9,Grado,0,Servicios,4,0,0,0,1,0,ChatGPT,7,2,2,4,3,4,7,6,2,4,5,3,7,4,3,6,3,5,1,5,2,1,4,3,1,5
+SLHLRBP0,24,Mujer,Operaciones,5,Grado,0,Tecnología,5,0,1,1,1,0,Copilot,2,4,7,2,3,4,3,1,4,2,1,2,3,3,3,6,7,2,5,5,5,4,2,3,5,2
+WU8RFR0J,58,Prefiero no decirlo,Marketing,17,Máster,0,Tecnología,2,1,1,0,0,0,Otra,3,5,1,6,2,2,6,6,6,6,5,6,2,6,1,7,3,2,4,5,4,5,6,2,3,7
+BYDY0V5J,28,Prefiero no decirlo,RRHH,14,FP Superior,1,Consultoría,4,0,1,0,1,0,ChatGPT,6,1,7,5,4,4,2,1,7,2,5,5,1,5,6,5,4,5,1,4,7,5,1,3,4,4
+WU1OO5ZP,42,Hombre,Finanzas,3,Grado,1,Industria,4,0,1,1,1,1,Otra,6,5,2,1,7,3,4,7,2,1,7,4,6,4,1,2,3,5,7,1,2,7,5,1,7,2
+QAX3DFRE,30,Mujer,IT,1,Doctorado,0,Consultoría,2,0,0,1,1,1,ChatGPT,3,2,5,1,6,1,7,7,3,7,1,5,5,4,5,7,3,7,7,5,1,1,3,4,7,5
+K9K7SMP7,39,No binario,IT,1,Grado,0,Tecnología,2,0,1,1,0,0,Gemini,4,5,6,5,3,4,3,1,3,5,3,4,5,1,5,2,2,4,4,2,7,7,4,4,4,1
+WT7MH65J,25,No binario,Marketing,3,Máster,0,Servicios,4,0,1,1,0,0,LMS IA,4,1,2,6,5,6,5,2,2,4,4,6,1,1,2,7,5,3,5,5,6,7,2,5,4,3
+9NMQSLRB,46,Mujer,Finanzas,18,Máster,0,Consultoría,2,0,0,1,0,1,ChatGPT,5,2,7,7,2,1,4,4,6,2,2,3,6,6,5,5,5,2,6,4,7,6,1,7,4,6
+8D6ZPU3F,35,No binario,Operaciones,10,Máster,1,Tecnología,4,1,0,0,0,0,Otra,6,5,6,1,2,2,5,2,5,5,5,5,1,5,2,1,6,7,3,6,1,2,3,6,6,7
+CHFORLOB,30,No binario,Finanzas,3,FP Superior,1,Consultoría,4,1,0,1,0,1,Gemini,5,4,7,7,6,6,4,4,4,1,6,7,2,4,4,5,6,7,5,2,1,2,7,7,4,6
+N25EJCIO,47,Mujer,Marketing,8,Grado,0,Industria,5,0,1,0,0,0,ChatGPT,6,2,5,1,5,1,2,6,3,7,6,4,3,6,1,5,2,3,2,4,5,4,2,1,5,5
+UNJI41QV,23,Prefiero no decirlo,Marketing,14,FP Superior,0,Consultoría,1,0,0,0,0,0,Copilot,7,2,7,1,4,6,3,4,5,3,4,3,7,6,7,2,6,7,7,6,5,4,2,3,3,7
+UUI6VM86,41,Mujer,Finanzas,18,FP Superior,1,Consultoría,4,0,0,1,0,0,LMS IA,7,4,1,4,5,2,4,6,2,6,6,2,5,2,4,2,7,4,4,7,2,6,3,4,6,7
+ZXE9Z8LP,49,Prefiero no decirlo,Marketing,15,Máster,1,Tecnología,3,1,0,0,1,0,ChatGPT,2,3,3,4,4,3,6,7,5,5,3,4,2,7,5,5,4,5,4,7,4,4,1,7,4,1
+KBUMMIJ4,28,No binario,Finanzas,2,Máster,0,Tecnología,1,1,1,0,1,0,Gemini,7,1,2,3,5,2,7,3,7,5,6,6,3,1,4,5,1,6,6,2,2,2,7,1,2,7
+RHO3LUEE,29,No binario,RRHH,10,FP Superior,0,Tecnología,1,1,0,0,0,0,Copilot,2,3,3,2,5,2,1,7,1,3,2,2,2,5,4,5,7,3,2,3,3,7,6,4,2,4
+845T4XZ0,56,No binario,Finanzas,2,Grado,0,Consultoría,1,1,1,0,0,0,Gemini,7,5,7,5,1,6,6,7,3,5,2,2,6,4,4,2,1,5,6,1,1,3,1,3,3,2
+7ARYHQN3,35,Hombre,Finanzas,17,Doctorado,1,Industria,5,1,1,1,1,1,Gemini,1,4,5,5,2,7,6,3,2,1,5,1,5,6,5,5,1,5,2,1,7,5,5,7,7,2
+E4ZL7EUR,38,Prefiero no decirlo,Marketing,8,FP Superior,1,Servicios,4,1,0,0,0,1,Copilot,7,3,2,5,5,5,7,4,4,1,1,5,7,4,7,5,2,1,3,4,6,3,4,4,1,2
+CZFC2H51,57,Hombre,Marketing,1,Grado,1,Servicios,5,1,0,1,0,1,Gemini,5,2,7,3,6,4,1,4,6,3,7,4,1,2,6,4,7,3,7,6,1,3,3,6,1,4
+R5EAX4HP,25,Hombre,IT,9,Máster,0,Tecnología,4,1,1,1,0,1,Copilot,3,5,6,4,5,4,6,6,7,6,3,2,1,5,4,1,2,7,4,1,1,2,6,6,7,6
+PDW8NXV1,23,Mujer,IT,11,Máster,0,Tecnología,5,1,0,0,1,1,ChatGPT,5,5,4,6,3,3,4,2,2,4,5,1,3,6,2,3,3,6,4,6,2,3,7,5,6,1
+Z4143ZJS,27,Hombre,RRHH,16,Grado,1,Consultoría,5,0,0,1,1,0,Copilot,3,3,7,7,2,3,4,6,4,2,3,6,7,4,5,1,1,3,3,6,6,6,3,5,6,7
+O60RLJA4,25,Mujer,IT,7,Doctorado,1,Servicios,3,0,1,1,1,0,Copilot,4,3,3,7,3,4,4,2,6,4,1,3,4,1,4,4,4,7,1,4,6,1,3,4,6,4
+5P3GZHA0,50,Mujer,Finanzas,10,Máster,0,Tecnología,5,0,1,1,1,1,LMS IA,5,4,2,6,2,5,1,7,6,5,6,7,6,7,7,3,6,5,7,4,6,4,1,1,1,2
+2X97Z1HI,39,Hombre,Marketing,3,Máster,1,Industria,2,0,0,0,1,0,Copilot,4,1,3,3,3,4,6,3,2,2,6,7,3,2,6,7,4,6,6,4,2,1,4,6,2,5
+8AALCGFM,47,Prefiero no decirlo,IT,18,Máster,1,Industria,3,1,1,1,0,1,Copilot,2,3,2,6,5,7,1,7,7,3,7,4,4,5,5,5,6,7,3,1,1,7,5,1,1,3
+IYVVNZW4,55,Prefiero no decirlo,IT,13,Grado,0,Tecnología,5,1,0,1,1,1,ChatGPT,2,3,7,5,5,5,4,1,5,3,1,2,2,2,3,4,1,4,6,7,2,5,2,1,5,7
+5KXU47DO,31,Prefiero no decirlo,RRHH,7,FP Superior,1,Tecnología,1,0,0,1,0,0,LMS IA,1,2,1,2,1,3,7,4,5,6,5,7,6,1,6,7,1,7,5,4,5,4,2,4,4,4
+UJDIS36H,57,Prefiero no decirlo,RRHH,4,Máster,0,Servicios,2,1,0,0,0,0,Otra,7,5,6,1,6,1,6,2,6,2,7,5,2,5,2,5,1,1,4,1,5,3,3,1,6,4
+EM2B4BE3,35,Prefiero no decirlo,Finanzas,13,FP Superior,0,Servicios,2,0,1,1,1,0,ChatGPT,5,1,7,7,3,6,6,6,5,1,1,7,7,2,4,2,2,5,6,4,2,5,4,6,2,1
+VUDJ2W4I,52,Hombre,Marketing,1,Doctorado,0,Consultoría,2,1,0,0,1,1,ChatGPT,4,2,3,4,4,7,5,3,1,2,4,7,5,3,7,6,7,7,2,5,6,4,7,3,3,1
+XBBOBM1B,36,Hombre,RRHH,8,Máster,0,Servicios,3,0,0,0,0,0,Otra,3,4,4,4,1,7,5,2,6,5,2,7,6,1,3,4,6,2,6,6,1,6,7,5,3,4
+LR68JT6U,29,No binario,IT,14,Máster,0,Industria,5,1,0,0,0,1,Copilot,2,4,4,3,3,3,2,6,6,1,7,1,4,1,7,2,7,2,5,4,2,6,6,3,4,2
+19SQKX5N,35,Prefiero no decirlo,Marketing,16,Doctorado,0,Industria,5,1,1,0,0,1,Gemini,7,3,5,4,3,3,3,4,4,7,7,2,5,1,3,4,2,1,7,2,2,6,1,1,2,3
+278P10CH,44,Hombre,Marketing,14,Máster,0,Tecnología,1,0,1,0,1,1,LMS IA,2,3,2,5,1,2,5,7,5,7,5,5,1,3,5,4,2,4,4,6,2,6,4,3,1,7
+X74JR294,42,No binario,IT,12,FP Superior,1,Servicios,1,1,1,0,1,0,Gemini,3,4,3,7,5,7,1,4,7,7,3,2,4,3,3,2,5,5,3,6,3,3,4,6,1,1
+VVOOQGPQ,37,Prefiero no decirlo,RRHH,19,Grado,0,Consultoría,2,0,1,1,1,0,Otra,7,3,5,6,3,2,5,5,6,3,4,4,3,4,2,3,4,3,5,4,5,1,1,6,5,7
+L78CAFV7,39,Mujer,IT,15,FP Superior,0,Industria,1,0,1,0,1,1,ChatGPT,7,1,3,5,5,2,2,1,7,2,5,4,1,6,2,1,4,1,4,7,7,4,7,1,5,2
+9Q7QOXVK,45,No binario,Marketing,2,Grado,1,Industria,3,0,0,1,1,0,ChatGPT,4,3,2,3,1,6,6,5,1,7,1,4,1,7,1,5,3,4,6,3,6,3,7,4,1,7
+KWA0LO28,47,Hombre,Operaciones,2,Grado,1,Consultoría,5,0,1,1,0,0,LMS IA,4,5,7,5,5,2,2,3,4,4,1,6,3,2,2,4,2,3,7,7,4,6,7,3,3,5
+9EU1EBBT,46,Mujer,Operaciones,19,FP Superior,1,Consultoría,2,1,1,0,1,0,ChatGPT,5,3,7,6,2,5,6,2,2,6,1,7,6,4,6,5,6,2,1,4,7,7,3,4,6,1
+4P5A6WSA,50,Mujer,Finanzas,17,FP Superior,0,Industria,1,1,1,1,0,1,ChatGPT,5,2,4,2,4,4,7,3,7,4,1,6,1,2,3,6,5,2,7,6,6,1,4,4,3,2
+7RX39N06,36,Mujer,IT,10,FP Superior,1,Industria,3,1,0,1,0,1,LMS IA,6,1,7,3,7,1,7,7,6,7,3,1,7,7,2,2,5,3,1,2,4,7,2,2,5,2
+ITKBRRUW,22,No binario,IT,6,FP Superior,0,Consultoría,3,0,1,1,0,0,LMS IA,6,2,7,2,3,3,6,6,1,6,4,4,4,6,5,5,7,1,2,6,3,5,1,1,4,3
+GFIHG8IV,46,Hombre,Finanzas,15,Doctorado,0,Industria,1,1,1,1,1,1,Otra,1,2,1,1,6,5,3,4,3,5,6,5,5,3,7,2,4,2,7,7,2,7,7,5,1,3
+5XB7VFBA,28,Mujer,Finanzas,11,Máster,0,Tecnología,5,0,0,0,1,0,ChatGPT,2,5,4,2,4,1,5,5,1,4,2,2,1,6,7,5,2,5,4,2,3,5,6,6,5,5
+OMUG1PZQ,30,Prefiero no decirlo,Finanzas,5,Grado,0,Tecnología,1,1,1,1,1,0,ChatGPT,5,1,5,1,7,7,1,5,1,2,3,7,4,3,1,1,3,6,1,1,3,5,7,6,5,2
+UQKX9AD5,45,Mujer,Marketing,1,FP Superior,1,Consultoría,2,1,0,0,0,0,Otra,4,1,6,1,5,7,1,7,4,2,3,3,2,7,7,1,2,7,3,5,7,6,7,1,6,6
+C6B6UEUO,22,Mujer,IT,8,FP Superior,1,Servicios,1,1,0,1,0,0,Copilot,3,1,1,2,3,7,4,5,2,4,6,5,4,6,3,1,7,3,4,6,1,5,5,7,1,2
+RRJSW7HR,29,No binario,Marketing,12,FP Superior,0,Consultoría,3,0,0,1,0,1,Copilot,4,1,5,3,5,5,6,7,3,7,6,7,5,4,1,1,1,3,3,4,7,2,3,7,6,3
+3SF1E10Q,45,No binario,Finanzas,12,Doctorado,0,Consultoría,1,1,0,0,0,1,Copilot,2,1,2,6,2,5,1,3,5,2,2,6,4,5,3,1,2,2,7,1,5,4,1,7,1,6
+OW8T36AU,32,Hombre,IT,5,FP Superior,0,Servicios,5,1,0,1,0,1,Otra,6,5,1,5,1,3,3,4,5,5,2,6,3,4,5,1,7,1,3,5,4,4,5,5,6,1
+OEPMB5LI,38,Prefiero no decirlo,Marketing,7,FP Superior,1,Servicios,4,0,1,1,0,0,ChatGPT,4,3,5,5,3,4,6,2,7,1,6,5,5,2,1,2,1,5,1,4,2,6,5,6,3,1
+RSGDHC0X,29,No binario,Marketing,4,FP Superior,0,Servicios,1,1,0,1,1,0,Otra,1,2,2,6,7,2,3,6,1,7,1,6,6,4,4,4,1,1,4,3,7,2,6,1,4,7
+GMIQJ40G,56,Mujer,Finanzas,6,Máster,0,Tecnología,5,0,0,0,1,0,Otra,2,1,4,7,7,7,1,2,4,5,3,4,2,7,6,5,3,4,6,4,4,7,4,6,4,4
+0970I8H9,56,Hombre,IT,13,Doctorado,1,Industria,5,1,1,1,1,1,Copilot,6,3,6,7,2,6,1,3,4,6,5,1,3,1,6,1,6,4,5,2,6,3,6,4,1,3
+R2GMK38F,54,Mujer,Finanzas,15,FP Superior,1,Tecnología,3,0,0,0,1,0,Gemini,3,3,2,1,2,4,4,6,5,5,2,2,6,2,3,2,4,6,1,2,4,7,4,3,2,4
+8INARFO9,26,Mujer,IT,3,Grado,0,Industria,5,0,1,1,0,1,ChatGPT,6,2,7,1,3,6,1,5,7,7,2,1,4,6,7,2,2,2,1,3,6,3,4,3,7,6
+DA3ZPQQ8,49,No binario,Operaciones,8,Grado,1,Tecnología,5,1,1,0,0,1,Copilot,7,5,3,3,5,3,6,1,7,6,6,7,5,2,4,2,1,2,6,1,7,5,1,6,5,3
+V32IKNL0,28,Hombre,RRHH,16,Grado,1,Industria,5,0,1,0,1,1,Gemini,1,4,2,4,6,3,7,3,7,7,4,2,2,5,1,4,2,2,4,5,5,1,7,2,5,5
+L3S1ODX6,30,Prefiero no decirlo,RRHH,13,Doctorado,0,Tecnología,5,0,0,1,0,1,Gemini,2,4,2,2,7,3,6,3,3,2,5,2,3,3,4,5,6,6,4,4,7,3,1,5,1,2
+YSWGNH2Y,29,Prefiero no decirlo,RRHH,18,Doctorado,1,Servicios,2,0,0,1,1,1,LMS IA,3,3,6,1,7,1,6,4,2,1,5,1,6,6,4,4,4,4,7,2,6,1,3,7,6,5
+QDJUBLXU,33,No binario,Finanzas,10,Grado,0,Consultoría,2,0,0,0,1,1,ChatGPT,1,2,3,5,2,6,4,2,3,7,2,5,6,2,7,3,6,1,3,1,4,4,4,5,2,6
+JQU7LEG6,55,No binario,Operaciones,19,FP Superior,1,Tecnología,3,0,1,0,1,0,Gemini,6,4,7,3,4,4,4,3,6,7,1,2,2,6,1,7,4,6,7,3,4,1,5,5,3,3
+RULNX07S,54,Hombre,IT,17,Doctorado,0,Industria,1,0,0,1,0,0,Copilot,1,3,5,2,2,4,1,3,6,2,4,1,7,6,5,2,5,6,6,7,6,4,7,4,6,6
+TOQH67SQ,44,Prefiero no decirlo,Marketing,19,Grado,0,Servicios,5,1,0,0,1,1,LMS IA,2,5,5,3,6,5,2,5,2,3,5,2,4,6,7,3,4,1,7,6,3,2,2,5,6,2
+4O307BAB,45,Prefiero no decirlo,IT,5,Grado,0,Tecnología,1,0,0,1,1,1,ChatGPT,5,4,2,2,5,5,2,5,5,2,2,3,2,3,4,6,3,2,6,7,5,2,3,3,1,1
+SFNC52M9,58,Prefiero no decirlo,Marketing,9,FP Superior,1,Tecnología,1,0,1,1,1,0,Otra,1,3,3,2,5,7,4,6,2,6,5,5,6,7,4,1,6,5,4,7,1,6,1,4,1,1
+F77EBBJ2,56,Mujer,IT,12,Máster,0,Servicios,3,1,1,1,0,1,Copilot,7,3,3,6,4,5,1,7,4,2,7,4,1,4,5,7,1,1,3,2,2,6,6,1,5,6
+DOWPLEP6,43,Prefiero no decirlo,Operaciones,1,Doctorado,1,Tecnología,5,1,0,1,0,1,Gemini,1,1,7,1,7,3,2,7,6,2,4,2,3,6,4,1,5,4,7,3,4,5,3,5,1,4
+33PBC9A6,48,Mujer,Marketing,1,FP Superior,0,Consultoría,5,1,0,0,1,0,Gemini,6,5,6,3,2,4,1,1,1,1,4,3,2,1,4,4,3,3,1,4,2,3,3,5,1,3
+3TPMWAXT,56,Hombre,Finanzas,15,Grado,0,Tecnología,4,1,0,1,0,1,Copilot,6,1,4,3,5,6,1,7,1,2,7,4,7,7,4,7,2,3,2,7,1,5,7,1,1,3

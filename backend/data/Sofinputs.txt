@@ -1,0 +1,84 @@
+El cuestionario definitivo tiene 24 ítems de evaluación organizados en 6 escalas (Aceptación, Autoeficacia, Motivación, Experiencia, Desarrollo y Dependencia), pero el dataset inicial incluía menos ítems y algunos índices ya calculados.
+Para que el análisis sea correcto, necesitamos:
+Incluir los 24 ítems individuales (escala 1–7)
+Mantener las variables de uso de IA (1–5)
+Eliminar los índices ya calculados
+Calcular los índices automáticamente a partir de los ítems
+En la escala de Dependencia hay dos preguntas que deben invertirse (8 – respuesta original) antes de calcular la media.
+Adjunto un Excel con datos ficticios de 100 personas que refleja exactamente la estructura definitiva que utilizaré. Puede servir como referencia para el desarrollo técnico.
+1 ESTRUCTURA DEL INSTRUMENTO Y CÁLCULO DE ÍNDICES
+El instrumento consta de 24 ítems distribuidos en 6 escalas:
+ Aceptación Tecnológica
+Ítems: AT1–AT4
+Cálculo: media de los 4 ítems
+Rango: 1–7
+ Autoeficacia Digital
+Ítems: AE1–AE4
+Cálculo: media de los 4 ítems
+ Motivación hacia la Formación
+Ítems: M1–M4
+Cálculo: media de los 4 ítems
+ Experiencia de Aprendizaje
+Ítems: E1–E4
+Cálculo: media de los 4 ítems
+ Desarrollo del Talento Percibido
+Ítems: D1–D4
+Cálculo: media de los 4 ítems
+ Uso Crítico vs Dependencia Tecnológica
+Ítems: C1–C4
+Los ítems C3 y C4 son invertidos.
+Fórmula de inversión:
+valor_invertido = 8 – valor_original
+Cálculo final:
+Media (C1 + C2 + C3 invertido + C4 invertido)
+Una puntuación alta indica mayor dependencia tecnológica.
+2 ÍNDICES GLOBALES
+ Índice de Autonomía y Dependencia IA
+Media de:
+Aceptación
+Autoeficacia
+Motivación
+Experiencia
+Desarrollo
+(No incluye la escala de Dependencia)
+ Índice Riesgo Dependencia
+Corresponde directamente a la puntuación de la escala Dependencia.
+3 ACLARACIÓN SOBRE EL DATASET INICIAL
+Tras revisar el CSV sintético original, he detectado que:
+Incluye únicamente 10 ítems tipo Likert
+Contiene índices ya precalculados
+No refleja la estructura completa de 24 ítems del instrumento final
+Para garantizar coherencia metodológica y permitir el cálculo correcto de las escalas, el dataset definitivo debe:
+Incluir los 24 ítems individuales (1–7)
+Incluir variables sociodemográficas y de uso de IA
+No contener índices precalculados
+Permitir que los índices se generen automáticamente en backend
+Adjunto un Excel con un dataset ficticio de 100 participantes que refleja exactamente la estructura definitiva que utilizaremos. Este archivo puede utilizarse como referencia para modelado y pruebas técnicas.
+4 ESCALAS Y CODIFICACIÓN
+Escala Likert principal (ítems):
+1 = Totalmente en desacuerdo
+7 = Totalmente de acuerdo
+Frecuencia de uso IA (1–5):
+1 = Nunca
+2 = Rara vez
+3 = A veces
+4 = Frecuentemente
+5 = Muy frecuentemente
+Nivel de integración de IA (1–5):
+1 = No integrada
+2 = Uso puntual
+3 = Uso complementario
+4 = Uso frecuente estructural
+5 = Totalmente integrada en la formación
+Es importante que el sistema exporte valores numéricos y no texto, para evitar errores en el cálculo automático.
+5 ESTABILIDAD DEL CUESTIONARIO
+Confirmo que el instrumento no sufrirá modificaciones adicionales durante la recogida real de datos.
+Por tanto:
+Número de ítems definitivo: 24
+Escalas definitivas: 6
+Índices globales definidos
+Estructura estable para desarrollo
+6  IDENTIFICADOR Y PROTECCIÓN DE DATOS
+Los datos se recogerán anonimizados desde origen.
+Cada participante tendrá un identificador alfanumérico sin vínculo directo a datos personales identificables (nombre, email, DNI, etc.).
+El sistema trabajará exclusivamente con datos anonimizados, garantizando cumplimiento RGPD desde el diseño.

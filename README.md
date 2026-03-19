@@ -54,8 +54,8 @@ Arquitectura por capas:
                                |--> nlp.py
                                '--> data_store.py
 
-[CSV data]
-  - backend/data/datos_encuesta_formacion_ia.csv
+[Data files]
+  - backend/data/raw/survey_raw.xlsx
   - backend/data/courses.csv
   - backend/data/mentors.csv
 ```
@@ -84,8 +84,8 @@ Layered architecture:
                                |--> nlp.py
                                '--> data_store.py
 
-[CSV data]
-  - backend/data/datos_encuesta_formacion_ia.csv
+[Data files]
+  - backend/data/raw/survey_raw.xlsx
   - backend/data/courses.csv
   - backend/data/mentors.csv
 ```
@@ -130,26 +130,28 @@ Components:
 
 Dataset principal:
 
-- Archivo: `backend/data/datos_encuesta_formacion_ia.csv`
+- Archivo: `backend/data/raw/survey_raw.xlsx`
 - Grano: 1 fila = 1 respuesta
 - Incluye: perfil, uso de IA, índices, bloque Likert, feedback cualitativo
 
 Normalización interna (backend):
 
-- `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `comment`, `last_goal`
+- Campos normalizados principales: `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `open_experience_ai_learning`, `open_challenges_ai_usage`, `open_training_needs`
+- Campos de compatibilidad heredados aún presentes en backend: `comment`, `last_goal` (se rellenan a partir de los campos abiertos anteriores para mantener compatibilidad con el esquema legado)
 - `ai_usage` normalizado a: `never`, `rarely`, `sometimes`, `frequently`, `always`
 
 **EN**
 
 Main dataset:
 
-- File: `backend/data/datos_encuesta_formacion_ia.csv`
+- File: `backend/data/raw/survey_raw.xlsx`
 - Grain: 1 row = 1 response
 - Contains: profile, AI usage, indexes, Likert block, qualitative feedback
 
 Internal backend normalization:
 
-- `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `comment`, `last_goal`
+- Main normalized fields: `employee_id`, `role`, `motivation`, `ai_usage`, `self_efficacy`, `talent_development`, `experience_years`, `acceptance`, `open_experience_ai_learning`, `open_challenges_ai_usage`, `open_training_needs`
+- Legacy compatibility fields still required/produced by backend: `comment`, `last_goal` (they are backfilled from the open-text fields above to preserve compatibility with the legacy schema)
 - `ai_usage` normalized to: `never`, `rarely`, `sometimes`, `frequently`, `always`
 
 ## 6) API / Endpoints
@@ -232,7 +234,7 @@ backend/
     main.py
     config.py
   data/
-    datos_encuesta_formacion_ia.csv
+    raw/survey_raw.xlsx
     courses.csv
     mentors.csv
   tests/test_api.py
@@ -257,6 +259,13 @@ pip install -r backend/requirements.txt
 ```bash
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+## 11) Collaborators / Colaboradores
+
+- Kirutasu Sánchez Serrano — @Kirutasu
+- Ignacio Castillo Franco — @IgnacioCastilloFranco
+- Bunty Nanwani Nanwani — @buntynanwani
+- Alfonso Bermúdez Torres — @GHalfbbt
 
 3. React (optional / opcional):
 
@@ -296,7 +305,7 @@ Covers smoke tests for health, dashboard, chat, and nlp.
 - `EVALUAI_APP_VERSION` (default: `0.1.0`)
 - `EVALUAI_API_PREFIX` (default: `/api/v1`)
 - `EVALUAI_ALLOWED_ORIGINS` (default: `*`)
-- `EVALUAI_SURVEYS_PATH` (default: `data/datos_encuesta_formacion_ia.csv`)
+- `EVALUAI_SURVEYS_PATH` (default: `data/raw/survey_raw.xlsx`)
 - `EVALUAI_COURSES_PATH` (default: `data/courses.csv`)
 - `EVALUAI_MENTORS_PATH` (default: `data/mentors.csv`)
 - `EVALUAI_CHAT_PROVIDER` (`rule_based` or `azure_foundry`, default: `rule_based`)

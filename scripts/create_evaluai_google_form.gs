@@ -36,12 +36,14 @@ const CSV_COLUMNS = [
   "p8_preparado_aplicar_conocimientos",
   "p9_confio_uso_ia_aprendizaje",
   "p10_ia_util_desarrollo_profesional",
-  "comentarios_experiencia_ia",
-  "sugerencias_mejora",
+  "open_experience_ai_learning",
+  "open_challenges_ai_usage",
+  "open_training_needs",
 ];
 
 const EXPORT_FOLDER_NAME = "EvaluAI_exports";
 const EXPORT_FILE_NAME = "evaluai_responses.csv";
+const OPEN_TEXT_MAX_LENGTH = 500;
 
 const Q = {
   empleado_id: "ID de empleado",
@@ -75,8 +77,9 @@ const Q = {
   p9_confio_uso_ia_aprendizaje: "P9. Confio en el uso de IA para aprender",
   p10_ia_util_desarrollo_profesional:
     "P10. La IA es util para mi desarrollo profesional",
-  comentarios_experiencia_ia: "Comentarios sobre tu experiencia con IA",
-  sugerencias_mejora: "Sugerencias de mejora",
+  open_experience_ai_learning: "Comentarios sobre tu experiencia con IA",
+  open_challenges_ai_usage: "Principales desafios al usar IA",
+  open_training_needs: "Sugerencias de mejora",
 };
 
 /**
@@ -167,6 +170,18 @@ function buildCsvRow_(formResponse) {
     Session.getScriptTimeZone(),
     "yyyy-MM-dd HH:mm:ss"
   );
+  const openExperienceText = asBoundedText_(
+    answers[Q.open_experience_ai_learning],
+    OPEN_TEXT_MAX_LENGTH
+  );
+  const openChallengesText = asBoundedText_(
+    answers[Q.open_challenges_ai_usage],
+    OPEN_TEXT_MAX_LENGTH
+  );
+  const openTrainingNeedsText = asBoundedText_(
+    answers[Q.open_training_needs],
+    OPEN_TEXT_MAX_LENGTH
+  );
 
   return [
     asText_(answers[Q.empleado_id]),
@@ -195,8 +210,9 @@ function buildCsvRow_(formResponse) {
     asInt_(answers[Q.p8_preparado_aplicar_conocimientos]),
     asInt_(answers[Q.p9_confio_uso_ia_aprendizaje]),
     asInt_(answers[Q.p10_ia_util_desarrollo_profesional]),
-    asText_(answers[Q.comentarios_experiencia_ia]),
-    asText_(answers[Q.sugerencias_mejora]),
+    openExperienceText,
+    openChallengesText,
+    openTrainingNeedsText,
   ];
 }
 
@@ -344,15 +360,23 @@ function addLikertSection_(form) {
 function addOpenSection_(form) {
   form.addSectionHeaderItem().setTitle("Feedback cualitativo");
 
-  form
-    .addParagraphTextItem()
-    .setTitle(Q.comentarios_experiencia_ia)
-    .setRequired(true);
+  addOpenTextItem_(form, Q.open_experience_ai_learning, true);
+  addOpenTextItem_(form, Q.open_challenges_ai_usage, true);
+  addOpenTextItem_(form, Q.open_training_needs, false);
+}
+
+function addOpenTextItem_(form, title, required) {
+  const validation = FormApp.createTextValidation()
+    .requireTextLengthLessThanOrEqualTo(OPEN_TEXT_MAX_LENGTH)
+    .setHelpText(`Maximo ${OPEN_TEXT_MAX_LENGTH} caracteres`)
+    .build();
 
   form
     .addParagraphTextItem()
-    .setTitle(Q.sugerencias_mejora)
-    .setRequired(false);
+    .setTitle(title)
+    .setHelpText(`Maximo ${OPEN_TEXT_MAX_LENGTH} caracteres`)
+    .setValidation(validation)
+    .setRequired(required);
 }
 
 function addNumericTextItem_(form, title, min, max) {
@@ -452,15 +476,24 @@ function toCsvContent_(values) {
 
 function escapeCsvCell_(value) {
   const text = value == null ? "" : String(value);
+  // Prevent CSV formula injection: prefix values starting with a formula
+  // character with a single quote so spreadsheet applications (Excel, Google
+  // Sheets, LibreOffice) treat them as plain text rather than formulas.
+  const needsFormulaPrefix = /^[=+\-@]/.test(text);
+  const escapedText = text.replace(/"/g, "\"\"");
+  const safe = needsFormulaPrefix ? `'${escapedText}` : escapedText;
   if (
+    // Quote cells that were prefixed to neutralize formula injection, as well
+    // as cells containing characters that require quoting under RFC 4180.
+    needsFormulaPrefix ||
     text.indexOf(",") !== -1 ||
     text.indexOf("\"") !== -1 ||
     text.indexOf("\n") !== -1 ||
     text.indexOf("\r") !== -1
   ) {
-    return `"${text.replace(/"/g, "\"\"")}"`;
+    return `"${safe}"`;
   }
-  return text;
+  return safe;
 }
 
 function installSubmitTrigger_(form) {
@@ -476,6 +509,12 @@ function installSubmitTrigger_(form) {
 
 function asText_(value) {
   return value == null ? "" : String(value).trim();
+}
+
+function asBoundedText_(value, maxLength) {
+  const text = asText_(value);
+  if (!maxLength || maxLength < 1) return text;
+  return text.slice(0, maxLength);
 }
 
 function asInt_(value) {

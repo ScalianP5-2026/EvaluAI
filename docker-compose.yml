@@ -1,26 +1,61 @@
-
 services:
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8001:8000"
     environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CHATBOT_LLM_PROVIDER=${CHATBOT_LLM_PROVIDER}
+      - CHATBOT_FOUNDRY_ENDPOINT=${CHATBOT_FOUNDRY_ENDPOINT}
+      - CHATBOT_FOUNDRY_API_KEY=${CHATBOT_FOUNDRY_API_KEY}
+      - CHATBOT_FOUNDRY_DEPLOYMENT=${CHATBOT_FOUNDRY_DEPLOYMENT}
+      - CHATBOT_FOUNDRY_API_VERSION=${CHATBOT_FOUNDRY_API_VERSION}
+      - CHATBOT_FOUNDRY_TEMPERATURE=${CHATBOT_FOUNDRY_TEMPERATURE}
+      - CHATBOT_FOUNDRY_MAX_TOKENS=${CHATBOT_FOUNDRY_MAX_TOKENS}
+      - CHATBOT_FOUNDRY_TIMEOUT_SECONDS=${CHATBOT_FOUNDRY_TIMEOUT_SECONDS}
+      - CHATBOT_FOUNDRY_MAX_RETRIES=${CHATBOT_FOUNDRY_MAX_RETRIES}
+      - DEBUG=true
+      - LOG_LEVEL=INFO
       - EVALUAI_ALLOWED_ORIGINS=*
-      - EVALUAI_SURVEYS_PATH=data/raw/EIPIA_FO_dataset_100_personas.xls
-      - EVALUAI_COURSES_PATH=data/courses.csv
-      - EVALUAI_MENTORS_PATH=data/mentors.csv
+      - EVALUAI_SURVEYS_PATH=${EVALUAI_SURVEYS_PATH}
+      - EVALUAI_COURSES_PATH=${EVALUAI_COURSES_PATH}
+      - EVALUAI_MENTORS_PATH=${EVALUAI_MENTORS_PATH}
+    volumes:
+      - ./backend:/app
+      - ./backend/data:/app/data
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+    networks:
+      - evaluai-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - VITE_API_BASE_URL=/evaluai/api/v1
+      - BACKEND_PROXY_TARGET=http://backend:8000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+    networks:
+      - evaluai-net
     depends_on:
       - backend
+
+networks:
+  evaluai-net:
+    driver: bridge
