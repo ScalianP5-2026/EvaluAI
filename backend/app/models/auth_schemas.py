@@ -16,13 +16,13 @@ from pydantic import BaseModel, EmailStr, Field
 
 class LoginRequest(BaseModel):
     """Login request with email and password."""
-    email: str = Field(..., description="Employee email address")
+    email: EmailStr = Field(..., description="Employee email address")
     password: str = Field("", description="Employee password (empty on first login attempt)")
 
 
 class SetPasswordRequest(BaseModel):
     """First-time password setup request."""
-    email: str = Field(..., description="Employee email address")
+    email: EmailStr = Field(..., description="Employee email address")
     password: str = Field(..., min_length=6, description="New password (min 6 characters)")
     password_confirm: str = Field(..., description="Password confirmation")
 
@@ -34,7 +34,7 @@ class SetPasswordRequest(BaseModel):
 class EmployeeInfo(BaseModel):
     """Public employee information returned after authentication."""
     employee_id: str
-    email: str
+    email: EmailStr
     department: Optional[str] = None
     age: Optional[int] = None
     gender: Optional[str] = None
@@ -52,5 +52,5 @@ class LoginResponse(BaseModel):
 class MustSetPasswordResponse(BaseModel):
     """Response when employee has no password set yet."""
     must_set_password: bool = True
-    email: str
+    email: EmailStr
     message: str = "First login: please create your password"

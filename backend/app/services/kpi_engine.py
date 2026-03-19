@@ -1,5 +1,5 @@
 """
-KPI Engine: Calcula 5 KPIs MVP desde CSV.
+KPI Engine: Calcula 5 KPIs MVP desde CSV/Excel.
 """
 
 import logging
@@ -18,7 +18,18 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Ruta al dataset (obtenida directamente desde .env EVALUAI_SURVEYS_PATH)
-DATA_PATH = Path(os.getenv("EVALUAI_SURVEYS_PATH", "data/raw/EIPIA_FO_dataset_100_personas.csv"))
+DATA_PATH = Path(os.getenv("EVALUAI_SURVEYS_PATH", "data/raw/survey_raw.xlsx"))
+
+
+def _load_dataset(path: Path) -> pd.DataFrame:
+    """Load a dataset from CSV or Excel based on file suffix."""
+    suffix = path.suffix.lower()
+    if suffix == ".xlsx":
+        return pd.read_excel(path, engine="openpyxl")
+    elif suffix == ".xls":
+        return pd.read_excel(path, engine="xlrd")
+    else:
+        return pd.read_csv(path, sep=';')
 
 
 class KPIEngine:
@@ -29,7 +40,7 @@ class KPIEngine:
         try:
             if not DATA_PATH.exists():
                 raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
-            self.df = pd.read_csv(DATA_PATH, sep=';')
+            self.df = _load_dataset(DATA_PATH)
             logger.info(f"Loaded {len(self.df)} employees from dataset: {DATA_PATH}")
         except Exception as e:
             logger.error(f"Error loading dataset: {e}")
