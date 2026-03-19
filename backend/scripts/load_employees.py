@@ -72,7 +72,7 @@ def main() -> None:
             credenciales_nuevas.append({
                 "employee_id": emp_id,
                 "email": f"{emp_id.lower()}@scalian.com",
-                "password_hash": "password_generica_123",
+                "password_hash": "scalian",
                 "is_active": True
             })
 
