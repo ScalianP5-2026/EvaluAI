@@ -103,11 +103,9 @@ export const authAPI = {
     }
   },
 
-  getMe: async (token) => {
+  getMe: async () => {
     try {
-      const response = await apiClient.get("/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiClient.get("/auth/me");
       return response.data;
     } catch (error) {
       handleError(error, "Auth Me");

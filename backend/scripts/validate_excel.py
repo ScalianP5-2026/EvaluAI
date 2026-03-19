@@ -8,6 +8,10 @@ CLEAN_PATH = BASE_DIR / "data" / "clean" / "survey_clean.csv"
 ERROR_PATH = BASE_DIR / "data" / "errors" / "survey_errors.csv"
 REPORT_PATH = BASE_DIR / "data" / "errors" / "validation_report.txt"
 
+# Ensure output directories exist before writing
+CLEAN_PATH.parent.mkdir(parents=True, exist_ok=True)
+ERROR_PATH.parent.mkdir(parents=True, exist_ok=True)
+
 df = pd.read_excel(RAW_PATH, engine="openpyxl")
 
 # Normalizar columnas
@@ -60,7 +64,7 @@ error_df = pd.DataFrame(errors)
 valid_df.to_csv(CLEAN_PATH, index=False)
 error_df.to_csv(ERROR_PATH, index=False)
 
-with open(REPORT_PATH, "w") as f:
+with open(REPORT_PATH, "w", encoding="utf-8") as f:
     f.write("REPORTE VALIDACIÓN\n")
     f.write("-----------------\n")
     f.write(f"Filas totales: {len(df)}\n")

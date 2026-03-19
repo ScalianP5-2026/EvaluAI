@@ -345,6 +345,8 @@
     "sessionExpired": "Sesión expirada. Inicia sesión de nuevo.",
     "loggedInAs": "Conectado como",
     "firstTimeMessage": "Es tu primer inicio de sesión. Por favor, crea una contraseña para tu cuenta.",
-    "backToLogin": "Volver al inicio de sesión"
+    "backToLogin": "Volver al inicio de sesión",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
   }
 }

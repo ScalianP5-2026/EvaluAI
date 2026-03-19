@@ -160,7 +160,7 @@ export default function LoginPage() {
                   type="button"
                   className="login-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
@@ -220,7 +220,7 @@ export default function LoginPage() {
                   type="button"
                   className="login-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
