@@ -136,7 +136,14 @@ async def login(request: LoginRequest):
         )
     
     credential = result.data[0]
-    
+
+    # Reject disabled accounts
+    if not credential.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
     # Check if password has been set
     if credential.get("password_hash") is None:
         return MustSetPasswordResponse(
@@ -221,7 +228,14 @@ async def set_password(request: SetPasswordRequest):
         )
     
     credential = result.data[0]
-    
+
+    # Reject disabled accounts
+    if not credential.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled"
+        )
+
     # Ensure password hasn't been set already
     if credential.get("password_hash") is not None:
         raise HTTPException(
@@ -310,7 +324,21 @@ async def get_current_user(
         )
     
     credential = cred_result.data[0]
-    
+
+    # Reject disabled accounts
+    if not credential.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is disabled"
+        )
+
+    # Verify the credential belongs to the token subject to prevent mismatch
+    if credential.get("employee_id") != employee_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token subject does not match credential"
+        )
+
     # Fetch employee details
     employee = None
     try:

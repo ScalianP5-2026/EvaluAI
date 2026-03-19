@@ -345,6 +345,8 @@
     "sessionExpired": "Session expired. Please sign in again.",
     "loggedInAs": "Logged in as",
     "firstTimeMessage": "This is your first login. Please create a password for your account.",
-    "backToLogin": "Back to login"
+    "backToLogin": "Back to login",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   }
 }

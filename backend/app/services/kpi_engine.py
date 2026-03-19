@@ -10,15 +10,15 @@ import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Ruta al dataset (obtenida directamente desde .env EVALUAI_SURVEYS_PATH)
-DATA_PATH = Path(os.getenv("EVALUAI_SURVEYS_PATH", "data/raw/survey_raw.xlsx"))
+# Ruta al dataset resuelta desde la configuración centralizada.
+# Si la ruta es relativa, se resuelve respecto al directorio del backend.
+_BASE_DIR = Path(__file__).resolve().parents[2]
+_raw_path = Path(settings.surveys_path)
+DATA_PATH = _raw_path if _raw_path.is_absolute() else _BASE_DIR / _raw_path
 
 
 def _load_dataset(path: Path) -> pd.DataFrame:
