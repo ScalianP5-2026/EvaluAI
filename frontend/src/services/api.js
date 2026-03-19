@@ -31,6 +31,23 @@ const nlpClient = axios.create({
   },
 });
 
+// ═══════════════════════════════════════════════════════════════
+// Auth Interceptor - Auto-attach JWT token
+// ═══════════════════════════════════════════════════════════════
+
+const authInterceptor = (config) => {
+  const token = localStorage.getItem("evaluai_token");
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+};
+
+// Apply auth token to both the main API and NLP clients
+apiClient.interceptors.request.use(authInterceptor);
+nlpClient.interceptors.request.use(authInterceptor);
+
 // Error handler
 const handleError = (error, context) => {
   const requestId =
@@ -54,6 +71,46 @@ const handleError = (error, context) => {
   }
 
   throw error;
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Auth API
+// ═══════════════════════════════════════════════════════════════
+
+export const authAPI = {
+  login: async (email, password) => {
+    try {
+      const response = await apiClient.post("/auth/login", {
+        email,
+        password: password || "",
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, "Auth Login");
+    }
+  },
+
+  setPassword: async (email, password, passwordConfirm) => {
+    try {
+      const response = await apiClient.post("/auth/set-password", {
+        email,
+        password,
+        password_confirm: passwordConfirm,
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, "Auth Set Password");
+    }
+  },
+
+  getMe: async () => {
+    try {
+      const response = await apiClient.get("/auth/me");
+      return response.data;
+    } catch (error) {
+      handleError(error, "Auth Me");
+    }
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════

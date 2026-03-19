@@ -1,5 +1,5 @@
 """
-KPI Engine: Calcula 5 KPIs MVP desde CSV.
+KPI Engine: Calcula 5 KPIs MVP desde CSV/Excel.
 """
 
 import logging
@@ -10,22 +10,40 @@ import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
 
+from app.config import settings
+
 logger = logging.getLogger(__name__)
 
-# Ruta al CSV (ajusta según tu estructura)
-CSV_PATH = Path(__file__).parent.parent.parent / "data" / "raw" / "EIPIA_FO_dataset_100_personas.csv"
+# Ruta al dataset resuelta desde la configuración centralizada.
+# Si la ruta es relativa, se resuelve respecto al directorio del backend.
+_BASE_DIR = Path(__file__).resolve().parents[2]
+_raw_path = Path(settings.surveys_path)
+DATA_PATH = _raw_path if _raw_path.is_absolute() else _BASE_DIR / _raw_path
+
+
+def _load_dataset(path: Path) -> pd.DataFrame:
+    """Load a dataset from CSV or Excel based on file suffix."""
+    suffix = path.suffix.lower()
+    if suffix == ".xlsx":
+        return pd.read_excel(path, engine="openpyxl")
+    elif suffix == ".xls":
+        return pd.read_excel(path, engine="xlrd")
+    else:
+        return pd.read_csv(path, sep=';')
 
 
 class KPIEngine:
     """Calcula KPIs MVP."""
     
     def __init__(self):
-        """Load CSV on init."""
+        """Load dataset on init."""
         try:
-            self.df = pd.read_csv(CSV_PATH, delimiter=';', encoding='utf-8-sig')
-            logger.info(f"Loaded {len(self.df)} employees from CSV")
+            if not DATA_PATH.exists():
+                raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
+            self.df = _load_dataset(DATA_PATH)
+            logger.info(f"Loaded {len(self.df)} employees from dataset: {DATA_PATH}")
         except Exception as e:
-            logger.error(f"Error loading CSV: {e}")
+            logger.error(f"Error loading dataset: {e}")
             self.df = pd.DataFrame()
             
     def calculate_acceptance_distribution(self) -> Dict:

@@ -322,5 +322,31 @@
     "topDept": "Top department by motivation: {{dept}} ({{val}}/5).",
     "riskAlert": "{{pct}}% of employees show high AI dependency. Structured coaching recommended.",
     "riskOk": "AI dependency risk is manageable ({{pct}}% high risk). Balanced autonomy observed."
+  },
+  "auth": {
+    "title": "Welcome to EvaluAI",
+    "subtitle": "AI-Powered Training Evaluation",
+    "createPasswordSubtitle": "Create Your Password",
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Min. 6 characters",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "login": "Sign In",
+    "loggingIn": "Signing In...",
+    "logout": "Sign Out",
+    "setPasswordButton": "Create Password & Sign In",
+    "settingPassword": "Creating Password...",
+    "invalidCredentials": "Invalid email or password",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "errorSettingPassword": "Error creating password. Please try again.",
+    "sessionExpired": "Session expired. Please sign in again.",
+    "loggedInAs": "Logged in as",
+    "firstTimeMessage": "This is your first login. Please create a password for your account.",
+    "backToLogin": "Back to login",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   }
 }

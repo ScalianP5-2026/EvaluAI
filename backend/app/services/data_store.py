@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from io import StringIO
 from pathlib import Path
 
 import pandas as pd
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 REQUIRED_SURVEY_COLUMNS = [
     "employee_id",
@@ -29,6 +32,9 @@ class DataRepository:
         self.courses_path = self._resolve_path(courses_path)
         self.mentors_path = self._resolve_path(mentors_path)
 
+        logger.info(f"DataRepository base_dir: {self.base_dir}")
+        logger.info(f"Surveys path resolved: {self.surveys_path} (exists={self.surveys_path.exists()})")
+
         self.surveys_df = self._load_surveys(self.surveys_path)
         self.courses_df = self._load_csv(self.courses_path)
         self.mentors_df = self._load_csv(self.mentors_path)
@@ -41,6 +47,7 @@ class DataRepository:
 
     def _load_csv(self, path: Path) -> pd.DataFrame:
         if not path.exists():
+            logger.warning(f"CSV file not found: {path}")
             return pd.DataFrame()
         df = pd.read_csv(path, encoding="utf-8-sig")
         df.columns = [str(col).replace("\ufeff", "").strip() for col in df.columns]
@@ -48,12 +55,15 @@ class DataRepository:
 
     def _load_surveys(self, path: Path) -> pd.DataFrame:
         if not path.exists():
+            logger.error(f"Survey file not found: {path}")
             return pd.DataFrame(columns=REQUIRED_SURVEY_COLUMNS)
         suffix = path.suffix.lower()
         if suffix in {".xls", ".xlsx"}:
-            dataframe = pd.read_excel(path)
+            engine = "openpyxl" if suffix == ".xlsx" else "xlrd"
+            dataframe = pd.read_excel(path, engine=engine)
         else:
             dataframe = pd.read_csv(path)
+        logger.info(f"Loaded {len(dataframe)} survey rows from {path}")
         return self._normalize_surveys(dataframe)
 
     def _normalize_surveys(self, dataframe: pd.DataFrame) -> pd.DataFrame:

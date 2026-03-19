@@ -11,7 +11,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-// ─── Static dataset constants (EIPIA_FO_dataset_100_personas, n=100) ──────────
+// ─── Static dataset constants (survey_raw, n=100) ──────────
 // Sorted descending by count so index 0 is always the executive highlight.
 
 const DATASET_N = 100;

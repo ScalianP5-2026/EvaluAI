@@ -19,7 +19,11 @@ if not DATABASE_URL:
 
 engine = create_engine(DATABASE_URL)
 
-df = pd.read_excel("backend/data/raw/EIPIA_FO_dataset_100_personas.xls")
+# Resolve dataset path relative to project root (works locally and in Docker)
+DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "raw" / "survey_raw.xlsx"
+if not DATA_PATH.exists():
+    raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
+df = pd.read_excel(DATA_PATH, engine="openpyxl")
 
 # Asegurar que columnas coincidan con nombres SQL
 df.columns = df.columns.str.lower()

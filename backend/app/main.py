@@ -6,7 +6,7 @@ Initializes the app, configures routes, CORS, and startup/shutdown hooks.
 import logging
 from contextlib import asynccontextmanager
 
-from app.api import chat_routes, kpi_routes, ml_routes, surveys_routes
+from app.api import auth_routes, chat_routes, kpi_routes, ml_routes, surveys_routes
 from app.config import (
     AppConfig,
     close_supabase_client,
@@ -15,6 +15,7 @@ from app.config import (
 from app.database.seeds.courses_seed import seed_courses
 from app.database.seeds.employees_seed import seed_employees
 from app.database.seeds.mentores_seed import seed_mentores
+from app.database.seeds.user_credentials_seed import seed_user_credentials
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -66,6 +67,14 @@ async def lifespan(app: FastAPI):
             logger.info("✓ Employees seeded")
         except Exception as e:
             logger.warning(f"⚠ Employees seed failed: {e}")
+
+        # Seed user credentials (execute once on startup)
+        try:
+            logger.info("Seeding user credentials...")
+            await seed_user_credentials(supabase)
+            logger.info("✓ User credentials seeded successfully")
+        except Exception as e:
+            logger.warning(f"⚠ User credentials seed skipped: {str(e)}")
             
         logger.info("✓ API ready at /api/v1 (Gemini configured)")
         logger.info("=== EvaluAI Backend Ready ===")
@@ -112,6 +121,7 @@ def create_app() -> FastAPI:
     )
     
     # ━━━━━━━━━━━━━━━━━ Routes Registration ━━━━━━━━━━━━━━━━━
+    app.include_router(auth_routes.router)
     app.include_router(chat_routes.router)
     app.include_router(kpi_routes.router)
     app.include_router(surveys_routes.router)
