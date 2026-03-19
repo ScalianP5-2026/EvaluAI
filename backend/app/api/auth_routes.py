@@ -33,7 +33,21 @@ logger = logging.getLogger(__name__)
 # Security Configuration
 # ═══════════════════════════════════════════════════════════════
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "evaluai-dev-secret-key-change-in-production-2026")
+_JWT_SECRET_DEFAULT = "evaluai-dev-secret-key-change-in-production-2026"
+_raw_jwt_secret = os.getenv("JWT_SECRET_KEY")
+
+if not _raw_jwt_secret:
+    if os.getenv("APP_ENV", "development").lower() == "production":
+        raise RuntimeError(
+            "JWT_SECRET_KEY environment variable must be set in production. "
+            "Please configure it before starting the application."
+        )
+    logger.warning(
+        "JWT_SECRET_KEY is not set. Using insecure default — DO NOT use in production."
+    )
+    _raw_jwt_secret = _JWT_SECRET_DEFAULT
+
+JWT_SECRET_KEY = _raw_jwt_secret
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "60"))
 

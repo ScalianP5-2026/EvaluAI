@@ -59,7 +59,8 @@ class DataRepository:
             return pd.DataFrame(columns=REQUIRED_SURVEY_COLUMNS)
         suffix = path.suffix.lower()
         if suffix in {".xls", ".xlsx"}:
-            dataframe = pd.read_excel(path, engine="openpyxl")
+            engine = "openpyxl" if suffix == ".xlsx" else "xlrd"
+            dataframe = pd.read_excel(path, engine=engine)
         else:
             dataframe = pd.read_csv(path)
         logger.info(f"Loaded {len(dataframe)} survey rows from {path}")

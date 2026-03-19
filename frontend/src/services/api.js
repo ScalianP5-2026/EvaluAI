@@ -38,6 +38,7 @@ const nlpClient = axios.create({
 const authInterceptor = (config) => {
   const token = localStorage.getItem("evaluai_token");
   if (token) {
+    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
