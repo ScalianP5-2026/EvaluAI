@@ -53,7 +53,6 @@ export default function LoginPage() {
 
       if (result.mustSetPassword) {
         setMode("set-password");
-        navigate("/chat", { replace: true });
       }
     } catch (err) {
       const msg =
