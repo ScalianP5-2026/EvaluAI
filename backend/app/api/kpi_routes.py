@@ -5,8 +5,9 @@ GET /api/v1/kpi/summary - Obtener resumen de 5 KPIs
 
 import logging
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.access_control import require_rrhh_access
 from app.models.chat_schemas import KPIResponse
 from app.services.kpi_engine import (
     calculate_acceptance_distribution,
@@ -25,7 +26,9 @@ router = APIRouter(prefix="/api/v1", tags=["kpi"])
 # ═══════════════════════════════════════════════════════════════
 
 @router.get("/kpi/summary", response_model=KPIResponse)
-async def get_kpi_summary() -> KPIResponse:
+async def get_kpi_summary(
+    _current_user=Depends(require_rrhh_access),
+) -> KPIResponse:
     """
     Obtiene resumen de los 5 KPIs de MVP.
     

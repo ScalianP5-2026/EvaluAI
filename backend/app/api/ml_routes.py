@@ -8,7 +8,8 @@ import logging
 from typing import Dict, Optional
 
 from app.services.ml_client import get_ml_client
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from app.api.access_control import require_rrhh_access
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,10 @@ router = APIRouter(prefix="/api/v1", tags=["ml"])
 # ═══════════════════════════════════════════════════════════════
 
 @router.post("/ml/employee-scoring")
-async def get_employee_scoring(profile: Dict[str, float]):
+async def get_employee_scoring(
+    profile: Dict[str, float],
+    _current_user=Depends(require_rrhh_access),
+):
     """
     Obtiene scores ML para un empleado.
     
@@ -71,7 +75,8 @@ async def get_employee_scoring(profile: Dict[str, float]):
 @router.get("/ml/nlp-analysis")
 async def nlp_analysis(
     text: Optional[str] = None,
-    analysis_type: str = "sentiment"
+    analysis_type: str = "sentiment",
+    _current_user=Depends(require_rrhh_access),
 ): 
     """
     Realiza análisis NLP (placeholder).

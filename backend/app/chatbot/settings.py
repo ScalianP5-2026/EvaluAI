@@ -8,6 +8,12 @@ All parameters can be overridden by setting environment variables.
 import os
 from typing import List
 
+# ==================== LLM PROVIDER ====================
+# Supported values: "gemini" (default), "foundry", "azure_foundry", "azure_openai"
+
+LLM_PROVIDER: str = os.getenv("CHATBOT_LLM_PROVIDER", "gemini").strip().lower()
+"""Active LLM provider for chatbot responses"""
+
 # ==================== GEMINI API CONFIG ====================
 # Load from environment with defaults
 
@@ -27,6 +33,32 @@ GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("CHATBOT_GEMINI_TIMEOUT_SECONDS", "3
 """Request timeout in seconds"""
 
 GEMINI_MAX_RETRIES: int = int(os.getenv("CHATBOT_GEMINI_MAX_RETRIES", "3"))
+"""Number of retry attempts on failure"""
+
+# ==================== AZURE FOUNDRY / AZURE OPENAI ====================
+
+FOUNDRY_API_KEY: str = os.getenv("CHATBOT_FOUNDRY_API_KEY", "")
+"""Azure OpenAI / Foundry API key"""
+
+FOUNDRY_ENDPOINT: str = os.getenv("CHATBOT_FOUNDRY_ENDPOINT", "")
+"""Endpoint URL (resource base, deployment base, or full chat completions URL)"""
+
+FOUNDRY_DEPLOYMENT: str = os.getenv("CHATBOT_FOUNDRY_DEPLOYMENT", "")
+"""Deployment name (required if endpoint is only the resource base URL)"""
+
+FOUNDRY_API_VERSION: str = os.getenv("CHATBOT_FOUNDRY_API_VERSION", "2025-01-01-preview")
+"""Azure OpenAI API version"""
+
+FOUNDRY_TEMPERATURE: float = float(os.getenv("CHATBOT_FOUNDRY_TEMPERATURE", "0.4"))
+"""Temperature for Foundry responses"""
+
+FOUNDRY_MAX_TOKENS: int = int(os.getenv("CHATBOT_FOUNDRY_MAX_TOKENS", "800"))
+"""Max output tokens for Foundry responses"""
+
+FOUNDRY_TIMEOUT_SECONDS: int = int(os.getenv("CHATBOT_FOUNDRY_TIMEOUT_SECONDS", "30"))
+"""Request timeout in seconds"""
+
+FOUNDRY_MAX_RETRIES: int = int(os.getenv("CHATBOT_FOUNDRY_MAX_RETRIES", "3"))
 """Number of retry attempts on failure"""
 
 
@@ -75,9 +107,19 @@ def validate_settings() -> bool:
     """
     errors = []
     
-    # Check required settings
-    if not GEMINI_API_KEY:
-        errors.append("CHATBOT_GEMINI_API_KEY is not set")
+    # Check required settings by provider
+    if LLM_PROVIDER in ("foundry", "azure_foundry", "azure_openai"):
+        if not FOUNDRY_API_KEY:
+            errors.append("CHATBOT_FOUNDRY_API_KEY is not set")
+        if not FOUNDRY_ENDPOINT:
+            errors.append("CHATBOT_FOUNDRY_ENDPOINT is not set")
+        if not FOUNDRY_DEPLOYMENT and "/deployments/" not in FOUNDRY_ENDPOINT:
+            errors.append(
+                "CHATBOT_FOUNDRY_DEPLOYMENT is not set and endpoint doesn't include deployment path"
+            )
+    else:
+        if not GEMINI_API_KEY:
+            errors.append("CHATBOT_GEMINI_API_KEY is not set")
     
     if GEMINI_TEMPERATURE < 0.0 or GEMINI_TEMPERATURE > 1.0:
         errors.append(f"CHATBOT_GEMINI_TEMPERATURE must be 0.0-1.0, got {GEMINI_TEMPERATURE}")
@@ -114,7 +156,9 @@ def print_settings() -> None:
     """Print current settings (for debugging)."""
     if DEBUG_MODE:
         print("\n=== Chatbot Core Settings ===")
+        print(f"LLM Provider: {LLM_PROVIDER}")
         print(f"Gemini Model: {GEMINI_MODEL}")
+        print(f"Foundry Deployment: {FOUNDRY_DEPLOYMENT or '(from endpoint)'}")
         print(f"Temperature: {GEMINI_TEMPERATURE}")
         print(f"Max Tokens: {GEMINI_MAX_TOKENS}")
         print(f"Timeout: {GEMINI_TIMEOUT_SECONDS}s")

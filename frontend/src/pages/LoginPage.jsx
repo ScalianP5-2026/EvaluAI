@@ -53,7 +53,10 @@ export default function LoginPage() {
 
       if (result.mustSetPassword) {
         setMode("set-password");
-        navigate("/chat", { replace: true });
+        setPasswordValue("");
+        setPasswordConfirm("");
+        setError("");
+        return;
       }
     } catch (err) {
       const msg =
@@ -179,6 +182,23 @@ export default function LoginPage() {
                 <span className="login-spinner" />
               ) : null}
               {isLoading ? t("auth.loggingIn") : t("auth.login")}
+            </button>
+
+            <button
+              type="button"
+              className="login-back-link"
+              onClick={() => {
+                if (!email) {
+                  setError(t("auth.enterEmailFirst"));
+                  return;
+                }
+                setMode("set-password");
+                setPasswordValue("");
+                setPasswordConfirm("");
+                setError("");
+              }}
+            >
+              {t("auth.firstTimeAction")}
             </button>
           </form>
         )}

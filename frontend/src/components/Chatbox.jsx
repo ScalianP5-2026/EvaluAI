@@ -19,7 +19,7 @@ export default function ChatBox({ history, onSendMessage, loading }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col h-96 shadow-sm">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col h-[48rem] shadow-sm">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
         {t("chat.title")}
       </h2>

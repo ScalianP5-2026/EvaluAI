@@ -2,48 +2,95 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ChatBox from "../components/Chatbox";
 import { chatAPI } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function ChatPage() {
   const { t } = useTranslation();
-  const [userId] = useState("1XVWCBPH");
-  const initialHistory = [
+  const { user } = useAuth();
+  const userId = user?.employee_id || "";
+  const normalizeContent = (role, content) => {
+    if (typeof content !== "string") {
+      return String(content ?? "");
+    }
+
+    const trimmed = content.trim();
+    if (!trimmed) return "";
+
+    if (trimmed.startsWith("chat.welcomeMessage")) {
+      return t("chat.welcomeMessage");
+    }
+
+    if (role === "assistant" && trimmed.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed.message === "string" && parsed.message.trim()) {
+          return parsed.message;
+        }
+      } catch (e) {
+        // Keep original content when it's plain text.
+      }
+    }
+
+    return content;
+  };
+
+  const buildInitialHistory = () => [
     {
       role: "assistant",
       content: t("chat.welcomeMessage"),
       timestamp: new Date().toISOString(),
     },
   ];
-  const [history, setHistory] = useState(initialHistory);
+  const [history, setHistory] = useState(buildInitialHistory);
   const [loading, setLoading] = useState(false);
   const [sendError, setSendError] = useState(null);
 
   useEffect(() => {
+    if (!userId) return;
     loadHistory();
-  }, []);
+  }, [t, userId]);
 
   const loadHistory = async () => {
+    if (!userId) {
+      setHistory(buildInitialHistory());
+      return;
+    }
+
     try {
       const data = await chatAPI.getHistory(userId);
-      const conversationHistory = data && Array.isArray(data.conversation_history)
-        ? data.conversation_history
-        : null;
+      const conversationHistory = Array.isArray(data)
+        ? data
+        : data && Array.isArray(data.conversation_history)
+          ? data.conversation_history
+          : null;
+
       if (conversationHistory && conversationHistory.length > 0) {
-        setHistory(conversationHistory);
+        const normalizedHistory = conversationHistory.map((item) => ({
+          ...item,
+          content: normalizeContent(item?.role, item?.content),
+        }));
+        setHistory(normalizedHistory);
       } else {
-        setHistory(initialHistory);
+        setHistory(buildInitialHistory());
       }
     } catch (error) {
       console.error("Failed to load history:", error);
+      setHistory(buildInitialHistory());
     }
   };
 
   const handleSendMessage = async (message) => {
+    if (!userId) {
+      setSendError(t("chat.sendError"));
+      return;
+    }
+
     setLoading(true);
     setSendError(null);
     try {
       const response = await chatAPI.sendMessage(userId, message);
-      setHistory([
-        ...history,
+      setHistory((prevHistory) => [
+        ...prevHistory,
         { role: "user", content: message, timestamp: new Date().toISOString() },
         {
           role: "assistant",
