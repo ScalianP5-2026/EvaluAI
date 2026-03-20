@@ -307,6 +307,8 @@ async def chat_query(
         rag_ctx["recommended_mentors"] = [
             {
                 "nombre": item.get("title"),
+                "mentor_initials": (item.get("metadata") or {}).get("mentor_initials")
+                or (item.get("metadata") or {}).get("nombre_codigo"),
                 "especialidades": (item.get("metadata") or {}).get("especialidades")
                 or (item.get("metadata") or {}).get("expertise"),
                 "role": (item.get("metadata") or {}).get("role"),
@@ -316,6 +318,10 @@ async def chat_query(
                 "disponibilidad": (item.get("metadata") or {}).get("disponibilidad")
                 or (item.get("metadata") or {}).get("availability"),
                 "email": (item.get("metadata") or {}).get("email"),
+                "teams": (item.get("metadata") or {}).get("teams"),
+                "contact_channel": (item.get("metadata") or {}).get(
+                    "contact_channel"
+                ),
                 "source": item.get("source"),
                 "score": item.get("score"),
                 "reasons": item.get("reasons", []),

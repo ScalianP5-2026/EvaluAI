@@ -242,9 +242,15 @@ Model not available yet
         mentor_contacts_text = (
             "; ".join(
                 [
-                    f"{m.get('nombre', 'Unknown')} ({m.get('email')})"
+                    (
+                        f"{m.get('nombre', 'Unknown')}"
+                        f" [iniciales: {m.get('mentor_initials', 'N/A')}]"
+                        f" | email: {m.get('email', 'N/A')}"
+                        f" | teams: {m.get('teams', 'N/A')}"
+                        f" | canal: {m.get('contact_channel', 'N/A')}"
+                    )
                     for m in mentores
-                    if m.get("email")
+                    if m.get("email") or m.get("teams")
                 ]
             )
             if mentores

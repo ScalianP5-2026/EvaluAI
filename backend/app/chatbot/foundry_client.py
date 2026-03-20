@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import httpx
@@ -105,6 +105,11 @@ class FoundryChatClient:
         self.max_tokens = settings.FOUNDRY_MAX_TOKENS
         self.timeout_seconds = settings.FOUNDRY_TIMEOUT_SECONDS
         self.max_retries = settings.FOUNDRY_MAX_RETRIES
+        self.system_prompt = settings.FOUNDRY_SYSTEM_PROMPT
+        self.use_structured_outputs = settings.FOUNDRY_USE_STRUCTURED_OUTPUTS
+        self.structured_schema_name = settings.FOUNDRY_STRUCTURED_SCHEMA_NAME
+        self.structured_schema_strict = settings.FOUNDRY_STRUCTURED_SCHEMA_STRICT
+        self._runtime_structured_outputs_enabled = self.use_structured_outputs
 
         if not self.api_key:
             raise ValueError("API key cannot be empty (set CHATBOT_FOUNDRY_API_KEY)")
@@ -138,6 +143,14 @@ class FoundryChatClient:
         history = history or []
         messages: List[Dict[str, str]] = []
 
+        if self.system_prompt and self.system_prompt.strip():
+            messages.append(
+                {
+                    "role": "system",
+                    "content": self.system_prompt.strip(),
+                }
+            )
+
         for turn in history:
             role = turn.get("role", "user")
             content = turn.get("content", "")
@@ -148,11 +161,14 @@ class FoundryChatClient:
 
         messages.append({"role": "user", "content": prompt})
 
-        payload = {
+        payload: Dict[str, Any] = {
             "messages": messages,
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
         }
+        if self._runtime_structured_outputs_enabled:
+            payload["response_format"] = self._build_structured_response_format()
+
         headers = {
             "Content-Type": "application/json",
             "api-key": self.api_key,
@@ -169,14 +185,33 @@ class FoundryChatClient:
                     )
                 response.raise_for_status()
                 data = response.json()
-                content = (
-                    data.get("choices", [{}])[0]
-                    .get("message", {})
-                    .get("content", "")
-                )
+                content = self._extract_assistant_content(data)
                 if not content:
                     raise RuntimeError("Empty content in Foundry response")
                 return content
+            except httpx.HTTPStatusError as exc:
+                status_code = exc.response.status_code if exc.response else None
+                if (
+                    status_code in (400, 404, 422)
+                    and self._runtime_structured_outputs_enabled
+                ):
+                    logger.warning(
+                        "Foundry endpoint rejected structured outputs. "
+                        "Retrying without response_format. status=%s",
+                        status_code,
+                    )
+                    self._runtime_structured_outputs_enabled = False
+                    payload.pop("response_format", None)
+                    continue
+                last_error = str(exc)
+                logger.warning(
+                    "Foundry query attempt %s/%s failed: %s",
+                    attempt + 1,
+                    self.max_retries,
+                    last_error,
+                )
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(0.6)
             except Exception as exc:
                 last_error = str(exc)
                 logger.warning(
@@ -192,3 +227,88 @@ class FoundryChatClient:
             f"Failed to get response from Foundry after {self.max_retries} attempts. "
             f"Last error: {last_error}"
         )
+
+    def _build_structured_response_format(self) -> Dict[str, Any]:
+        """Build JSON schema response format for strict parseable outputs."""
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": self.structured_schema_name,
+                "strict": self.structured_schema_strict,
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": [
+                        "message",
+                        "recommendations",
+                        "insights",
+                        "metadata",
+                        "risk_alert",
+                    ],
+                    "properties": {
+                        "message": {"type": "string"},
+                        "recommendations": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["course", "mentor", "plan_30_days"],
+                            "properties": {
+                                "course": {"type": ["string", "null"]},
+                                "mentor": {"type": ["string", "null"]},
+                                "rationale": {"type": ["string", "null"]},
+                                "plan_30_days": {
+                                    "type": ["array", "null"],
+                                    "items": {"type": "string"},
+                                },
+                            },
+                        },
+                        "insights": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["general", "department", "personal"],
+                            "properties": {
+                                "general": {"type": "string"},
+                                "department": {"type": "string"},
+                                "personal": {"type": "string"},
+                            },
+                        },
+                        "metadata": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": [
+                                "goal_detected",
+                                "goal_clarity",
+                                "recommended_skill",
+                            ],
+                            "properties": {
+                                "goal_detected": {"type": "boolean"},
+                                "goal_clarity": {"type": "string"},
+                                "recommended_skill": {"type": ["string", "null"]},
+                            },
+                        },
+                        "risk_alert": {"type": ["string", "null"]},
+                    },
+                },
+            },
+        }
+
+    @staticmethod
+    def _extract_assistant_content(data: Dict[str, Any]) -> str:
+        """
+        Extract assistant content from Azure OpenAI response payload.
+
+        Handles both plain-string and list-based content shapes.
+        """
+        message = data.get("choices", [{}])[0].get("message", {})
+        content = message.get("content", "")
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            text_parts: List[str] = []
+            for part in content:
+                if not isinstance(part, dict):
+                    continue
+                text = part.get("text")
+                if isinstance(text, str) and text:
+                    text_parts.append(text)
+            return "\n".join(text_parts).strip()
+        return str(content or "")
