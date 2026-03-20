@@ -45,7 +45,16 @@ if env_file:
 else:
     # Fallback: use default load_dotenv() behavior or system env vars
     load_dotenv()
-    print("⚠ No .env file found, using system environment variables")
+    runtime_env_detected = any(
+        os.getenv(var)
+        for var in ("SUPABASE_URL", "SUPABASE_KEY", "GEMINI_API_KEY")
+    )
+    if runtime_env_detected:
+        print(
+            "ℹ No .env file found in container filesystem; using runtime environment variables"
+        )
+    else:
+        print("⚠ No .env file found and critical environment variables are missing")
 
 logger = logging.getLogger(__name__)
 
