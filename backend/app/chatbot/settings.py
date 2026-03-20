@@ -8,6 +8,13 @@ All parameters can be overridden by setting environment variables.
 import os
 from typing import List
 
+
+def _as_bool(value: str, default: bool = False) -> bool:
+    """Parse common boolean env values."""
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 # ==================== LLM PROVIDER ====================
 # Supported values: "gemini" (default), "foundry", "azure_foundry", "azure_openai"
 
@@ -60,6 +67,47 @@ FOUNDRY_TIMEOUT_SECONDS: int = int(os.getenv("CHATBOT_FOUNDRY_TIMEOUT_SECONDS", 
 
 FOUNDRY_MAX_RETRIES: int = int(os.getenv("CHATBOT_FOUNDRY_MAX_RETRIES", "3"))
 """Number of retry attempts on failure"""
+
+FOUNDRY_SYSTEM_PROMPT: str = os.getenv(
+    "CHATBOT_FOUNDRY_SYSTEM_PROMPT",
+    (
+        "You are Scalian's internal learning advisor chatbot. "
+        "Your responsibility is to provide practical, accurate, and personalized "
+        "educational guidance to Scalian employees.\n"
+        "Scope:\n"
+        "- Recommend relevant courses, programs, and mentors based on provided context.\n"
+        "- Answer employee profile questions only using supplied facts.\n"
+        "- If information is unavailable in context, say so clearly and avoid guessing.\n"
+        "Style:\n"
+        "- Be concise, helpful, and professional.\n"
+        "- Prefer clear, actionable next steps.\n"
+        "Safety and policy:\n"
+        "- Do not fabricate employee data, internal policies, or contacts.\n"
+        "- Do not reveal secrets, credentials, or implementation internals.\n"
+        "- Refuse requests outside learning advisory scope when needed.\n"
+        "Output contract:\n"
+        "- Follow the requested response schema exactly."
+    ),
+)
+"""System prompt for Foundry chat completions."""
+
+FOUNDRY_USE_STRUCTURED_OUTPUTS: bool = _as_bool(
+    os.getenv("CHATBOT_FOUNDRY_USE_STRUCTURED_OUTPUTS", "true"),
+    default=True,
+)
+"""Enable schema-enforced structured outputs on Foundry chat completions."""
+
+FOUNDRY_STRUCTURED_SCHEMA_NAME: str = os.getenv(
+    "CHATBOT_FOUNDRY_STRUCTURED_SCHEMA_NAME",
+    "evaluai_chat_response",
+)
+"""Name used for Foundry structured output schema."""
+
+FOUNDRY_STRUCTURED_SCHEMA_STRICT: bool = _as_bool(
+    os.getenv("CHATBOT_FOUNDRY_STRUCTURED_SCHEMA_STRICT", "true"),
+    default=True,
+)
+"""Whether structured output schema enforcement should be strict."""
 
 
 # ==================== CONVERSATION MEMORY ====================
@@ -123,6 +171,11 @@ def validate_settings() -> bool:
     
     if GEMINI_TEMPERATURE < 0.0 or GEMINI_TEMPERATURE > 1.0:
         errors.append(f"CHATBOT_GEMINI_TEMPERATURE must be 0.0-1.0, got {GEMINI_TEMPERATURE}")
+
+    if FOUNDRY_TEMPERATURE < 0.0 or FOUNDRY_TEMPERATURE > 1.0:
+        errors.append(
+            f"CHATBOT_FOUNDRY_TEMPERATURE must be 0.0-1.0, got {FOUNDRY_TEMPERATURE}"
+        )
     
     if GEMINI_MAX_TOKENS < 1:
         errors.append(f"CHATBOT_GEMINI_MAX_TOKENS must be > 0, got {GEMINI_MAX_TOKENS}")
@@ -163,6 +216,8 @@ def print_settings() -> None:
         print(f"Max Tokens: {GEMINI_MAX_TOKENS}")
         print(f"Timeout: {GEMINI_TIMEOUT_SECONDS}s")
         print(f"Retries: {GEMINI_MAX_RETRIES}")
+        print(f"Foundry Structured Outputs: {FOUNDRY_USE_STRUCTURED_OUTPUTS}")
+        print(f"Foundry Structured Schema: {FOUNDRY_STRUCTURED_SCHEMA_NAME}")
         print(f"Memory Turns: {CONVERSATION_MAX_TURNS}")
         print(f"API Turns: {CONVERSATION_MAX_TURNS_TO_API}")
         print(f"Goal Keywords: {', '.join(GOAL_DETECTION_KEYWORDS)}")
