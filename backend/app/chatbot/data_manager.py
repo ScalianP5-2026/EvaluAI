@@ -4,6 +4,8 @@ RAG context vía SQL queries.
 """
 
 import logging
+import re
+import unicodedata
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
@@ -12,6 +14,93 @@ import pandas as pd
 from supabase import Client
 
 logger = logging.getLogger(__name__)
+
+FIRST_NAME_BY_INITIAL = {
+    "A": "Alejandro",
+    "B": "Beatriz",
+    "C": "Carlos",
+    "D": "Daniel",
+    "E": "Elena",
+    "F": "Fernando",
+    "G": "Gabriel",
+    "H": "Hector",
+    "I": "Irene",
+    "J": "Javier",
+    "K": "Karla",
+    "L": "Lucia",
+    "M": "Marta",
+    "N": "Nuria",
+    "O": "Oscar",
+    "P": "Paula",
+    "Q": "Quique",
+    "R": "Raul",
+    "S": "Sofia",
+    "T": "Teresa",
+    "U": "Unai",
+    "V": "Valeria",
+    "W": "William",
+    "X": "Xavier",
+    "Y": "Yolanda",
+    "Z": "Zoe",
+}
+
+LAST_NAME_BY_INITIAL_1 = {
+    "A": "Alonso",
+    "B": "Blanco",
+    "C": "Castro",
+    "D": "Dominguez",
+    "E": "Esteban",
+    "F": "Fernandez",
+    "G": "Garcia",
+    "H": "Herrera",
+    "I": "Iglesias",
+    "J": "Jimenez",
+    "K": "Keller",
+    "L": "Lopez",
+    "M": "Martinez",
+    "N": "Navarro",
+    "O": "Ortega",
+    "P": "Perez",
+    "Q": "Quintero",
+    "R": "Rodriguez",
+    "S": "Sanchez",
+    "T": "Torres",
+    "U": "Urrutia",
+    "V": "Vega",
+    "W": "Williams",
+    "X": "Ximenez",
+    "Y": "Yanez",
+    "Z": "Zamora",
+}
+
+LAST_NAME_BY_INITIAL_2 = {
+    "A": "Alvarez",
+    "B": "Benitez",
+    "C": "Cabrera",
+    "D": "Diaz",
+    "E": "Escobar",
+    "F": "Flores",
+    "G": "Gomez",
+    "H": "Hidalgo",
+    "I": "Izquierdo",
+    "J": "Jurado",
+    "K": "Khan",
+    "L": "Lara",
+    "M": "Molina",
+    "N": "Nunez",
+    "O": "Olivares",
+    "P": "Prieto",
+    "Q": "Quevedo",
+    "R": "Ruiz",
+    "S": "Suarez",
+    "T": "Trujillo",
+    "U": "Ubeda",
+    "V": "Vargas",
+    "W": "Wolf",
+    "X": "Xuarez",
+    "Y": "Yepes",
+    "Z": "Zarate",
+}
 
 class DataManager:
     """Gestiona acceso a datos desde Supabase."""
@@ -36,6 +125,95 @@ class DataManager:
         if isinstance(value, list):
             return [DataManager._normalize_value(v) for v in value]
         return value
+
+    @staticmethod
+    def _ascii_upper_letters(value: Any) -> str:
+        """Normalize text and keep only ASCII uppercase letters."""
+        text = unicodedata.normalize("NFKD", str(value or ""))
+        text = "".join(ch for ch in text if not unicodedata.combining(ch))
+        return "".join(ch for ch in text.upper() if "A" <= ch <= "Z")
+
+    @staticmethod
+    def _slug(value: str) -> str:
+        """Create a lowercase ASCII slug fragment."""
+        text = unicodedata.normalize("NFKD", value or "")
+        text = "".join(ch for ch in text if not unicodedata.combining(ch))
+        text = re.sub(r"[^a-zA-Z0-9]+", ".", text).strip(".").lower()
+        text = re.sub(r"\.+", ".", text)
+        return text or "mentor"
+
+    @staticmethod
+    def _is_initials_code(value: str) -> bool:
+        """
+        Detect 2-5 uppercase initials-like codes (e.g., CDO, MLS, JJO).
+        """
+        cleaned = (value or "").strip()
+        return bool(re.fullmatch(r"[A-Z]{2,5}", cleaned))
+
+    def _mentor_full_name_from_initials(self, initials: str) -> str:
+        """
+        Deterministically expand initials into a plausible full name.
+        """
+        letters = self._ascii_upper_letters(initials)
+        if len(letters) < 3:
+            letters = (letters + "AAA")[:3]
+        else:
+            letters = letters[:3]
+
+        first = FIRST_NAME_BY_INITIAL.get(letters[0], "Alejandro")
+        last_1 = LAST_NAME_BY_INITIAL_1.get(letters[1], "Garcia")
+        last_2 = LAST_NAME_BY_INITIAL_2.get(letters[2], "Ruiz")
+        return f"{first} {last_1} {last_2}"
+
+    def _mentor_contact_payload(
+        self,
+        full_name: str,
+        initials: str,
+    ) -> Dict[str, str]:
+        """
+        Create synthetic but consistent contact fields for mentor suggestions.
+        """
+        parts = [part for part in full_name.split(" ") if part]
+        first = parts[0] if parts else "mentor"
+        last = parts[1] if len(parts) > 1 else "advisor"
+        email_local = f"{self._slug(first)}.{self._slug(last)}"
+        initials_slug = self._slug(initials)
+        if initials_slug:
+            email_local = f"{email_local}.{initials_slug}"
+        teams_alias = f"{self._slug(first)}.{self._slug(last)}"
+
+        return {
+            "email": f"{email_local}@scalian.com",
+            "teams": f"@{teams_alias}",
+            "contact_channel": "Correo interno o Microsoft Teams",
+        }
+
+    def _enrich_mentor_identity(self, row: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Ensure mentor rows are human-readable and include contact data.
+        """
+        enriched = dict(row)
+        raw_name = str(enriched.get("nombre") or enriched.get("mentor_name") or "").strip()
+        raw_id = str(enriched.get("mentor_id") or "").strip()
+        initials_source = raw_name or raw_id
+        initials = self._ascii_upper_letters(initials_source)[:5]
+
+        if raw_name and not self._is_initials_code(self._ascii_upper_letters(raw_name)):
+            full_name = raw_name
+        else:
+            full_name = self._mentor_full_name_from_initials(initials_source)
+
+        contact = self._mentor_contact_payload(full_name=full_name, initials=initials)
+
+        # Keep original initials for traceability, expose human-readable name for chatbot.
+        enriched["mentor_initials"] = initials or raw_name or raw_id
+        enriched["nombre_codigo"] = raw_name or raw_id
+        enriched["nombre"] = full_name
+        enriched["mentor_name"] = full_name
+        enriched["email"] = contact["email"]
+        enriched["teams"] = contact["teams"]
+        enriched["contact_channel"] = contact["contact_channel"]
+        return enriched
 
     def _safe_select(
         self,
@@ -469,7 +647,8 @@ class DataManager:
         try:
             response = self.db.table("mentores").select("*").limit(limit).execute()
             rows = response.data if response and response.data else []
-            return [self._normalize_value(row) for row in rows]
+            normalized_rows = [self._normalize_value(row) for row in rows]
+            return [self._enrich_mentor_identity(row) for row in normalized_rows]
         except Exception as e:
             logger.error(f"Error loading mentor catalog: {e}")
             return []
@@ -518,7 +697,11 @@ class DataManager:
             if not mentores_data:
                 logger.info(f"No mentores found in database for specialties: {especialidades}")
                 return []
-                
+
+            mentores_data = [
+                self._enrich_mentor_identity(self._normalize_value(row))
+                for row in mentores_data
+            ]
             logger.info(f"Found {len(mentores_data)} mentores matching specialties: {especialidades}")
             return mentores_data
             

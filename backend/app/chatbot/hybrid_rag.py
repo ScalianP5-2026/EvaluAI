@@ -132,7 +132,8 @@ class HybridRAGOrchestrator:
         )
 
         file_courses = self._load_file_course_docs()
-        file_mentors = self._load_file_mentor_docs() + self._load_readable_mentor_profiles()
+        # Mentors must come from Supabase table `mentores` (no file fallback).
+        file_mentors: List[Dict[str, Any]] = []
         tool_trace.append(
             {
                 "tool": "file_knowledge_retrieval",
@@ -363,10 +364,7 @@ class HybridRAGOrchestrator:
         merged: Dict[str, Candidate] = {}
 
         for row in supabase_rows:
-            title = row.get("nombre") or row.get("mentor_name") or ""
-            if _is_code_like_name(str(title)):
-                # Skip opaque IDs so final recommendations use readable names.
-                continue
+            title = row.get("mentor_name") or row.get("nombre") or ""
             key = _normalize_title(str(title))
             if not key:
                 continue
@@ -375,7 +373,15 @@ class HybridRAGOrchestrator:
                 specialties_text = " ".join(str(item) for item in specialties)
             else:
                 specialties_text = str(specialties)
-            text = " ".join([str(title), specialties_text])
+            text = " ".join(
+                [
+                    str(title),
+                    specialties_text,
+                    str(row.get("contact_channel", "")),
+                    str(row.get("email", "")),
+                    str(row.get("teams", "")),
+                ]
+            )
             merged[key] = Candidate(
                 item_type="mentor",
                 title=str(title),
