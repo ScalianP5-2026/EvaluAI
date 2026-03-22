@@ -77,33 +77,48 @@ export default function Sidebar() {
               type="button"
               onClick={() => setShowCampaignModal(true)}
             >
-              {t("dashboard.createCampaignButton")}
+              <span className="inline-flex items-center gap-2">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                {t("dashboard.createCampaignButton")}
+              </span>
             </button>
           </div>
           {/* Create Campaign Modal */}
           {showCampaignModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-              <div className="bg-white rounded-lg shadow-lg w-full max-w-xs p-6">
-                <h3 className="text-lg font-semibold mb-4">
+              <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-xs p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                   {t("dashboard.createCampaignButton")}
                 </h3>
                 <form className="space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
                       {t("dashboard.campaignTitleLabel", "Title")}
                     </label>
-                    <input className="w-full border rounded-md px-3 py-2 text-sm" />
+                    <input className="w-full border rounded-md px-3 py-2 text-sm bg-white dark:bg-slate-800 dark:text-gray-100 border-slate-300 dark:border-slate-700" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
                       {t("dashboard.campaignWaveLabel", "Wave")}
                     </label>
-                    <input className="w-full border rounded-md px-3 py-2 text-sm" />
+                    <input className="w-full border rounded-md px-3 py-2 text-sm bg-white dark:bg-slate-800 dark:text-gray-100 border-slate-300 dark:border-slate-700" />
                   </div>
                   <div className="flex justify-end gap-2 mt-2">
                     <button
                       type="button"
-                      className="px-4 py-2 text-sm bg-gray-200 rounded-md"
+                      className="px-4 py-2 text-sm bg-gray-200 dark:bg-slate-700 dark:text-gray-100 rounded-md"
                       onClick={() => setShowCampaignModal(false)}
                     >
                       {t("dashboard.cancel", "Cancel")}
