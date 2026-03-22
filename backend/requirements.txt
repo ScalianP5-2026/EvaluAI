@@ -64,6 +64,7 @@ isort==5.13.2
 
 # Excel
 xlrd==2.0.2
+xlwt==1.3.0
 
 # Logging & Utilities
 python-json-logger==2.0.7

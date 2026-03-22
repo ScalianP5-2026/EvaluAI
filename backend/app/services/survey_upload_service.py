@@ -38,7 +38,7 @@ class SurveyUploadService:
         """
         self.supabase = supabase
     
-    def process_csv_upload(self, file_content: bytes, filename: str) -> SurveyUploadResponse:
+    def process_csv_upload(self, file_content: bytes, filename: str, campaign_id: str = None) -> SurveyUploadResponse:
         """
         Process a survey file upload (.csv, .xls, .xlsx) end-to-end.
         """
@@ -64,36 +64,51 @@ class SurveyUploadService:
             logger.error(f"Failed to parse file: {e}")
             raise ValueError(f"Failed to parse file: {e}")
 
+
+        # --- Campaign association required ---
+        if campaign_id is None:
+            raise ValueError("campaign_id is required for manual survey upload.")
+
+        # Load campaign to inherit wave if needed
+        campaign = None
+        try:
+            campaign_result = self.supabase.table("survey_campaigns").select("id,wave").eq("id", campaign_id).single().execute()
+            campaign = campaign_result.data
+        except Exception as e:
+            logger.error(f"Failed to load campaign {campaign_id}: {e}")
+            raise ValueError(f"Invalid campaign_id: {campaign_id}")
+        if not campaign:
+            raise ValueError(f"Invalid campaign_id: {campaign_id}")
+        campaign_wave = campaign.get("wave")
+
         # Normalize and validate
-        # Use DataRepository only for normalization, avoid file loading
         class NoLoadDataRepository(DataRepository):
             def __init__(self):
                 pass
         repo = NoLoadDataRepository()
         norm_df = repo._normalize_surveys(df)
-        # Compute dedupe_key for each row: normalized id_empleado + full normalized survey_completed_at
         def compute_dedupe_key(row):
             emp = str(row.get("id_empleado", "")).strip().upper()
             ts = str(row.get("survey_completed_at", "")).strip()
             return f"{emp}_{ts}" if emp and ts else ""
         norm_df["dedupe_key"] = norm_df.apply(compute_dedupe_key, axis=1)
 
-        # --- Begin normalization for optional fields ---
-        # For MVP: set default wave = 't1' if missing/blank
+        # --- Begin normalization for campaign association ---
+        norm_df["campaign_id"] = campaign_id
+        norm_df["source"] = "bulk_upload"
+        # Inherit wave from campaign if missing/blank
         if "wave" in norm_df.columns:
-            norm_df["wave"] = norm_df["wave"].apply(lambda x: "t1" if pd.isna(x) or str(x).strip() == "" else str(x).strip())
+            norm_df["wave"] = norm_df["wave"].apply(lambda x: campaign_wave if pd.isna(x) or str(x).strip() == "" else str(x).strip())
         else:
-            norm_df["wave"] = "t1"
-        # Normalize campaign_id, import_batch_id, source: set to None if blank
-        for col in ["campaign_id", "import_batch_id", "source"]:
-            if col in norm_df.columns:
-                norm_df[col] = norm_df[col].apply(lambda x: None if pd.isna(x) or str(x).strip() == "" else x)
-        # --- End normalization for optional fields ---
+            norm_df["wave"] = campaign_wave
+        # Normalize import_batch_id: set to None if blank
+        if "import_batch_id" in norm_df.columns:
+            norm_df["import_batch_id"] = norm_df["import_batch_id"].apply(lambda x: None if pd.isna(x) or str(x).strip() == "" else x)
+        # --- End normalization for campaign association ---
 
         # Prepare import_batches fields
         import_type = IMPORT_TYPE
         status = "pending"
-        norm_df["source"] = "bulk_upload"
 
         # Validation and deduplication
         errors = []
