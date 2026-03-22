@@ -27,7 +27,7 @@ class CampaignUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 class CampaignResponse(CampaignBase):
-    id: int
+    id: str
     is_active: bool
     created_by: Optional[str] = None
     created_at: datetime

@@ -18,6 +18,7 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showCampaignModal, setShowCampaignModal] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const navItems = [
     { path: "/dashboard", text: t("nav.dashboard") },
@@ -69,11 +70,30 @@ export default function Sidebar() {
             <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-widest mb-3">
               {t("dashboard.rrhhActionsTitle")}
             </h3>
-            <div className="mb-2">
-              <SurveyUpload compact={false} />
-            </div>
             <button
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-md"
+              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-md transition-colors"
+              type="button"
+              onClick={() => setIsUploadOpen(true)}
+            >
+              <span className="inline-flex items-center gap-2">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12"
+                  />
+                </svg>
+                {t("dashboard.uploadSurveys")}
+              </span>
+            </button>
+            <button
+              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-md transition-colors"
               type="button"
               onClick={() => setShowCampaignModal(true)}
             >
@@ -97,7 +117,7 @@ export default function Sidebar() {
           </div>
           {/* Create Campaign Modal */}
           {showCampaignModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
               <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-xs p-6">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                   {t("dashboard.createCampaignButton")}
@@ -105,13 +125,13 @@ export default function Sidebar() {
                 <form className="space-y-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
-                      {t("dashboard.campaignTitleLabel", "Title")}
+                      {t("dashboard.campaignTitleLabel")}
                     </label>
                     <input className="w-full border rounded-md px-3 py-2 text-sm bg-white dark:bg-slate-800 dark:text-gray-100 border-slate-300 dark:border-slate-700" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
-                      {t("dashboard.campaignWaveLabel", "Wave")}
+                      {t("dashboard.campaignWaveLabel")}
                     </label>
                     <input className="w-full border rounded-md px-3 py-2 text-sm bg-white dark:bg-slate-800 dark:text-gray-100 border-slate-300 dark:border-slate-700" />
                   </div>
@@ -121,18 +141,26 @@ export default function Sidebar() {
                       className="px-4 py-2 text-sm bg-gray-200 dark:bg-slate-700 dark:text-gray-100 rounded-md"
                       onClick={() => setShowCampaignModal(false)}
                     >
-                      {t("dashboard.cancel", "Cancel")}
+                      {t("dashboard.cancel")}
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-sm bg-blue-700 text-white rounded-md"
+                      className="px-4 py-2 text-sm bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors"
                     >
-                      {t("dashboard.create", "Create")}
+                      {t("dashboard.create")}
                     </button>
                   </div>
                 </form>
               </div>
             </div>
+          )}
+          {/* Inline upload modal rendered by SurveyUpload */}
+          {isUploadOpen && (
+            <SurveyUpload
+              compact={false}
+              isOpen={isUploadOpen}
+              onClose={() => setIsUploadOpen(false)}
+            />
           )}
         </div>
       )}

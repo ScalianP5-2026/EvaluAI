@@ -163,7 +163,8 @@ export const dashboardAPI = {
   getCampaigns: async () => {
     try {
       const response = await apiClient.get("/campaigns");
-      return response.data;
+      const payload = response.data;
+      return Array.isArray(payload) ? payload : payload?.campaigns ?? [];
     } catch (error) {
       handleError(error, "Get Campaigns");
     }
