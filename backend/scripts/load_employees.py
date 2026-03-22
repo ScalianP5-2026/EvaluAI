@@ -8,26 +8,30 @@ from supabase_client import get_supabase_client
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+# APUNTAMOS AL ARCHIVO NUEVO CON LOS 158 EMPLEADOS
 BASE_DIR = Path(__file__).resolve().parents[1]
-CLEAN_PATH = BASE_DIR / "data" / "clean" / "survey_clean.csv"
+DATA_PATH = BASE_DIR / "data" / "raw" / "survey_raw.xlsx"
 
 def main() -> None:
-    if not CLEAN_PATH.exists():
-        logger.error(f"No se encontró el archivo limpio: {CLEAN_PATH}")
+    if not DATA_PATH.exists():
+        logger.error(f"No se encontró el archivo: {DATA_PATH}")
         return
 
     print("Verificando datos de empleados...")
-    df = pd.read_csv(CLEAN_PATH)
+    # Leemos el Excel nuevo
+    df = pd.read_excel(DATA_PATH, engine="openpyxl")
+    df.columns = df.columns.str.lower().str.strip()
+    
     empleados_unicos = df.drop_duplicates(subset=['id_empleado'])
 
     supabase = get_supabase_client()
 
-    # 1. Traer los empleados que YA existen en la base de datos para comparar
+    # 1. Traer los empleados que YA existen
     print("Descargando estado actual de la base de datos...")
     db_employees_response = supabase.table("employees").select("employee_id, age, gender, department").execute()
     existing_employees = {emp["employee_id"]: emp for emp in db_employees_response.data}
 
-    # Traer los IDs de los que ya tienen credenciales para no pisar el trabajo de Nacho
+    # Traer credenciales existentes
     db_credentials_response = supabase.table("user_credentials").select("employee_id").execute()
     existing_credentials = {cred["employee_id"] for cred in db_credentials_response.data}
 
@@ -47,7 +51,6 @@ def main() -> None:
         # 2. Verificar si es NUEVO o si hay ACTUALIZACIONES
         if emp_id in existing_employees:
             old_data = existing_employees[emp_id]
-            # Solo si hay algún cambio real, lo marcamos para actualizar
             if (old_data.get("age") != new_age or 
                 old_data.get("gender") != new_gender or 
                 old_data.get("department") != new_dept):
@@ -59,7 +62,6 @@ def main() -> None:
                     "department": new_dept
                 })
         else:
-            # Es un empleado completamente NUEVO
             empleados_a_subir.append({
                 "employee_id": emp_id,
                 "age": new_age,
@@ -72,7 +74,7 @@ def main() -> None:
             credenciales_nuevas.append({
                 "employee_id": emp_id,
                 "email": f"{emp_id.lower()}@scalian.com",
-                "password_hash": "scalian",
+                "password_hash": None,  # Magia para el sistema de Nacho
                 "is_active": True
             })
 
