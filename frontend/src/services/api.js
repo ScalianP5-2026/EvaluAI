@@ -157,10 +157,28 @@ export const dashboardAPI = {
     }
   },
 
-  uploadSurveys: async (file) => {
+  /**
+   * Fetch available survey campaigns for upload (id, name, wave)
+   */
+  getCampaigns: async () => {
+    try {
+      const response = await apiClient.get("/campaigns");
+      return response.data;
+    } catch (error) {
+      handleError(error, "Get Campaigns");
+    }
+  },
+
+  /**
+   * Upload survey file with campaign_id
+   * @param {File} file
+   * @param {string} campaignId
+   */
+  uploadSurveys: async (file, campaignId) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("campaign_id", campaignId);
       const response = await apiClient.post("/upload/surveys", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
