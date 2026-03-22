@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from pathlib import Path
 from typing import Any
@@ -14,8 +15,13 @@ from supabase_client import get_supabase_client
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "clean" / "courses_clean.csv"
+DEFAULT_DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "clean" / "courses_clean.csv"
 BATCH_SIZE = 500
+
+
+def _resolve_data_path() -> Path:
+    override_path = os.getenv("EVALUAI_INPUT_FILE", "").strip()
+    return Path(override_path) if override_path else DEFAULT_DATA_PATH
 
 
 def _clean_text(value: Any) -> str:
@@ -85,10 +91,12 @@ def _chunked(items: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]
 def main() -> None:
     print("Loading courses...")
 
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(f"Clean courses file not found: {DATA_PATH}")
+    data_path = _resolve_data_path()
 
-    df = pd.read_csv(DATA_PATH)
+    if not data_path.exists():
+        raise FileNotFoundError(f"Clean courses file not found: {data_path}")
+
+    df = pd.read_csv(data_path)
     records = _build_records(df)
 
     if not records:

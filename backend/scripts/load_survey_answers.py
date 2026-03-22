@@ -1,6 +1,7 @@
 """Load survey answers securely fitting the CURRENT database schema (without date column)."""
 
 import logging
+import os
 from pathlib import Path
 import pandas as pd
 from supabase_client import get_supabase_client
@@ -10,9 +11,14 @@ logger = logging.getLogger(__name__)
 
 # Rutas
 BASE_DIR = Path(__file__).resolve().parents[1]
-DATA_PATH = BASE_DIR / "data" / "raw" / "survey_raw.xlsx"
+DEFAULT_DATA_PATH = BASE_DIR / "data" / "raw" / "survey_raw.xlsx"
 ERRORS_DIR = BASE_DIR / "data" / "errors"
 BATCH_SIZE = 100
+
+
+def _resolve_data_path() -> Path:
+    override_path = os.getenv("EVALUAI_INPUT_FILE", "").strip()
+    return Path(override_path) if override_path else DEFAULT_DATA_PATH
 
 def _to_int_or_none(value):
     if pd.isna(value): return None
@@ -29,18 +35,20 @@ def _to_bool_or_none(value):
     return None
 
 def main() -> None:
-    if not DATA_PATH.exists():
-        logger.error(f"Archivo no encontrado: {DATA_PATH}")
+    data_path = _resolve_data_path()
+
+    if not data_path.exists():
+        logger.error(f"Archivo no encontrado: {data_path}")
         return
 
     # Crear carpeta de errores
     ERRORS_DIR.mkdir(parents=True, exist_ok=True)
     print("Cargando y validando respuestas de encuestas...")
     
-    if DATA_PATH.suffix == '.xlsx':
-        df = pd.read_excel(DATA_PATH, engine="openpyxl")
+    if data_path.suffix.lower() in {".xlsx", ".xls"}:
+        df = pd.read_excel(data_path, engine="openpyxl")
     else:
-        df = pd.read_csv(DATA_PATH)
+        df = pd.read_csv(data_path)
         
     df.columns = df.columns.str.lower().str.strip()
     df = df.dropna(subset=['id_empleado'])

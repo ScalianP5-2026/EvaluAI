@@ -6,7 +6,7 @@ Initializes the app, configures routes, CORS, and startup/shutdown hooks.
 import logging
 from contextlib import asynccontextmanager
 
-from app.api import chat_routes, kpi_routes, ml_routes, surveys_routes
+from app.api import chat_routes, data_upload_routes, kpi_routes, ml_routes, surveys_routes
 from app.config import (
     AppConfig,
     close_supabase_client,
@@ -113,6 +113,7 @@ def create_app() -> FastAPI:
     
     # ━━━━━━━━━━━━━━━━━ Routes Registration ━━━━━━━━━━━━━━━━━
     app.include_router(chat_routes.router)
+    app.include_router(data_upload_routes.router)
     app.include_router(kpi_routes.router)
     app.include_router(surveys_routes.router)
     app.include_router(ml_routes.router)

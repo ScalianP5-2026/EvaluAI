@@ -1,6 +1,7 @@
 """Load employees securely, updating only if needed and never overwriting existing credentials."""
 
 import logging
+import os
 from pathlib import Path
 import pandas as pd
 from supabase_client import get_supabase_client
@@ -10,16 +11,25 @@ logger = logging.getLogger(__name__)
 
 # APUNTAMOS AL ARCHIVO NUEVO CON LOS 158 EMPLEADOS
 BASE_DIR = Path(__file__).resolve().parents[1]
-DATA_PATH = BASE_DIR / "data" / "raw" / "survey_raw.xlsx"
+DEFAULT_DATA_PATH = BASE_DIR / "data" / "raw" / "survey_raw.xlsx"
+
+
+def _resolve_data_path() -> Path:
+    override_path = os.getenv("EVALUAI_INPUT_FILE", "").strip()
+    return Path(override_path) if override_path else DEFAULT_DATA_PATH
 
 def main() -> None:
-    if not DATA_PATH.exists():
-        logger.error(f"No se encontró el archivo: {DATA_PATH}")
+    data_path = _resolve_data_path()
+
+    if not data_path.exists():
+        logger.error(f"No se encontró el archivo: {data_path}")
         return
 
     print("Verificando datos de empleados...")
-    # Leemos el Excel nuevo
-    df = pd.read_excel(DATA_PATH, engine="openpyxl")
+    if data_path.suffix.lower() in {".xlsx", ".xls"}:
+        df = pd.read_excel(data_path, engine="openpyxl")
+    else:
+        df = pd.read_csv(data_path)
     df.columns = df.columns.str.lower().str.strip()
     
     empleados_unicos = df.drop_duplicates(subset=['id_empleado'])

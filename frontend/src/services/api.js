@@ -112,6 +112,19 @@ export const dashboardAPI = {
       handleError(error, "Upload Surveys");
     }
   },
+
+  uploadDataset: async (datasetType, file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await apiClient.post(`/upload/${datasetType}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, `Upload ${datasetType}`);
+    }
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════
