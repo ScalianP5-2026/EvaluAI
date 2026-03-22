@@ -60,8 +60,9 @@ async def upload_surveys(
     if not file.filename:
         raise HTTPException(status_code=400, detail="File must have a filename")
     
-    if not file.filename.lower().endswith(".csv"):
-        raise HTTPException(status_code=400, detail="File must be a CSV file (.csv)")
+    allowed_exts = (".csv", ".xlsx", ".xls")
+    if not file.filename.lower().endswith(allowed_exts):
+        raise HTTPException(status_code=400, detail="File must be .csv, .xlsx, or .xls")
     
     # Read file
     MAX_SIZE = 5 * 1024 * 1024
