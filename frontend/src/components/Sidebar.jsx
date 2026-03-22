@@ -9,13 +9,15 @@ import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SurveyUpload from "./SurveyUpload";
+import { useState } from "react";
 
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
   const { isDark, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, isRRHH } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showCampaignModal, setShowCampaignModal] = useState(false);
 
   const navItems = [
     { path: "/dashboard", text: t("nav.dashboard") },
@@ -35,7 +37,7 @@ export default function Sidebar() {
       {/* Logo Section */}
       <div className="p-8 border-b border-slate-800">
         <h1 className="text-2xl font-bold text-blue-400 tracking-tight">
-          EvaluAI
+          FormatIA
         </h1>
         <p className="text-xs text-slate-400 mt-2 font-medium uppercase tracking-widest">
           {t("sidebar.subtitle")}
@@ -59,16 +61,70 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Upload Section */}
-      <div className="p-4 border-t border-slate-800">
-        <SurveyUpload compact />
-      </div>
+      {/* RRHH Actions Section */}
+      {isRRHH && (
+        <div className="p-4 border-t border-slate-800">
+          {/* RRHH Actions: visually spaced */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-widest mb-3">
+              {t("dashboard.rrhhActionsTitle")}
+            </h3>
+            <div className="mb-2">
+              <SurveyUpload compact={false} />
+            </div>
+            <button
+              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-md"
+              type="button"
+              onClick={() => setShowCampaignModal(true)}
+            >
+              {t("dashboard.createCampaignButton")}
+            </button>
+          </div>
+          {/* Create Campaign Modal */}
+          {showCampaignModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-white rounded-lg shadow-lg w-full max-w-xs p-6">
+                <h3 className="text-lg font-semibold mb-4">
+                  {t("dashboard.createCampaignButton")}
+                </h3>
+                <form className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      {t("dashboard.campaignTitleLabel", "Title")}
+                    </label>
+                    <input className="w-full border rounded-md px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      {t("dashboard.campaignWaveLabel", "Wave")}
+                    </label>
+                    <input className="w-full border rounded-md px-3 py-2 text-sm" />
+                  </div>
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button
+                      type="button"
+                      className="px-4 py-2 text-sm bg-gray-200 rounded-md"
+                      onClick={() => setShowCampaignModal(false)}
+                    >
+                      {t("dashboard.cancel", "Cancel")}
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm bg-blue-700 text-white rounded-md"
+                    >
+                      {t("dashboard.create", "Create")}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Controls Section */}
       <div className="p-4 border-t border-slate-800">
-        {/* Compact Language & Theme Controls */}
         <div className="flex items-center justify-between gap-2">
-          {/* Language Selector - Flag Buttons */}
           <div className="flex gap-1">
             <button
               onClick={() => i18n.changeLanguage("es")}
@@ -98,7 +154,6 @@ export default function Sidebar() {
             </button>
           </div>
 
-          {/* Theme Toggle - Compact Icon Button */}
           <button
             onClick={toggleTheme}
             className="w-9 h-9 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white flex items-center justify-center text-lg font-medium transition-all"
@@ -117,7 +172,10 @@ export default function Sidebar() {
             <p className="text-xs text-slate-400 truncate" title={user.email}>
               {t("auth.loggedInAs")}
             </p>
-            <p className="text-sm text-slate-200 font-medium truncate" title={user.email}>
+            <p
+              className="text-sm text-slate-200 font-medium truncate"
+              title={user.email}
+            >
               {user.email}
             </p>
           </div>
@@ -133,7 +191,9 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="p-4 border-t border-slate-800 text-center">
-        <p className="text-xs text-gray-500 dark:text-gray-500">EvaluAI v1.0</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500">
+          FormatIA v1.0
+        </p>
       </div>
     </div>
   );
