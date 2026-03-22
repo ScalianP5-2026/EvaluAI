@@ -123,7 +123,6 @@ class SurveyUploadService:
         # Check for existing duplicates in DB (Supabase)
         inserted_count = 0
         skipped_count = 0
-        # TEMP DEBUG: Only print first failing payload/exception
         first_fail_printed = False
         # Only allow columns that exist in survey_responses table
         persisted_columns = [
@@ -201,7 +200,6 @@ class SurveyUploadService:
                         if v is not None:
                             insert_data[k] = v
                 if not first_fail_printed:
-                    print(f"DEBUG_FINAL_INSERT_KEYS={list(insert_data.keys())}")
                     first_fail_printed = True
                 self.supabase.table("survey_responses").insert(insert_data).execute()
                 inserted_count += 1
