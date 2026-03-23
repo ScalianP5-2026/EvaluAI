@@ -10,8 +10,43 @@ import { useAuth } from "../context/AuthContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SurveyUpload from "./SurveyUpload";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { dashboardAPI } from "../services/api";
+
+/**
+ * Minimal draggable hook — header-only drag handle.
+ */
+function useDraggable() {
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragging = useRef(false);
+  const start = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging.current) return;
+      setOffset({ x: e.clientX - start.current.x, y: e.clientY - start.current.y });
+    };
+    const onUp = () => {
+      dragging.current = false;
+      document.body.style.userSelect = "";
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const onMouseDown = (e) => {
+    dragging.current = true;
+    start.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+    document.body.style.userSelect = "none";
+  };
+
+  const reset = () => setOffset({ x: 0, y: 0 });
+  return { offset, onMouseDown, reset };
+}
 
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
@@ -25,6 +60,7 @@ export default function Sidebar() {
   const [campaignError, setCampaignError] = useState("");
   const [campaignSuccess, setCampaignSuccess] = useState("");
   const [campaignLoading, setCampaignLoading] = useState(false);
+  const campaignDrag = useDraggable();
 
   const navItems = [
     { path: "/dashboard", text: t("nav.dashboard") },
@@ -84,6 +120,8 @@ export default function Sidebar() {
               type="button"
               onClick={() => {
                 setCampaignError("");
+                setCampaignSuccess("");
+                campaignDrag.reset();
                 setShowCampaignModal(true);
               }}
             >
@@ -107,11 +145,34 @@ export default function Sidebar() {
           </div>
           {/* Create Campaign Modal */}
           {showCampaignModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-sm p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                  {t("dashboard.createCampaignButton")}
-                </h3>
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+              <div
+                className="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-sm p-6"
+                style={{ transform: `translate(${campaignDrag.offset.x}px, ${campaignDrag.offset.y}px)` }}
+              >
+                {/* Header — drag handle */}
+                <div
+                  className="flex items-center justify-between mb-4 cursor-grab active:cursor-grabbing select-none"
+                  onMouseDown={campaignDrag.onMouseDown}
+                >
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {t("dashboard.createCampaignButton")}
+                  </h3>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => {
+                      setCampaignTitle("");
+                      setCampaignWave("");
+                      setCampaignError("");
+                      setCampaignSuccess("");
+                      setShowCampaignModal(false);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
                 <form
                   className="space-y-3"
                   onSubmit={async (e) => {

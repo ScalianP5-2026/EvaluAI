@@ -24,13 +24,53 @@ function UploadButton({ onClick, compact }) {
 }
 
 /**
- * Modal overlay component
+ * Minimal draggable hook — header-only drag handle.
+ * Returns offset state, a mousedown handler, and a reset function.
  */
-function ModalOverlay({ isOpen, onClose, children }) {
+function useDraggable() {
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragging = useRef(false);
+  const start = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging.current) return;
+      setOffset({ x: e.clientX - start.current.x, y: e.clientY - start.current.y });
+    };
+    const onUp = () => {
+      dragging.current = false;
+      document.body.style.userSelect = "";
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const onMouseDown = (e) => {
+    dragging.current = true;
+    start.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+    document.body.style.userSelect = "none";
+  };
+
+  const reset = () => setOffset({ x: 0, y: 0 });
+  return { offset, onMouseDown, reset };
+}
+
+/**
+ * Modal overlay component — supports draggable offset via transform
+ */
+function ModalOverlay({ isOpen, onClose, children, dragOffset }) {
   if (!isOpen) return null;
+  const tx = dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : undefined;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40">
+      <div
+        className="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        style={tx ? { transform: tx } : undefined}
+      >
         {children}
       </div>
     </div>
@@ -367,20 +407,27 @@ export default function SurveyUpload({ compact = false }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Draggable modal support
+  const drag = useDraggable();
+
   // --- UI ---
   return (
     <>
-      <UploadButton onClick={() => setIsModalOpen(true)} compact={compact} />
-      <ModalOverlay isOpen={isModalOpen} onClose={handleReset}>
+      <UploadButton onClick={() => { drag.reset(); setIsModalOpen(true); }} compact={compact} />
+      <ModalOverlay isOpen={isModalOpen} onClose={handleReset} dragOffset={drag.offset}>
         <div className="p-6 space-y-4">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-4">
+          {/* Header — drag handle */}
+          <div
+            className="flex items-start justify-between mb-4 cursor-grab active:cursor-grabbing select-none"
+            onMouseDown={drag.onMouseDown}
+          >
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {t("dashboard.uploadTitle")}
             </h3>
             <button
               onClick={handleReset}
-              className="text-gray-400 hover:text-gray-600 text-xl"
+              onMouseDown={(e) => e.stopPropagation()}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl"
             >
               ×
             </button>
