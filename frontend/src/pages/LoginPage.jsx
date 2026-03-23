@@ -55,8 +55,7 @@ export default function LoginPage() {
         setMode("set-password");
       }
     } catch (err) {
-      const msg =
-        err.response?.data?.detail || t("auth.invalidCredentials");
+      const msg = err.response?.data?.detail || t("auth.invalidCredentials");
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -104,7 +103,7 @@ export default function LoginPage() {
       <div className="login-card">
         {/* Logo section */}
         <div className="login-header">
-          <h1 className="login-logo">EvaluAI</h1>
+          <h1 className="login-logo">FormatIA</h1>
           <p className="login-subtitle">
             {mode === "set-password"
               ? t("auth.createPasswordSubtitle")
@@ -160,7 +159,11 @@ export default function LoginPage() {
                   type="button"
                   className="login-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  aria-label={
+                    showPassword
+                      ? t("auth.hidePassword")
+                      : t("auth.showPassword")
+                  }
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
@@ -173,9 +176,7 @@ export default function LoginPage() {
               className="login-button"
               disabled={isLoading || !email}
             >
-              {isLoading ? (
-                <span className="login-spinner" />
-              ) : null}
+              {isLoading ? <span className="login-spinner" /> : null}
               {isLoading ? t("auth.loggingIn") : t("auth.login")}
             </button>
           </form>
@@ -220,7 +221,11 @@ export default function LoginPage() {
                   type="button"
                   className="login-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  aria-label={
+                    showPassword
+                      ? t("auth.hidePassword")
+                      : t("auth.showPassword")
+                  }
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
@@ -250,9 +255,7 @@ export default function LoginPage() {
               className="login-button"
               disabled={isLoading || !password || !passwordConfirm}
             >
-              {isLoading ? (
-                <span className="login-spinner" />
-              ) : null}
+              {isLoading ? <span className="login-spinner" /> : null}
               {isLoading
                 ? t("auth.settingPassword")
                 : t("auth.setPasswordButton")}
@@ -290,7 +293,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="login-footer">EvaluAI v1.0 — Scalian</p>
+        <p className="login-footer">FormatIA v1.0 — Scalian</p>
       </div>
     </div>
   );

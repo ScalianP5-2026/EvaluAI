@@ -188,6 +188,19 @@ export const dashboardAPI = {
       handleError(error, "Upload Surveys");
     }
   },
+
+  /**
+   * Create a new survey campaign
+   * @param {{ title: string, wave?: string, description?: string }} payload
+   */
+  createCampaign: async (payload) => {
+    try {
+      const response = await apiClient.post("/campaigns", payload);
+      return response.data;
+    } catch (error) {
+      handleError(error, "Create Campaign");
+    }
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════

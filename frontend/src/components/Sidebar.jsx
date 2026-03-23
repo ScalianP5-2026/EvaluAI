@@ -9,7 +9,9 @@ import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SurveyUpload from "./SurveyUpload";
+
 import { useState } from "react";
+import { dashboardAPI } from "../services/api";
 
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
@@ -21,6 +23,8 @@ export default function Sidebar() {
   const [campaignTitle, setCampaignTitle] = useState("");
   const [campaignWave, setCampaignWave] = useState("");
   const [campaignError, setCampaignError] = useState("");
+  const [campaignSuccess, setCampaignSuccess] = useState("");
+  const [campaignLoading, setCampaignLoading] = useState(false);
 
   const navItems = [
     { path: "/dashboard", text: t("nav.dashboard") },
@@ -53,10 +57,11 @@ export default function Sidebar() {
           <Link
             key={item.path}
             to={item.path}
-            className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all ${isActive(item.path)
+            className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+              isActive(item.path)
                 ? "bg-blue-600 shadow-lg text-white"
                 : "border border-slate-600 text-slate-100 bg-slate-700/60 hover:bg-blue-600 hover:text-white hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 focus:ring-offset-slate-900 transition-all duration-200"
-              }`}
+            }`}
           >
             {item.text}
           </Link>
@@ -109,27 +114,52 @@ export default function Sidebar() {
                 </h3>
                 <form
                   className="space-y-3"
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
+                    setCampaignError("");
+                    setCampaignSuccess("");
                     const title = campaignTitle.trim();
                     const wave = campaignWave.trim();
                     if (!title && !wave) {
-                      setCampaignError(t("dashboard.campaignTitleLabel") + " & " + t("dashboard.campaignWaveLabel") + " required");
+                      setCampaignError(
+                        t("dashboard.campaignTitleLabel") +
+                          " & " +
+                          t("dashboard.campaignWaveLabel") +
+                          " required",
+                      );
                       return;
                     }
                     if (!title) {
-                      setCampaignError(t("dashboard.campaignTitleLabel") + " required");
+                      setCampaignError(
+                        t("dashboard.campaignTitleLabel") + " required",
+                      );
                       return;
                     }
                     if (!wave) {
-                      setCampaignError(t("dashboard.campaignWaveLabel") + " required");
+                      setCampaignError(
+                        t("dashboard.campaignWaveLabel") + " required",
+                      );
                       return;
                     }
-                    // Valid — close modal, reset fields (no backend call yet)
-                    setCampaignTitle("");
-                    setCampaignWave("");
-                    setCampaignError("");
-                    setShowCampaignModal(false);
+                    setCampaignLoading(true);
+                    try {
+                      await dashboardAPI.createCampaign({ title, wave });
+                      setCampaignSuccess(
+                        i18n.language === "es"
+                          ? "¡Campaña creada exitosamente!"
+                          : "Campaign created successfully!",
+                      );
+                      setCampaignTitle("");
+                      setCampaignWave("");
+                    } catch (err) {
+                      setCampaignError(
+                        i18n.language === "es"
+                          ? "No se pudo crear campaña"
+                          : "Could not create campaign",
+                      );
+                    } finally {
+                      setCampaignLoading(false);
+                    }
                   }}
                 >
                   <div>
@@ -141,6 +171,7 @@ export default function Sidebar() {
                       value={campaignTitle}
                       onChange={(e) => setCampaignTitle(e.target.value)}
                       placeholder={t("dashboard.campaignTitleLabel")}
+                      disabled={campaignLoading}
                     />
                   </div>
                   <div>
@@ -151,7 +182,8 @@ export default function Sidebar() {
                       className="w-full border rounded-md px-3 py-2 text-sm bg-white dark:bg-slate-800 dark:text-gray-100 border-slate-300 dark:border-slate-700"
                       value={campaignWave}
                       onChange={(e) => setCampaignWave(e.target.value)}
-                      placeholder="t1, t2..."
+                      placeholder="t0, t1, t2..."
+                      disabled={campaignLoading}
                     />
                   </div>
                   {campaignError && (
@@ -159,26 +191,65 @@ export default function Sidebar() {
                       {campaignError}
                     </p>
                   )}
-                  <div className="flex justify-end gap-2 mt-2">
-                    <button
-                      type="button"
-                      className="px-4 py-2 text-sm bg-gray-200 dark:bg-slate-700 dark:text-gray-100 rounded-md"
-                      onClick={() => {
-                        setCampaignTitle("");
-                        setCampaignWave("");
-                        setCampaignError("");
-                        setShowCampaignModal(false);
-                      }}
-                    >
-                      {t("dashboard.cancel")}
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-sm bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors"
-                    >
-                      {t("dashboard.create")}
-                    </button>
-                  </div>
+                  {campaignSuccess && (
+                    <div className="flex flex-col gap-2 items-center">
+                      <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                        {campaignSuccess}
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          type="button"
+                          className="px-4 py-2 text-sm bg-gray-200 dark:bg-slate-700 dark:text-gray-100 rounded-md"
+                          onClick={() => {
+                            setShowCampaignModal(false);
+                            setCampaignSuccess("");
+                          }}
+                        >
+                          {i18n.language === "es" ? "Salir" : "Close"}
+                        </button>
+                        <button
+                          type="button"
+                          className="px-4 py-2 text-sm bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors"
+                          onClick={() => {
+                            setCampaignSuccess("");
+                            setCampaignTitle("");
+                            setCampaignWave("");
+                          }}
+                        >
+                          {i18n.language === "es"
+                            ? "Crear otra"
+                            : "Create another"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {!campaignSuccess && (
+                    <div className="flex justify-end gap-2 mt-2">
+                      <button
+                        type="button"
+                        className="px-4 py-2 text-sm bg-gray-200 dark:bg-slate-700 dark:text-gray-100 rounded-md"
+                        onClick={() => {
+                          setCampaignTitle("");
+                          setCampaignWave("");
+                          setCampaignError("");
+                          setCampaignSuccess("");
+                          setShowCampaignModal(false);
+                        }}
+                        disabled={campaignLoading}
+                      >
+                        {t("dashboard.cancel")}
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-sm bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors disabled:opacity-60"
+                        disabled={campaignLoading}
+                      >
+                        {campaignLoading
+                          ? t("dashboard.creating") || "Creando..."
+                          : t("dashboard.create")}
+                      </button>
+                    </div>
+                  )}
                 </form>
               </div>
             </div>
@@ -192,10 +263,11 @@ export default function Sidebar() {
           <div className="flex gap-1">
             <button
               onClick={() => i18n.changeLanguage("es")}
-              className={`w-9 h-9 rounded text-lg font-medium transition-all ${i18n.language === "es"
+              className={`w-9 h-9 rounded text-lg font-medium transition-all ${
+                i18n.language === "es"
                   ? "bg-blue-600 text-white shadow-lg"
                   : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-                }`}
+              }`}
               title="Español"
               aria-label="Español"
               aria-pressed={i18n.language === "es"}
@@ -204,10 +276,11 @@ export default function Sidebar() {
             </button>
             <button
               onClick={() => i18n.changeLanguage("en")}
-              className={`w-9 h-9 rounded text-lg font-medium transition-all ${i18n.language === "en"
+              className={`w-9 h-9 rounded text-lg font-medium transition-all ${
+                i18n.language === "en"
                   ? "bg-blue-600 text-white shadow-lg"
                   : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-                }`}
+              }`}
               title="English"
               aria-label="English"
               aria-pressed={i18n.language === "en"}
