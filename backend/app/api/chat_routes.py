@@ -474,7 +474,8 @@ async def chat_query(
             recommendations = RecommendationData(
                 course=parsed["recommendations"].get("course"),
                 rationale=parsed["recommendations"].get("rationale"),
-                plan_30_days=parsed["recommendations"].get("plan_30_days")
+                plan_30_days=parsed["recommendations"].get("plan_30_days"),
+                mentor=parsed["recommendations"].get("mentor"),
             )
         
         insights = parsed.get("insights", {})
