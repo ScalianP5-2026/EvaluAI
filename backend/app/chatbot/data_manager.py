@@ -114,7 +114,6 @@ class DataManager:
             )
             
             # 3. Pandas on-the-fly: calculamos el promedio numérico al instante 
-            import pandas as pd
             if response.data:
                 df = pd.DataFrame(response.data)
                 avg_motivation = float(df["motivacion"].mean()) if "motivacion" in df.columns and not df["motivacion"].empty else 5.0
