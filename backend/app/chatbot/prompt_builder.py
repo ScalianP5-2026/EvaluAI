@@ -58,8 +58,10 @@ class PromptBuilder:
         if ml_scores:
             ml_context = f"""--- ML MODEL SIGNALS ---
 Recommendation Score: {ml_scores.get('recommendation_score', 0.0):.2f}
+Predictive Motivation: {ml_scores.get('predicted_motivation', 0.0):.2f}/7
 Risk Score (lower is better): {ml_scores.get('risk_score', 0.0):.2f}
 Confidence: {ml_scores.get('confidence', 0.0):.2f}
+Dependency Profile: {ml_scores.get('dependency_prediction', 'unknown').upper()}
 Model Available: {ml_scores.get('model_available', False)}
 """
         else:
@@ -70,11 +72,13 @@ Model not available yet (loading...)
         prompt = f"""{self.system_role}
 
 --- EMPLOYEE CONTEXT ---
+Role: {user_context.get('role', 'Empleado')}
 Department: {user_context.get('department', 'Unknown')}
+Years in Company: {user_context.get('years_in_company', 0)}
 Motivation Level: {user_context.get('motivation', 5)}/7
 Self-Efficacy: {user_context.get('self_efficacy', 5)}/7
 AI Usage Frequency: {user_context.get('ai_usage', 3)}/5
-Seniority: {user_context.get('seniority', 'Mid-level')}
+Primary AI Tool: {user_context.get('primary_tool', 'Unknown')}
 Education Level: {user_context.get('education_level', 'Bachelor')}
 
 {ml_context}
@@ -88,8 +92,8 @@ You MUST respond ONLY with this exact JSON structure (no other text):
 {{
   "message": "Personalized greeting and initial assessment for the employee",
   "recommendations": {{
-    "course": "Recommended course (solo si aplica o si el usuario pide aprender algo, de lo contrario null)",
-    "mentor": "Suggested mentor (solo si necesita ayuda técnica, de lo contrario null)",
+    "course": "Proactively select one of the Top Recommended Courses from the context",
+    "mentor": "Select ONE exact name from the Available Mentors list.", 
     "plan_30_days": [
       "Week 1: action",
       "Week 2: action",
@@ -196,10 +200,11 @@ Model not available yet
         
 --- EMPLOYEE CONTEXT ---
 Department: {user_context.get('department', 'Unknown')}
+Years in Company: {user_context.get('years_in_company', 0)}
 Motivation Level: {user_context.get('motivation', 5)}/7
 Self-Efficacy: {user_context.get('self_efficacy', 5)}/7
 AI Usage Frequency: {user_context.get('ai_usage', 3)}/5
-Seniority: {user_context.get('seniority', 'Mid-level')}
+Primary AI Tool: {user_context.get('primary_tool', 'Unknown')}
 Education Level: {user_context.get('education_level', 'Bachelor')}
 
 {ml_context}
@@ -249,9 +254,11 @@ You MUST respond ONLY with this exact JSON structure (no other text):
 
 CRITICAL RULES FOR RESPONSE:
 - Respond ONLY with JSON. Absolutely no text before, after, or mixed with JSON.
-- BE PROACTIVE: ALWAYS recommend a course, a mentor, and a 30-day plan, even if the user just says 'hola'. Use the context provided to cater them to their profile.
+- BE PROACTIVE: ALWAYS recommend a course, a mentor, and a 30-day plan, even if the user just says 'hola'. You MUST select EXACTLY ONE mentor from the 'Available Mentors' list. If Mentors is 'None available' NEVER invent fake names. Use the context provided to cater them to their profile.
 - SHOWCASE METRICS: You must explicitly mention their ML stats, autoeficacia, and improvement % in your answers to demonstrate that the AI knows their profile depth.
-- ML BEHAVIOR: Adapt your tone based on Risk Score. If they feel unmotivated, act highly supportive.
+- ML BEHAVIOR: Adapt your tone based on Risk Score and Years in Company. If Dependency Profile is HIGH, advise caution with AI copy-pasting. If they feel unmotivated, act highly supportive.
+- ADAPTABILITY FIRST: If the user changes their mind or explicitly asks for a different topic (e.g. Soft Skills instead of Data), you MUST respect their current request immediately. Pivot your course and mentor recommendations to match their NEW interest, ignoring their previous history if it conflicts.
+- CONSISTENCY: Ensure your conversational message matches your JSON output. If you select a mentor in the "mentor" JSON field, you must act as if they are actively assigned to the user in your text message. Do not say you are "still looking" if you are outputting a name.
 - Use null ONLY if data is truly completely missing from context.
 - The JSON must be valid and properly formatted.
 """

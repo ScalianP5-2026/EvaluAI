@@ -63,16 +63,22 @@ class DataManager:
             
             # Fetch AI usage del survey
             survey_response = self.db.table("survey_answers").select(
-                "ai_usage_frequency"
+                "ai_usage_frequency, main_tool"
             ).eq("employee_id", employee_id).limit(1).execute()
             
-            ai_usage = survey_response.data[0]["ai_usage_frequency"] if survey_response.data else 3
+            if survey_response.data:
+                ai_usage = survey_response.data[0].get("ai_usage_frequency", 3)
+                primary_tool = survey_response.data[0].get("main_tool", "Unknown")
+            else:
+                ai_usage = 3
+                primary_tool = "Unknown"
             
             context = {
                 "employee_id": emp_data.get("employee_id"),
                 "department": emp_data.get("department"),
                 "education_level": emp_data.get("education_level"),
                 "ai_usage_frequency": ai_usage,
+                "primary_tool": primary_tool,
                 "motivation": float(eval_data.get("motivacion", 5.0)),
                 "self_efficacy": float(eval_data.get("autoeficacia", 5.0)),
                 "age": emp_data.get("age"),

@@ -175,7 +175,8 @@ async def chat_query(
             "autoeficacia": employee_ctx.get("self_efficacy", 5.0),
             "ai_usage": employee_ctx.get("ai_usage_frequency", 3),
             "edad": employee_ctx.get("age", 30),
-            "antiguedad": employee_ctx.get("years_in_company", 5)
+            "antiguedad": employee_ctx.get("years_in_company", 5),
+            "primary_tool": employee_ctx.get("primary_tool", "Unknown")
         }
         ml_scores = ml_client.get_employee_scores(employee_profile)
         rag_ctx["ml_scores"] = ml_scores
@@ -202,6 +203,12 @@ async def chat_query(
             tecnologias_list.append(employee_ctx.get("department", "IT"))
                 
         mentores = dm.get_mentor_recommendations(especialidades=tecnologias_list, limit=2)
+                
+        # NUEVO: Fallback si no encuentra mentores
+        if not mentores:
+            # Buscar mentores genéricos o los mejores valorados en general
+            mentores = dm.get_mentor_recommendations(especialidades=["Liderazgo", "Soft Skills"], limit=1) 
+            
         rag_ctx["recommended_mentors"] = mentores
         
         logger.info(f"Found {len(mentores)} mentor recommendations with skills: {tecnologias_list}")        
