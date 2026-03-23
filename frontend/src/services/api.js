@@ -160,13 +160,70 @@ export const dashboardAPI = {
   /**
    * Fetch available survey campaigns for upload (id, name, wave)
    */
+
   getCampaigns: async () => {
     try {
       const response = await apiClient.get("/campaigns");
-      const payload = response.data;
-      return Array.isArray(payload) ? payload : payload?.campaigns ?? [];
+      const data = response.data;
+      return Array.isArray(data) ? data : Array.isArray(data?.campaigns) ? data.campaigns : [];
     } catch (error) {
       handleError(error, "Get Campaigns");
+    }
+  },
+
+  createCampaign: async ({
+    title,
+    wave,
+    description,
+    source,
+    form_provider,
+    form_url,
+    is_active,
+  }) => {
+    try {
+      const response = await apiClient.post("/campaigns", {
+        title,
+        wave,
+        description,
+        source,
+        form_provider,
+        form_url,
+        is_active,
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, "Create Campaign");
+      throw error;
+    }
+  },
+
+  updateCampaign: async (id, data) => {
+    try {
+      const response = await apiClient.patch(`/campaigns/${id}`, data);
+      return response.data;
+    } catch (error) {
+      handleError(error, "Update Campaign");
+      throw error;
+    }
+  },
+
+  activateCampaign: async (id) => {
+    try {
+      const response = await apiClient.post(`/campaigns/${id}/activate`);
+      return response.data;
+    } catch (error) {
+      handleError(error, "Activate Campaign");
+      throw error;
+    }
+  },
+
+  deactivateCampaign: async (id) => {
+    try {
+      const response = await apiClient.post(`/campaigns/${id}/deactivate`);
+      return response.data;
+    } catch (error) {
+      handleError(error, "Deactivate Campaign");
+      throw error;
     }
   },
 
@@ -186,19 +243,6 @@ export const dashboardAPI = {
       return response.data;
     } catch (error) {
       handleError(error, "Upload Surveys");
-    }
-  },
-
-  /**
-   * Create a new survey campaign
-   * @param {{ title: string, wave?: string, description?: string }} payload
-   */
-  createCampaign: async (payload) => {
-    try {
-      const response = await apiClient.post("/campaigns", payload);
-      return response.data;
-    } catch (error) {
-      handleError(error, "Create Campaign");
     }
   },
 };

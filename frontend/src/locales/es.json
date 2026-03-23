@@ -1,5 +1,10 @@
 {
   "dashboard": {
+    "campaignDescriptionLabel": "Descripción",
+    "campaignSourceLabel": "Fuente",
+    "campaignFormProviderLabel": "Proveedor del formulario",
+    "campaignFormUrlLabel": "URL del formulario",
+    "campaignIsActiveLabel": "Activa",
     "rrhhActionsTitle": "Acciones RRHH",
     "createCampaignButton": "Crear campaña",
     "createCampaignTitle": "Crear Campaña",
