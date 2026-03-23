@@ -151,7 +151,7 @@ class MLClient:
         
         # Devolver DataFrame asegurando el orden en que entrenamos:
         columns = list(row.keys()) # Están definidas en el orden perfecto de arriba
-        df = pd.DataFrame([row])
+        df = pd.DataFrame([row], columns=columns)
         return df
     
     # Instancia Singleton
