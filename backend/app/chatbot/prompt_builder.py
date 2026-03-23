@@ -249,7 +249,7 @@ You MUST respond ONLY with this exact JSON structure (no other text):
     "goal_clarity": "high",
     "recommended_skill": "Detected skill or focus area"
   }},
-  "risk_alert": null_or_"risk_type"
+  "risk_alert": null
 }}
 
 CRITICAL RULES FOR RESPONSE:
