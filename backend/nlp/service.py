@@ -59,6 +59,36 @@ def _to_json_ready(value: Any) -> Any:
     return value
 
 
+def _count_file_lines(path: Path) -> int:
+    """Return total number of lines in a text file."""
+    with path.open("r", encoding="utf-8", errors="ignore") as file_obj:
+        return sum(1 for _ in file_obj)
+
+
+def _read_csv_defensive(path: Path, dataset_name: str) -> pd.DataFrame:
+    """Read CSV defensively, skipping malformed rows by default."""
+    total_lines = _count_file_lines(path)
+    expected_data_rows = max(total_lines - 1, 0)
+
+    dataframe = pd.read_csv(
+        path,
+        engine="python",
+        on_bad_lines="skip",
+    )
+
+    loaded_rows = len(dataframe)
+    skipped_rows = max(expected_data_rows - loaded_rows, 0)
+    if skipped_rows > 0:
+        logger.warning(
+            "%s loaded with skipped malformed rows: %s skipped out of %s expected data rows.",
+            dataset_name,
+            skipped_rows,
+            expected_data_rows,
+        )
+
+    return dataframe
+
+
 def _load_dataframe() -> pd.DataFrame | None:
     """Load and cache NLP enriched dataframe, handling missing file gracefully."""
     global _DF_CACHE, _CACHE_ERROR
@@ -71,7 +101,7 @@ def _load_dataframe() -> pd.DataFrame | None:
         return None
 
     try:
-        _DF_CACHE = pd.read_csv(_ENRICHED_DATASET_PATH)
+        _DF_CACHE = _read_csv_defensive(_ENRICHED_DATASET_PATH, "NLP dataset")
         _CACHE_ERROR = None
         return _DF_CACHE
     except Exception as exc:
@@ -112,7 +142,10 @@ def _load_engineered_dataframe() -> pd.DataFrame | None:
         return None
 
     try:
-        _ENGINEERED_DF_CACHE = pd.read_csv(_ENGINEERED_DATASET_PATH)
+        _ENGINEERED_DF_CACHE = _read_csv_defensive(
+            _ENGINEERED_DATASET_PATH,
+            "Engineered dataset",
+        )
         _ENGINEERED_CACHE_ERROR = None
         return _ENGINEERED_DF_CACHE
     except Exception as exc:
@@ -265,7 +298,23 @@ def _build_top_topics_table(df: pd.DataFrame) -> list[dict[str, Any]]:
         else pd.Series(dtype=float)
     )
 
+
     rows: list[dict[str, Any]] = []
+    # Intentar cargar el dataset con parser tolerante antes del bucle
+    try:
+        _ENGINEERED_DF_CACHE = pd.read_csv(
+            _ENGINEERED_DATASET_PATH,
+            engine="python",
+            on_bad_lines="skip",
+        )
+        _ENGINEERED_CACHE_ERROR = None
+        logger.warning(
+            "Engineered dataset loaded with tolerant parser; malformed rows were skipped."
+        )
+    except Exception as exc:
+        _ENGINEERED_CACHE_ERROR = f"Failed to read engineered dataset: {exc}"
+        _ENGINEERED_DF_CACHE = None
+
     for topic_id, count in topic_counts.head(5).items():
         avg_value = float(avg_risk.get(topic_id)) if topic_id in avg_risk else None
         risk_level = _classify_topic_risk(avg_value or 0.0)
