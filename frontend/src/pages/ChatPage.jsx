@@ -95,6 +95,7 @@ export default function ChatPage() {
         {
           role: "assistant",
           content: response.message,
+          recommendations: response.recommendations || null,
           timestamp: new Date().toISOString(),
         },
       ]);

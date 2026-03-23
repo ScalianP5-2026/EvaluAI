@@ -310,7 +310,10 @@
     "status": "Estado",
     "processing": "Procesando...",
     "ready": "Listo",
-    "sendError": "Error al enviar el mensaje. Por favor, inténtalo de nuevo."
+    "sendError": "Error al enviar el mensaje. Por favor, inténtalo de nuevo.",
+    "recommendedCourse": "Curso recomendado",
+    "recommendedMentor": "Mentor recomendado",
+    "plan30Days": "Plan de 30 días"
   },
   "insights": {
     "adoptionLow": "La adopción de IA es baja ({{rate}}%). Priorizar formación y casos prácticos.",
