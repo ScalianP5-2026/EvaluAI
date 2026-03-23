@@ -5,10 +5,9 @@ Maneja carga de modelos, scoring y analisis NLP.
 
 import logging
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 import joblib
-import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
