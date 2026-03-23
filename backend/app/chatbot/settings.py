@@ -20,8 +20,8 @@ GEMINI_MODEL: str = os.getenv("CHATBOT_GEMINI_MODEL", "gemini-2.5-flash")
 GEMINI_TEMPERATURE: float = float(os.getenv("CHATBOT_GEMINI_TEMPERATURE", "0.4"))
 """Temperature for response consistency (0.0-1.0)"""
 
-GEMINI_MAX_TOKENS: int = int(os.getenv("CHATBOT_GEMINI_MAX_TOKENS", "800"))
-"""Max output tokens (concise responses)"""
+GEMINI_MAX_TOKENS: int = int(os.getenv("CHATBOT_GEMINI_MAX_TOKENS", "4096"))
+"""Maximum number of output tokens"""
 
 GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("CHATBOT_GEMINI_TIMEOUT_SECONDS", "30"))
 """Request timeout in seconds"""

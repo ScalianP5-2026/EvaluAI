@@ -300,6 +300,7 @@
     "netImpact": "Impacto Neto"
   },
   "chat": {
+    "welcomeMessage": "¡Hola! Soy tu Asistente de Desarrollo de Talento de Scalian. Integro 4 modelos de Machine Learning predictivos que evalúan tu perfil, tu motivación actual y el riesgo de abandono. Cruzo estos datos con tu departamento y puedo proyectar el ROI de tu formación, asignarte el mentor ideal y generar un plan de acción a medida de 30 días para maximizar tus resultados. ¿Qué nueva competencia, tecnología o certificación te gustaría dominar hoy?",
     "title": "Chatbot de Formación",
     "placeholder": "Haz una pregunta...",
     "noMessages": "Sin mensajes aún. ¡Inicia una conversación!",

@@ -117,15 +117,32 @@ async def chat_query(
                 )       
              
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        # 2. LOAD RAG CONTEXT (SQL)
+        # 2. LOAD RAG CONTEXT (SQL DYNAMIC)
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
-        top_courses = dm.get_top_courses(
-            department=employee_ctx.get("department", "Unknown"),
-            limit=3
-        )
+        user_message_lower = request.message.lower()
         
-        # 1. Obtenemos los datos puros
+        # [NEW]: Extracción básica de demanda para buscar cursos dinámicamente
+        detected_skills = []
+        for word in ["agile", "scrum", "data", "python", "sql", "ia", "artificial", "docker", "excel", "liderazgo", "management"]:
+            if word in user_message_lower:
+                detected_skills.append(word.capitalize())
+        
+        # Si detectamos skills, buscamos esos cursos cruzando con todo el catálogo en memoria RAM para evitar caídas de Cloudflare.
+        if detected_skills:
+            all_courses = supabase.table("courses").select("*").execute().data or []
+            target_skill = detected_skills[0].lower()
+            
+            # Filtramos en Python los que contengan la palabra en el título
+            matched_courses = [c for c in all_courses if target_skill in c.get("title", "").lower()]
+            
+            top_courses = matched_courses[:3] if matched_courses else dm.get_top_courses(employee_ctx.get("department", "Unknown"), 3)
+        else:
+            top_courses = dm.get_top_courses(
+                department=employee_ctx.get("department", "Unknown"),
+                limit=3
+            )
+        # 1. Obtenemos los datos puros (¡ESTO NOS FALTABA!)
         similar_prof_data = dm.get_similar_profiles(
             department=employee_ctx.get("department", "Unknown"),
             ai_usage_frequency=employee_ctx.get("ai_usage_frequency", 3),
@@ -134,17 +151,16 @@ async def chat_query(
         dept_insights_raw = dm.get_department_insights(
             department=employee_ctx.get("department", "Unknown")
         )
-        
         # 2. Aplanamos (Flatten) el diccionario de insights a un String legible para la IA
         dept_insights_text = "; ".join(f"{k}: {v}" for k, v in dept_insights_raw.items()) if dept_insights_raw else "N/A"
-        
+
         # 3. Construimos el RAG context EXACTO que espera el PromptBuilder
         rag_ctx = {
             "similar_profiles_summary": similar_prof_data.get("summary", "N/A"),
             "department_insights": dept_insights_text,
             "top_courses": top_courses,
             "avg_improvement": similar_prof_data.get("avg_improvement", 24),
-            "risk_flags": [] # Lo inicializamos para que el LLM no falle al buscarlo
+            "risk_flags": [] 
         }
         
         logger.info(f"RAG context loaded: {len(rag_ctx.get('top_courses', []))} courses")
@@ -159,7 +175,8 @@ async def chat_query(
             "autoeficacia": employee_ctx.get("self_efficacy", 5.0),
             "ai_usage": employee_ctx.get("ai_usage_frequency", 3),
             "edad": employee_ctx.get("age", 30),
-            "antiguedad": employee_ctx.get("years_in_company", 5)
+            "antiguedad": employee_ctx.get("years_in_company", 5),
+            "primary_tool": employee_ctx.get("primary_tool", "Unknown")
         }
         ml_scores = ml_client.get_employee_scores(employee_profile)
         rag_ctx["ml_scores"] = ml_scores
@@ -170,13 +187,31 @@ async def chat_query(
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # 2.6 GET MENTOR RECOMMENDATIONS
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        import re
         
-        # Extract tecnologías from top courses titles
-        tecnologias = [c.get("title", "").split()[0] for c in top_courses]  # Simple: first word
-        mentores = dm.get_mentor_recommendations(especialidades=tecnologias, limit=2)
+        tecnologias = set(detected_skills) # Metemos las que detectamos arriba
+        for c in top_courses:
+            title = c.get("title", "")
+            clean_title = re.sub(r'^\d+\.', '', title).strip().split()[0] if title else ""
+            if clean_title:
+                tecnologias.add(clean_title)
+        
+        tecnologias_list = list(tecnologias)
+        
+        # Si aún así está vacío, enviamos el departamento para ver si pilla algún mentor de rebote
+        if not tecnologias_list:
+            tecnologias_list.append(employee_ctx.get("department", "IT"))
+                
+        mentores = dm.get_mentor_recommendations(especialidades=tecnologias_list, limit=2)
+                
+        # NUEVO: Fallback si no encuentra mentores
+        if not mentores:
+            # Buscar mentores genéricos o los mejores valorados en general
+            mentores = dm.get_mentor_recommendations(especialidades=["Liderazgo", "Soft Skills"], limit=1) 
+            
         rag_ctx["recommended_mentors"] = mentores
         
-        logger.info(f"Found {len(mentores)} mentor recommendations")
+        logger.info(f"Found {len(mentores)} mentor recommendations with skills: {tecnologias_list}")        
         
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # 2.7 GET RELEVANT PROGRAMS
@@ -192,31 +227,45 @@ async def chat_query(
         logger.info(f"Found {len(programas)} relevant programs")
 
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        # 3. INITIALIZE SESSION OBJECTS
+        # 3. INITIALIZE SESSION OBJECTS & LOAD HISTORY
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
         memory = ConversationMemory(request.user_id)
         tracker = TrainingSessionTracker(session_id, request.user_id)
         pb = PromptBuilder()
+        
+        # FIX: Cargar historial previo de la base de datos para recuperar contexto
+        try:
+            sessions = supabase.table("chat_sessions").select("id").eq(
+                "employee_id", request.user_id
+            ).order("started_at", desc=True).limit(1).execute()
+            
+            if sessions.data:
+                session_id = sessions.data[0]["id"]
+                tracker.session_id = session_id
                 
+                turns_resp = supabase.table("chat_turns").select(
+                    "role, message"
+                ).eq("session_id", session_id).order("created_at").limit(10).execute()
+                
+                for t in turns_resp.data:
+                    memory.add_turn(t["role"], t["message"])
+        except Exception as e:
+            logger.warning(f"Could not load conversation history: {e}")
+
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # 4. BUILD PROMPT (INITIAL)
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
-        # Use initial prompt if no history, contextual if history exists
-        if not memory.get_history():
-            prompt = pb.build_initial_prompt(
-                user_context=employee_ctx,
-                ml_scores=rag_ctx.get("ml_scores")
-            )
-        else:
-            prompt = pb.build_contextual_prompt(
-                user_message=request.message,
-                user_context=employee_ctx,
-                rag_context=rag_ctx,
-                history=memory.get_history(),
-                ml_scores=rag_ctx.get("ml_scores")
-            )
+        # [FIX]: usamos SIEMPRE build_contextual_prompt
+        # Así aseguramos que Gemini SIEMPRE lee el request.message
+        prompt = pb.build_contextual_prompt(
+            user_message=request.message,
+            user_context=employee_ctx,
+            rag_context=rag_ctx,
+            history=memory.get_history(),
+            ml_scores=rag_ctx.get("ml_scores")
+        )
         
         logger.info("Prompt built, querying Gemini...")
         
@@ -268,6 +317,7 @@ async def chat_query(
         if parsed.get("recommendations"): 
             recommendations = RecommendationData(
                 course=parsed["recommendations"].get("course"),
+                mentor=parsed["recommendations"].get("mentor"),
                 rationale=parsed["recommendations"].get("rationale"),
                 plan_30_days=parsed["recommendations"].get("plan_30_days")
             )
@@ -291,7 +341,7 @@ async def chat_query(
         
         try:
             # Save chat_sessions
-            supabase.table("chat_sessions").insert({
+            supabase.table("chat_sessions").upsert({
                 "id": session_id,
                 "employee_id": request.user_id,
                 "started_at": datetime.utcnow().isoformat(),
@@ -302,19 +352,26 @@ async def chat_query(
                 "recommendation_generated": recommendations is not None
             }).execute()
             
-            # Save chat_turns (user turn)
+            # Guardar el mensaje del usuario en la base de datos
             supabase.table("chat_turns").insert({
                 "session_id": session_id,
-                "role": "user", 
+                "role": "user",
                 "message": request.message,
                 "created_at": datetime.utcnow().isoformat()
             }).execute()
+
+            # Convertimos el modelo pydantic a diccionario para Postgres (si no es null)
+            rec_dict = recommendations.model_dump() if recommendations else None
             
+            # Extraemos SOLO el mensaje limpio conversacional, no todo el JSON crudo
+            clean_message = parsed.get("message", response_text)
+
             # Save chat_turns (assistant turn)
             supabase.table("chat_turns").insert({
                 "session_id": session_id,
                 "role": "assistant",
-                "message": response_text,
+                "message": clean_message,      # <-- AHORA GUARDAMOS EL TEXTO LIMPIO
+                "recommendations": rec_dict,   # <-- COLUMNA REAL MANTENIDA
                 "created_at": datetime.utcnow().isoformat()
             }).execute()
             
@@ -383,19 +440,23 @@ async def get_chat_history(
         
         # Fetch turnos
         turns_response = supabase.table("chat_turns").select(
-            "role, message, created_at"
+            "role, message, created_at, recommendations"
         ).eq("session_id", session_id).order(
             "created_at", desc=True
         ).limit(limit).execute()
         
-        turns = [
-            ChatTurn(
+        # Debemos pasar esa llave suelta desde DB al modelo
+        turns = []
+        for turn in turns_response.data:
+            t = ChatTurn(
                 role=turn["role"],
                 content=turn["message"],
                 timestamp=turn["created_at"]
             )
-            for turn in turns_response.data
-        ]
+            # Acoplamos las recomendaciones dinámicamente si llegaron desde BD
+            if turn.get("recommendations"):
+                t.recommendations = turn["recommendations"] 
+            turns.append(t)
         
         logger.info(f"Retrieved {len(turns)} turns for user {user_id}")
         return turns

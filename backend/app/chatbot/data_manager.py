@@ -63,16 +63,22 @@ class DataManager:
             
             # Fetch AI usage del survey
             survey_response = self.db.table("survey_answers").select(
-                "ai_usage_frequency"
+                "ai_usage_frequency, main_tool"
             ).eq("employee_id", employee_id).limit(1).execute()
             
-            ai_usage = survey_response.data[0]["ai_usage_frequency"] if survey_response.data else 3
+            if survey_response.data:
+                ai_usage = survey_response.data[0].get("ai_usage_frequency", 3)
+                primary_tool = survey_response.data[0].get("main_tool", "Unknown")
+            else:
+                ai_usage = 3
+                primary_tool = "Unknown"
             
             context = {
                 "employee_id": emp_data.get("employee_id"),
                 "department": emp_data.get("department"),
                 "education_level": emp_data.get("education_level"),
                 "ai_usage_frequency": ai_usage,
+                "primary_tool": primary_tool,
                 "motivation": float(eval_data.get("motivacion", 5.0)),
                 "self_efficacy": float(eval_data.get("autoeficacia", 5.0)),
                 "age": emp_data.get("age"),
@@ -88,33 +94,17 @@ class DataManager:
     
     def get_department_insights(self, department: str) -> Dict: 
         """
-        Obtiene insights del departamento.
-        
-        Args:
-            department: Nombre del departamento
-            
-        Returns:
-            {
-                "avg_motivation": 7.2,
-                "avg_self_efficacy": 7.8,
-                "avg_ai_usage": 3.4,
-                "avg_dependency_risk": 3.1,
-                "count_employees": 32
-            }
+        Obtiene insights agregados de un departamento mediante SQL real y promedios Pandas on-the-fly.
         """
-        try: 
-            # Obtener empleados del departamento
-            dept_employees = self.db.table("employees").select(
-                "employee_id"
-            ).eq("department", department).execute()
-            
+        try:
+            # 1. Obtener empleados del departamento
+            dept_employees = self.db.table("employees").select("employee_id").eq("department", department).execute()
             dept_ids = [e["employee_id"] for e in dept_employees.data]
             
-            # Si no hay empleados en el departamento, devolvemos solo el conteo
             if not dept_ids:
                 return {"count_employees": 0}
             
-            # Query a employee_assessments solo para empleados del departamento
+            # 2. Consultar sus evaluaciones de baseline en Supabase
             response = (
                 self.db.table("employee_assessments")
                 .select("employee_id, motivacion, autoeficacia, dependencia")
@@ -123,32 +113,26 @@ class DataManager:
                 .execute()
             )
             
-            # Recalcular con pandas si hay datos de assessments
+            # 3. Pandas on-the-fly: calculamos el promedio numérico al instante 
             if response.data:
                 df = pd.DataFrame(response.data)
-                avg_motivation = float(df["motivacion"].mean()) if "motivacion" in df.columns and not df["motivacion"].empty else 0.0
-                avg_self_efficacy = float(df["autoeficacia"].mean()) if "autoeficacia" in df.columns and not df["autoeficacia"].empty else 0.0
-                avg_dependency = float(df["dependencia"].mean()) if "dependencia" in df.columns and not df["dependencia"].empty else 0.0
+                avg_motivation = float(df["motivacion"].mean()) if "motivacion" in df.columns and not df["motivacion"].empty else 5.0
+                avg_self_efficacy = float(df["autoeficacia"].mean()) if "autoeficacia" in df.columns and not df["autoeficacia"].empty else 5.0
+                avg_dependency = float(df["dependencia"].mean()) if "dependencia" in df.columns and not df["dependencia"].empty else 3.0
             else:
-                # Sin datos de assessments, devolvemos 0.0 como promedio
-                avg_motivation = 0.0
-                avg_self_efficacy = 0.0
-                avg_dependency = 0.0
+                avg_motivation = 5.0
+                avg_self_efficacy = 5.0
+                avg_dependency = 3.0
             
             count = len(dept_ids)
             
-            insights = {
-                "avg_motivation": avg_motivation,
-                "avg_self_efficacy": avg_self_efficacy,
-                "avg_ai_usage": 3.4,
-                "avg_dependency_risk": avg_dependency,
-                "learning_preference": "practical",
-                "common_barriers": ["time", "confidence", "relevance"],
+            return {
+                "avg_motivation": round(avg_motivation, 2),
+                "avg_self_efficacy": round(avg_self_efficacy, 2),
+                "avg_dependency_risk": round(avg_dependency, 2),
+                "learning_preference": "Determinar según autoeficacia", # Retirada la falsedad
                 "count_employees": count
             }
-            
-            logger.info(f"Department insights loaded for {department}")
-            return insights
         
         except Exception as e:
             logger.error(f"Error loading department insights: {e}")
@@ -162,22 +146,10 @@ class DataManager:
         limit: int = 10
     ) -> Dict:
         """
-        Obtiene empleados similares (mismo dpto, ai_usage, educación). 
-        
-        Args: 
-            department, ai_usage_frequency (1-5), education_level, limit
-        
-        Returns:
-            {
-                "count": 12,
-                "summary": "12 empleados similares",
-                "avg_improvement": 24,
-                "top_courses": ["ML Masterclass", "Python Advanced"],
-                "success_rate": 0.78
-            }
+        Obtiene recuento EXACTO de empleados similares cruzando factores demográficos.
         """
         try:
-            # Buscar empleados similares
+            # Buscar empleados similares en vivo
             similar_response = self.db.table("employees").select(
                 "employee_id"
             ).eq("department", department).eq(
@@ -186,12 +158,19 @@ class DataManager:
             
             similar_count = len(similar_response.data) if similar_response.data else 0
             
+            # Obtener datos vitales promedio del departamento como apoyo a los similares
+            courses_response = self.db.table("courses").select("avg_autoeficacia_improvement").eq("department", department).execute()
+            import pandas as pd
+            if courses_response.data:
+                df_corsi = pd.DataFrame(courses_response.data)
+                avg_improvement = round(float(df_corsi["avg_autoeficacia_improvement"].mean()), 2)
+            else:
+                avg_improvement = 0.0
+
             result = {
                 "count": similar_count,
-                "summary": f"{similar_count} empleados similares en {department}",
-                "avg_improvement": 24, #Placeholder
-                "top_courses": ["ML Masterclass", "Python Advanced"],
-                "success_rate": 0.78
+                "summary": f"Hay {similar_count} perfiles similares a este caso de uso en BD.",
+                "avg_improvement": avg_improvement
             }
             
             logger.info(f"Similar profiles found: {similar_count}")
