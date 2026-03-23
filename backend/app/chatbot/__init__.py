@@ -6,11 +6,13 @@ Designed to integrate with RAG system (Comp2) and frontend (Comp3).
 """
 
 from .conversation import ConversationMemory
+from .foundry_client import FoundryChatClient
 from .gemini_client import GeminiChatClient
 from .prompt_builder import PromptBuilder
 from .response_parser import parse_response, validate_response_structure
 
 __all__ = [
+    "FoundryChatClient",
     "GeminiChatClient",
     "PromptBuilder",
     "ConversationMemory",

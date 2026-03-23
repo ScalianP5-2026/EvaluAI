@@ -28,6 +28,27 @@ function ProtectedRoute({ children }) {
 }
 
 /**
+ * RRHH-only route wrapper.
+ */
+function RRHHRoute({ children }) {
+  const { canAccessAdminFeatures, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!canAccessAdminFeatures) {
+    return <Navigate to="/chat" replace />;
+  }
+
+  return children;
+}
+
+/**
  * App routes with authentication guards.
  */
 function AppRoutes() {
@@ -56,9 +77,11 @@ function AppRoutes() {
       } />
       <Route path="/dashboard" element={
         <ProtectedRoute>
-          <AppLayout>
-            <DashboardPage />
-          </AppLayout>
+          <RRHHRoute>
+            <AppLayout>
+              <DashboardPage />
+            </AppLayout>
+          </RRHHRoute>
         </ProtectedRoute>
       } />
       <Route path="/chat" element={
@@ -70,9 +93,11 @@ function AppRoutes() {
       } />
       <Route path="/nlp" element={
         <ProtectedRoute>
-          <AppLayout>
-            <NLPInsights />
-          </AppLayout>
+          <RRHHRoute>
+            <AppLayout>
+              <NLPInsights />
+            </AppLayout>
+          </RRHHRoute>
         </ProtectedRoute>
       } />
 

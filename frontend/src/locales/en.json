@@ -300,8 +300,8 @@
     "netImpact": "Net Impact"
   },
   "chat": {
-    "welcomeMessage": "Hello! I am your Scalian Talent Development Assistant. I integrate 4 predictive Machine Learning models that evaluate your profile, current motivation, and dropout risk. By cross-referencing this data with your department, I can project your training ROI, assign you the ideal mentor, and generate a customized 30-day action plan to maximize your results. What new skill, technology, or certification would you like to master today?",
     "title": "Training Chatbot",
+    "welcomeMessage": "Hello, I am your training assistant. Tell me your goal and I will recommend the best courses for your profile.",
     "placeholder": "Ask a question...",
     "noMessages": "No messages yet. Start a conversation!",
     "sessionInfo": "Session Info",
@@ -310,7 +310,10 @@
     "status": "Status",
     "processing": "Processing...",
     "ready": "Ready",
-    "sendError": "Failed to send message. Please try again."
+    "sendError": "Failed to send message. Please try again.",
+    "recommendedCourse": "Recommended course",
+    "recommendedMentor": "Recommended mentor",
+    "plan30Days": "30-Day Plan"
   },
   "insights": {
     "adoptionLow": "AI adoption is low ({{rate}}%). Prioritize practical training cases.",
@@ -334,7 +337,7 @@
     "newPasswordPlaceholder": "Min. 6 characters",
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Re-enter your password",
-    "login": "Sign In",
+    "login": "Log In or Sign Up",
     "loggingIn": "Signing In...",
     "logout": "Sign Out",
     "setPasswordButton": "Create Password & Sign In",
@@ -346,8 +349,8 @@
     "sessionExpired": "Session expired. Please sign in again.",
     "loggedInAs": "Logged in as",
     "firstTimeMessage": "This is your first login. Please create a password for your account.",
-    "backToLogin": "Back to login",
-    "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "firstTimeAction": "First time? Create password",
+    "enterEmailFirst": "Enter your email first",
+    "backToLogin": "Back to login"
   }
 }

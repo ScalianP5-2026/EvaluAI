@@ -8,10 +8,32 @@ import { authAPI } from "../services/api";
 
 const AuthContext = createContext(null);
 
+function normalizeDepartment(value) {
+  if (!value) return "";
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replaceAll(".", "")
+    .replaceAll("_", " ")
+    .replace(/\s+/g, " ");
+}
+
+function isRRHHDepartment(value) {
+  const normalized = normalizeDepartment(value);
+  return (
+    normalized === "rrhh" ||
+    normalized === "rr hh" ||
+    normalized === "recursos humanos" ||
+    normalized === "human resources" ||
+    normalized === "hr"
+  );
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem("evaluai_token"));
   const [loading, setLoading] = useState(true);
+  const canAccessAdminFeatures = isRRHHDepartment(user?.department);
 
   // Restore session from stored token on mount
   useEffect(() => {
@@ -75,6 +97,7 @@ export function AuthProvider({ children }) {
     token,
     loading,
     isAuthenticated: !!user && !!token,
+    canAccessAdminFeatures,
     login,
     setPassword,
     logout,
