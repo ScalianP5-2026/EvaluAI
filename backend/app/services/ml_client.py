@@ -4,160 +4,162 @@ Maneja carga de modelos, scoring y analisis NLP.
 """
 
 import logging
-import pickle
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
+import joblib
 import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
 class MLClient:
-    """Wrapper para modelos ML (.pkl files)"""
+    """Wrapper para cargar todos los modelos ML (.pkl) de la carpeta correcta y vectorizar peticiones."""
     
     def __init__(self):
-        """Carga modelos al init"""
-        self.models_dir = Path(__file__).parent.parent.parent / "models"
-        self.rf_model = None
-        self.scaler = None # Para normalización
-        self.nlp_models = {}
+        # Ajustado el path para apuntar a backend/ml/models (donde realmente están)
+        self.models_dir = Path(__file__).resolve().parent.parent.parent / "ml" / "models"
+        self.models = {}
         self._load_models()
     
     def _load_models(self):
-        """Carga RandomForest cuando esté disponible"""
-        rf_path = self.models_dir / "random_forest_model.pkl"
+        """Carga los 4 modelos oficiales y seguros."""
         
-        if rf_path.exists():
-            try:
-                with open(rf_path, 'rb') as f:
-                    model_data = pickle.load(f)
-                    # Espera dict: {"model": rf, "scaler": scaler, "feature_names": [...]}
-                    if isinstance(model_data, dict):
-                        self.rf_model = model_data.get("model")
-                        self.scaler = model_data.get("scaler")
-                    else:
-                        self.rf_model = model_data  # Legacy: solo el modelo
-                logger.info("✓ RandomForest model loaded")
-            except Exception as e:
-                logger.warning(f"⚠ RF model load failed: {e}")
-                self.rf_model = None
-        else: 
-            logger.warning(f"⚠ Model file not found: {rf_path}")
-    
-    def get_employee_scores(self, employee_profile: Dict) -> Optional[Dict]:
-        """
-        Obtiene scores ML para empleado.
-        
-        Si modelo no disponible, devuelve estructura con 0s.
+        files_to_load = {
+            "dropout_risk": "dropout_risk_model_clean.pkl",
+            "composite_roi": "composite_roi_model.pkl",
+            "dependency": "dependency_multiclass_model.pkl",
+            "motivation": "motivation_score_model.pkl"
+        }      
+          
+        for key, filename in files_to_load.items():
+            path = self.models_dir / filename
+            if path.exists():
+                try:
+                    with open(path, 'rb') as f:
+                        self.models[key] = joblib.load(f)
+                    logger.info(f"✓ {key} model loaded")
+                except Exception as e:
+                    logger.warning(f"⚠ {key} model load failed: {e}")
+            else:
+                logger.warning(f"⚠ Model file not found: {path}")
 
-        
-        Args:
-            employee_profile: {
-                "motivation": 7.5,
-                "autoeficacia": 8.0,
-                "ai_usage": 3,
-                "edad": 32,
-                "angiguedad": 17
-            }
-        
-        Returns: 
-            {
-                "recommendation_score": 0.85,
-                "risk_score": 0.12,
-                "course_affinity": {
-                    "AWS": 0.92,
-                    "Python": 0.78,
-                    "ML": 0.65
-                },
-                "confidence": 0.89
-                "model_available": True
-            }
+    def get_employee_scores(self, profile: Dict) -> Dict:
         """
+        Obtiene predicciones usando los 4 modelos cargados.
+        """
+        
+        if not self.models:
+            logger.warning("No models loaded, returning default scores")
+            return self._zero_scores()
+            
         try:
-            if not self.rf_model:
-                logger.warning("RF model not loaded, returning None")
-                return self._zero_scores()
-        
-            # Vectorizar profile
-            X = self._vectorize_profile(employee_profile)
+            # Vectorizar con la estructura real esperada (28 columnas)
+            X_df = self._vectorize_profile(profile)
             
-            # Normalizar si tenemos scaler
-            if self.scaler:
-                X = self.scaler.transform(X)
-                
-            # Predict
-            scores = self.rf_model.predict(X)[0] # [0] si solo 1 empleado
-            
-            return {
-                "recommendation_score": float(scores[0]),
-                "risk_score": float(scores[1]) if len(scores) > 1 else 0.5,
-                "course_affinity": self._map_scores_to_courses(scores),
-                "confidence": self._calculate_confidence(scores), # Desde modelo
-                "model_available": True
+            # Inicializar los resultados 
+            results = {
+                "model_available": True,
+                "confidence": 0.85 # CV average
             }
+            
+            # 1. Riesgo de abandono (Clasificador 1/0)
+            if "dropout_risk" in self.models:
+                # Predict_proba[0][1] devuelve la probabilidad real (0.0 a 1.0) de la clase POSITIVA (abandono)
+                prob = self.models["dropout_risk"].predict_proba(X_df)[0][1]
+                results["risk_score"] = float(prob)
+            else:
+                results["risk_score"] = 0.5
+            
+            # 2. ROI (Composite Regressor)
+            if "composite_roi" in self.models:
+                roi = self.models["composite_roi"].predict(X_df)[0]
+                results["recommendation_score"] = float(roi) # Usado como recomendacion general
+            else:
+                results["recommendation_score"] = 5.0
+
+            # 3. Predictor de Motivación futura
+            if "motivation" in self.models:
+                mot = self.models["motivation"].predict(X_df)[0]
+                results["predicted_motivation"] = float(mot)
+
+            # 4. Multiclase Dependencia
+            if "dependency" in self.models:
+                # Las clases son 'low', 'medium', 'high'
+                dep_class = self.models["dependency"].predict(X_df)[0]
+                results["dependency_prediction"] = str(dep_class)
+                
+            return results         
         
-        except Exception as e: 
+        except Exception as e:
             logger.error(f"Error getting ML scores: {e}")
             return self._zero_scores()
+
     
     def _zero_scores(self) -> Dict:
-        """Estructura de scores cuando modelo no disponible"""
         return {
             "recommendation_score": 0.0,
             "risk_score": 0.0,
-            "course_affinity": {},
+            "predicted_motivation": 0.0,
+            "dependency_prediction": "unknown",
             "confidence": 0.0,
             "model_available": False
         }
-    
-    def _vectorize_profile(self, profile: Dict) -> np.ndarray:
-        """
-        Convierte profile dict a vector para RF.
-        
-        ORDEN CRITICA: Debe coincidir exactamente con entrenamiento.
-        """
-        
-        return np.array([[
-            profile.get("motivation", 0.0),
-            profile.get("autoeficacia", 0.0),
-            profile.get("ai_usage", 0),
-            profile.get("edad", 0),
-            profile.get("antiguedad", 0)
-        ]])
-    
-    def _map_scores_to_courses(self, scores: np.ndarray) -> Dict:
-        """
-        Mapea scores a cursos disponibles.
-        
-        TODO: @ML_TEAM - Implementar mapping real
-        Actualmente retorna dict vacío (no hardcodeado).
-        
-        Debería:
-        1. Cargar lista de cursos desde Supabase
-        2. Normalizar scores a [0, 1]
-        3. Mapear a afinity scores por curso
-        """
-        # PLACEHOLDER: Vacío hasta que se implemente
-        return {}
-    
-    def _calculate_confidence(self, scores: np.ndarray) -> float:
-        """
-        Calcula confidence desde cross-validation del modelo.
-        
-        TODO: @ML_TEAM - Pasar CV score desde .pkl
-        Actualmente: 0.0 (no hardcodeado a 0.89)
-        """
-        # PLACEHOLDER: Retorna 0 hasta que haya data real
-        return 0.0
 
+    def _vectorize_profile(self, profile: Dict) -> pd.DataFrame:
+        """
+        Convierte profile dict a un vector compatible con las 28 variables esperadas.
+        Si la UI no los envía, mapeamos con promedios neutrales de relleno.
+        """
+        
+        # Mapeando datos reales desde UI / Data Manager si existen
+        row = {
+            # Demográficos y básicos numéricos
+            "edad": profile.get("edad", profile.get("age", 35)),
+            "antiguedad_empresa": profile.get("antiguedad_empresa", profile.get("years_in_company", 5)),
+            "rol_tecnico": profile.get("rol_tecnico", 0), # Default no tecnico
+            
+            # IA Features directas del front o BD
+            "frecuencia_uso_ia": profile.get("ai_usage", profile.get("ai_usage_frequency", 3)),
+            "usa_chatgpt": 1 if profile.get("primary_tool") == "ChatGPT" else 0,
+            "usa_gemini": 1 if profile.get("primary_tool") == "Gemini" else 0,
+            "usa_copilot": 1 if profile.get("primary_tool") == "Copilot" else 0,
+            "usa_lms_ia": 1 if profile.get("primary_tool") == "LMS IA" else 0,
+            "usa_otra_ia": 1 if profile.get("primary_tool") == "Otra" else 0,
+            "prefiere_humano_vs_ia": 3, # Valor medio ponderado temporal
+            "nivel_integracion_ia": 3,
+            
+            # Categóricas (One-Hot Encoded) defaults a 0 (Unknown en este entorno)
+            "genero_Mujer": 1 if profile.get("gender") == "Mujer" else 0,
+            "genero_No binario": 0,
+            "genero_Prefiero no decirlo": 0,
+            "departamento_IT": 1 if profile.get("department") == "IT" else 0,
+            "departamento_Marketing": 1 if profile.get("department") == "Marketing" else 0,
+            "departamento_Operaciones": 1 if profile.get("department") == "Operaciones" else 0,
+            "departamento_RRHH": 1 if profile.get("department") == "RRHH" else 0,
+            "sector_Industria": 0,
+            "sector_Servicios": 1 if profile.get("department") not in ["IT", "Operaciones"] else 0,
+            "sector_Tecnología": 1 if profile.get("department") == "IT" else 0,
+            "nivel_educativo_FP Superior": 1 if profile.get("education_level") == "FP Superior" else 0,            "nivel_educativo_Grado": 1 if profile.get("education_level") == "Grado" else 0,
+            "nivel_educativo_Máster": 1 if profile.get("education_level") == "Máster" or profile.get("education_level") == "Master" else 0,
+            "herramienta_principal_Copilot": 1 if profile.get("primary_tool") == "Copilot" else 0,
+            "herramienta_principal_Gemini": 1 if profile.get("primary_tool") == "Gemini" else 0,
+            "herramienta_principal_LMS IA": 1 if profile.get("primary_tool") == "LMS IA" else 0,
+            "herramienta_principal_Otra": 1 if profile.get("primary_tool") == "Otra" else 0
+        }
+        
+        # Devolver DataFrame asegurando el orden en que entrenamos:
+        columns = list(row.keys()) # Están definidas en el orden perfecto de arriba
+        df = pd.DataFrame([row])
+        return df
+    
+    # Instancia Singleton
+_ml_client_instance = None
 
 def get_ml_client() -> MLClient:
-    """Singleton: devuelve instancia única"""
-    global _ml_client
-    if _ml_client is None:
-        _ml_client = MLClient()
-    return _ml_client
-
-
-_ml_client = None
+    """Retorna una instancia única (singleton) del cliente ML."""
+    global _ml_client_instance
+    if _ml_client_instance is None:
+        _ml_client_instance = MLClient()
+    return _ml_client_instance

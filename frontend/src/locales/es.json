@@ -300,6 +300,7 @@
     "netImpact": "Impacto Neto"
   },
   "chat": {
+    "welcomeMessage": "Hola, soy el asistente virtual de evaluación. ¿En qué te puedo ayudar hoy?",
     "title": "Chatbot de Formación",
     "placeholder": "Haz una pregunta...",
     "noMessages": "Sin mensajes aún. ¡Inicia una conversación!",

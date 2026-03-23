@@ -88,8 +88,8 @@ You MUST respond ONLY with this exact JSON structure (no other text):
 {{
   "message": "Personalized greeting and initial assessment for the employee",
   "recommendations": {{
-    "course": "Recommended course name or null",
-    "mentor": "Suggested mentor profile or null",
+    "course": "Recommended course (solo si aplica o si el usuario pide aprender algo, de lo contrario null)",
+    "mentor": "Suggested mentor (solo si necesita ayuda técnica, de lo contrario null)",
     "plan_30_days": [
       "Week 1: action",
       "Week 2: action",
@@ -190,10 +190,8 @@ Model not available yet
         # Format mentores and programas
         mentores = rag_context.get("recommended_mentors", []) if rag_context else []
         programas = rag_context.get("relevant_programs", []) if rag_context else []
-        
         mentores_text = ", ".join([m.get("nombre", "Unknown") for m in mentores]) if mentores else "None available"
-        programas_text = ", ".join([p.get("title", "Unknown") for p in programas]) if programas else "None available"
-        
+        programas_text = ", ".join([p.get("title", "Unknown") for p in programas]) if programas else "None available"        
         prompt = f"""{self.system_role}
         
 --- EMPLOYEE CONTEXT ---
@@ -225,40 +223,38 @@ Relevant Programs: {programas_text}
 You MUST respond ONLY with this exact JSON structure (no other text):
 
 {{
-  "message": "Clear and personalized response addressing the employee's message",
+  "message": "Start by greeting the employee. Then, briefly mention your ML insights translating probabilities to natural percentages (e.g. if the Risk score is 0.66 say '66%'). Specifically mention the Predictive Motivation (out of 7) and the Recommendation Score (out of 10), and contextualize them empathetically to their query.",
   "recommendations": {{
-    "course": "Recommended course based on context or null",
-    "mentor": "Suggested mentor role or null",
+    "course": "Proactively select one of the Top Recommended Courses from the context",
+    "mentor": "Proactively select one relevant name from the Available Mentors list. Do not leave null.",
     "plan_30_days": [
-      "Week 1: specific action",
-      "Week 2: specific action",
-      "Week 3: specific action",
-      "Week 4: specific action"
+      "Semana 1: acción específica",
+      "Semana 2: acción específica",
+      "Semana 3: acción específica",
+      "Semana 4: acción específica"
     ]
   }},
   "insights": {{
-    "general": "Insight based on aggregated training data patterns",
-    "department": "Department-specific pattern or trend",
-    "personal": "Insight tailored to this employee's profile and message"
+    "general": "Provide a metric insight using exactly this format based on context: 'Empleados con perfil similar mejoraron un XX% su autoeficacia tras cursos similares'",
+    "department": "Insight linking their department data to the Recommended Course",
+    "personal": "Feedback explicitly addressing their Risk Score or Confidence level from the ML MODEL SIGNALS"
   }},
   "metadata": {{
-    "goal_detected": true_or_false,
-    "goal_clarity": "high_or_medium_or_low",
-    "recommended_skill": "Detected skill or null"
+    "goal_detected": true,
+    "goal_clarity": "high",
+    "recommended_skill": "Detected skill or focus area"
   }},
   "risk_alert": null_or_"risk_type"
 }}
 
 CRITICAL RULES FOR RESPONSE:
 - Respond ONLY with JSON. Absolutely no text before, after, or mixed with JSON.
-- Use null for missing information (not empty strings, not "N/A").
+- BE PROACTIVE: ALWAYS recommend a course, a mentor, and a 30-day plan, even if the user just says 'hola'. Use the context provided to cater them to their profile.
+- SHOWCASE METRICS: You must explicitly mention their ML stats, autoeficacia, and improvement % in your answers to demonstrate that the AI knows their profile depth.
+- ML BEHAVIOR: Adapt your tone based on Risk Score. If they feel unmotivated, act highly supportive.
+- Use null ONLY if data is truly completely missing from context.
 - The JSON must be valid and properly formatted.
-- The 'message' field should be conversational and helpful.
-- The 'plan_30_days' array should contain 4 concrete, actionable steps.
-- Do not use markdown, code blocks, or any formatting outside JSON.
-- If the employee message contains a clear learning goal, set goal_detected to true.
-- If a skill is mentioned or inferred, include it in recommended_skill."""
-
+"""
         logger.debug(
             f"Contextual prompt built (history: {len(history)} turns, "
             f"rag_context: {bool(rag_context)})"

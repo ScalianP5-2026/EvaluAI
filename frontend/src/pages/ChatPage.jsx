@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ChatBox from "../components/Chatbox";
 import { chatAPI } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function ChatPage() {
   const { t } = useTranslation();
-  const [userId] = useState("1XVWCBPH");
+  const { user } = useAuth();
+  const userId = user?.employee_id || "1XVWCBPH";
   const initialHistory = [
     {
       role: "assistant",
@@ -16,6 +18,7 @@ export default function ChatPage() {
   const [history, setHistory] = useState(initialHistory);
   const [loading, setLoading] = useState(false);
   const [sendError, setSendError] = useState(null);
+  const [latestInsights, setLatestInsights] = useState(null);
 
   useEffect(() => {
     loadHistory();
@@ -24,12 +27,26 @@ export default function ChatPage() {
   const loadHistory = async () => {
     try {
       const data = await chatAPI.getHistory(userId);
-      const conversationHistory = data && Array.isArray(data.conversation_history)
-        ? data.conversation_history
-        : null;
-      if (conversationHistory && conversationHistory.length > 0) {
-        setHistory(conversationHistory);
+      // OJO AL FIX: chatAPI.getHistory devuelve un Array directo según FastAPI [ {role, content, timestamp} ]
+      // NO un objeto con { conversation_history: [...] }
+
+      if (Array.isArray(data) && data.length > 0) {
+        // Formateamos los datos asegurando que respeten el formato del estado
+        const formattedHistory = data
+          .map((turn) => ({
+            role: turn.role,
+            content: turn.content,
+            recommendations: turn.recommendations || null,
+            timestamp: turn.timestamp || new Date().toISOString(),
+          }))
+          .reverse(); // Supabase los trae desc (novedad arriba), queremos asc (novedad abajo)
+
+        // FIX: Ya no empujamos el [initialHistory[0], ...]
+        // Simplemente cargamos la conversación ininterrumpida que traemos del backend.
+        setHistory([...formattedHistory]);
       } else {
+        // Solo mandamos el mensaje de bienvenida "Hola..." si es un usuario totalmente nuevo
+        // sin ninguna iteración en Supabase.
         setHistory(initialHistory);
       }
     } catch (error) {
@@ -42,12 +59,30 @@ export default function ChatPage() {
     setSendError(null);
     try {
       const response = await chatAPI.sendMessage(userId, message);
+
+      // Añadimos este pequeño limpiador de resiliencia:
+      let cleanMessage = response.message;
+      if (cleanMessage.startsWith("{") && cleanMessage.includes('"message":')) {
+        try {
+          // Intentar extraer el mensaje si vino corrompido dentro de un string JSON parcial
+          const regex = /"message"\s*:\s*"([^"]+)"/;
+          const match = cleanMessage.match(regex);
+          if (match && match[1]) {
+            cleanMessage = match[1];
+          }
+        } catch (e) {
+          console.log("No se pudo limpiar el mensage feo");
+        }
+      }
+
       setHistory([
         ...history,
         { role: "user", content: message, timestamp: new Date().toISOString() },
         {
           role: "assistant",
-          content: response.message,
+          content: cleanMessage, // Usar el texto limpio
+          recommendations: response.recommendations,
+          insights: response.insights,
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -57,6 +92,7 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
+    setLatestInsights(response.insights);
   };
 
   return (
@@ -117,6 +153,50 @@ export default function ChatPage() {
                 {loading ? t("chat.processing") : t("chat.ready")}
               </span>
             </div>
+
+            {/* NUEVA CAJA: INSIGHTS DE GEMINI */}
+            {latestInsights && (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2">
+                  <span>🧠</span> IA Insights
+                </h3>
+
+                <div className="space-y-4 text-sm">
+                  {latestInsights.personal && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Análisis Personal
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
+                        {latestInsights.personal}
+                      </p>
+                    </div>
+                  )}
+
+                  {latestInsights.department && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Tendencia de tu Departamento
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300">
+                        {latestInsights.department}
+                      </p>
+                    </div>
+                  )}
+
+                  {latestInsights.general && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Panorama Global
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300 italic">
+                        {latestInsights.general}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

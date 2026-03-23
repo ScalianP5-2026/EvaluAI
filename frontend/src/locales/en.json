@@ -300,6 +300,7 @@
     "netImpact": "Net Impact"
   },
   "chat": {
+    "welcomeMessage": "Hi, I'm the virtual evaluation assistant. How can I help you today?",
     "title": "Training Chatbot",
     "placeholder": "Ask a question...",
     "noMessages": "No messages yet. Start a conversation!",
