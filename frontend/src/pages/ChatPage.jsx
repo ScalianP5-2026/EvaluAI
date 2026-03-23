@@ -44,6 +44,7 @@ export default function ChatPage() {
   const [history, setHistory] = useState(buildInitialHistory);
   const [loading, setLoading] = useState(false);
   const [sendError, setSendError] = useState(null);
+  const [provider, setProvider] = useState("gemini");
 
   useEffect(() => {
     if (!userId) return;
@@ -88,7 +89,7 @@ export default function ChatPage() {
     setLoading(true);
     setSendError(null);
     try {
-      const response = await chatAPI.sendMessage(userId, message);
+      const response = await chatAPI.sendMessage(userId, message, provider);
       setHistory((prevHistory) => [
         ...prevHistory,
         { role: "user", content: message, timestamp: new Date().toISOString() },
@@ -116,6 +117,35 @@ export default function ChatPage() {
       )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
+
+          {/* Provider Selection Toggle */}
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-4 shadow-sm flex items-center justify-between">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <span>🤖</span> AI Model Provider:
+            </span>
+            <div className="flex bg-gray-100 dark:bg-gray-900 rounded-lg p-1">
+              <button
+                onClick={() => setProvider("gemini")}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  provider === "gemini" 
+                    ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm" 
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                }`}
+              >
+                Google Gemini
+              </button>
+              <button
+                onClick={() => setProvider("foundry")}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  provider === "foundry" 
+                    ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm" 
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                }`}
+              >
+                Azure OpenAI
+              </button>
+            </div>
+          </div>
           <ChatBox
             history={history}
             onSendMessage={handleSendMessage}

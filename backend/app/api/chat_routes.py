@@ -67,17 +67,7 @@ def get_data_manager(supabase: Client = Depends(get_supabase_client)) -> DataMan
     """Dependency: Datamanager inicializado."""
     return DataManager(supabase)
 
-def get_chat_client() -> GeminiChatClient | FoundryChatClient:
-    """
-    Dependency: Select active LLM client by CHATBOT_LLM_PROVIDER.
-    """
-    from app.chatbot import settings as chatbot_settings
-    from app.config import GEMINI_API_KEY
 
-    provider = chatbot_settings.LLM_PROVIDER
-    if provider in ("foundry", "azure_foundry", "azure_openai"):
-        return FoundryChatClient()
-    return GeminiChatClient(api_key=GEMINI_API_KEY)
 
 
 def _load_recent_history_for_user(
@@ -169,7 +159,6 @@ def _extract_assistant_message(content: str) -> str:
 async def chat_query(
     request: ChatRequest,
     dm: DataManager = Depends(get_data_manager),
-    client: GeminiChatClient | FoundryChatClient = Depends(get_chat_client),
     supabase: Client = Depends(get_supabase_client),
     current_user: EmployeeInfo = Depends(get_current_user),
 ) -> ChatResponse:
@@ -204,7 +193,13 @@ async def chat_query(
             )
 
         session_id = str(uuid.uuid4())
-        logger.info(f"New chat session: {session_id} for user {request.user_id}")
+        logger.info(f"New chat session: {session_id} for user {request.user_id} using provider {request.provider}")
+        
+        from app.config import GEMINI_API_KEY
+        if request.provider.lower() in ("foundry", "azure", "azure_openai", "azure_foundry"):
+            client = FoundryChatClient()
+        else:
+            client = GeminiChatClient(api_key=GEMINI_API_KEY)
         
         # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 1. LOAD EMPLOYEE CONTEXT
