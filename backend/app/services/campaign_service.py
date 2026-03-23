@@ -22,7 +22,8 @@ class CampaignService:
     def create_campaign(self, payload: dict, created_by: str) -> dict:
         data = payload.copy()
         data["created_by"] = created_by
-        data["is_active"] = True
+        # Use provided is_active if present, else default to True
+        data["is_active"] = data.get("is_active", True)
         result = self.supabase.table(self.table).insert(data).execute()
         return result.data[0]
 

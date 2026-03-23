@@ -15,7 +15,7 @@ class CampaignBase(BaseModel):
     form_url: Optional[str] = None
 
 class CampaignCreate(CampaignBase):
-    pass
+    is_active: Optional[bool] = None
 
 class CampaignUpdate(BaseModel):
     title: Optional[str] = None
