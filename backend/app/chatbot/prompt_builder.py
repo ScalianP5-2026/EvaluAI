@@ -47,7 +47,7 @@ class PromptBuilder:
                 - department (str)
                 - motivation (float, 1-7)
                 - self_efficacy (float, 1-7)
-                - ai_usage (int, 1-5)
+                - ai_usage_frequency (int, 1-5)
                 - seniority (str)
                 - education_level (str)
 
@@ -77,7 +77,7 @@ Department: {user_context.get('department', 'Unknown')}
 Years in Company: {user_context.get('years_in_company', 0)}
 Motivation Level: {user_context.get('motivation', 5)}/7
 Self-Efficacy: {user_context.get('self_efficacy', 5)}/7
-AI Usage Frequency: {user_context.get('ai_usage', 3)}/5
+AI Usage Frequency: {user_context.get('ai_usage_frequency', 3)}/5
 Primary AI Tool: {user_context.get('primary_tool', 'Unknown')}
 Education Level: {user_context.get('education_level', 'Bachelor')}
 
@@ -203,7 +203,7 @@ Department: {user_context.get('department', 'Unknown')}
 Years in Company: {user_context.get('years_in_company', 0)}
 Motivation Level: {user_context.get('motivation', 5)}/7
 Self-Efficacy: {user_context.get('self_efficacy', 5)}/7
-AI Usage Frequency: {user_context.get('ai_usage', 3)}/5
+AI Usage Frequency: {user_context.get('ai_usage_frequency', 3)}/5
 Primary AI Tool: {user_context.get('primary_tool', 'Unknown')}
 Education Level: {user_context.get('education_level', 'Bachelor')}
 
