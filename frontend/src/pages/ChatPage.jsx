@@ -75,8 +75,8 @@ export default function ChatPage() {
         }
       }
 
-      setHistory([
-        ...history,
+      setHistory((prevHistory) => [
+        ...prevHistory,
         { role: "user", content: message, timestamp: new Date().toISOString() },
         {
           role: "assistant",
