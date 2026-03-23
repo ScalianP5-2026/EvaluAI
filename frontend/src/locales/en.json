@@ -300,7 +300,7 @@
     "netImpact": "Net Impact"
   },
   "chat": {
-    "welcomeMessage": "Hi, I'm the virtual evaluation assistant. How can I help you today?",
+    "welcomeMessage": "Hello! I am your Scalian Talent Development Assistant. I integrate 4 predictive Machine Learning models that evaluate your profile, current motivation, and dropout risk. By cross-referencing this data with your department, I can project your training ROI, assign you the ideal mentor, and generate a customized 30-day action plan to maximize your results. What new skill, technology, or certification would you like to master today?",
     "title": "Training Chatbot",
     "placeholder": "Ask a question...",
     "noMessages": "No messages yet. Start a conversation!",
