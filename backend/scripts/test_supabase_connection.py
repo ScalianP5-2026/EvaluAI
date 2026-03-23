@@ -1,5 +1,5 @@
 """
-Quick script to test Supabase DB connection and fetch user_credentials table.
+Quick script to test Supabase DB connection and fetch employees table.
 """
 import os
 
@@ -19,11 +19,11 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 try:
-    result = supabase.table("user_credentials").select("*").limit(5).execute()
-    print(f"✅ Conexión exitosa. Primeros usuarios:")
+    result = supabase.table("employees").select("*").limit(5).execute()
+    print(f"✅ Conexión exitosa. Primeros empleados:")
     for row in result.data:
         print(row)
     if not result.data:
-        print("⚠️ La tabla user_credentials está vacía.")
+        print("⚠️ La tabla employees está vacía.")
 except Exception as e:
     print(f"❌ Error al acceder a Supabase: {e}")
