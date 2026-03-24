@@ -16,6 +16,18 @@ except ImportError:  # pragma: no cover
     except ImportError:  # pragma: no cover
         GeminiChatClient = None  # type: ignore
 
+# DB-backed NLP pipeline helpers (same package)
+try:
+    from nlp.db_loader import load_survey_responses as _load_from_db
+    from nlp.analyzers import enrich_dataframe as _enrich_df
+except ImportError:
+    try:
+        from backend.nlp.db_loader import load_survey_responses as _load_from_db  # type: ignore[no-redef]
+        from backend.nlp.analyzers import enrich_dataframe as _enrich_df  # type: ignore[no-redef]
+    except ImportError:
+        _load_from_db = None  # type: ignore[assignment]
+        _enrich_df = None  # type: ignore[assignment]
+
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +45,7 @@ _ENGINEERED_DATASET_PATH = _APP_ROOT / "data" / "processed" / "survey_engineered
 # Keep dataframe and load error cached in memory for fast repeated reads.
 _DF_CACHE: pd.DataFrame | None = None
 _CACHE_ERROR: str | None = None
+_DATA_SOURCE: str = "none"  # "db" or "csv" — tracks which source was used
 _ENGINEERED_DF_CACHE: pd.DataFrame | None = None
 _ENGINEERED_CACHE_ERROR: str | None = None
 _EXECUTIVE_CACHE: dict[str, str | None] = {"en": None, "es": None}
@@ -59,20 +72,74 @@ def _to_json_ready(value: Any) -> Any:
     return value
 
 
+def _count_file_lines(path: Path) -> int:
+    """Return total number of lines in a text file."""
+    with path.open("r", encoding="utf-8", errors="ignore") as file_obj:
+        return sum(1 for _ in file_obj)
+
+
+def _read_csv_defensive(path: Path, dataset_name: str) -> pd.DataFrame:
+    """Read CSV defensively, skipping malformed rows by default."""
+    total_lines = _count_file_lines(path)
+    expected_data_rows = max(total_lines - 1, 0)
+
+    dataframe = pd.read_csv(
+        path,
+        engine="python",
+        on_bad_lines="skip",
+    )
+
+    loaded_rows = len(dataframe)
+    skipped_rows = max(expected_data_rows - loaded_rows, 0)
+    if skipped_rows > 0:
+        logger.warning(
+            "%s loaded with skipped malformed rows: %s skipped out of %s expected data rows.",
+            dataset_name,
+            skipped_rows,
+            expected_data_rows,
+        )
+
+    return dataframe
+
+
 def _load_dataframe() -> pd.DataFrame | None:
-    """Load and cache NLP enriched dataframe, handling missing file gracefully."""
-    global _DF_CACHE, _CACHE_ERROR
+    """Load and cache NLP enriched dataframe.
+
+    Priority: 1) Supabase survey_responses → enrich  2) static CSV fallback.
+    """
+    global _DF_CACHE, _CACHE_ERROR, _DATA_SOURCE
 
     if _DF_CACHE is not None:
         return _DF_CACHE
 
+    # --- Attempt 1: live DB ---
+    if _load_from_db is not None and _enrich_df is not None:
+        try:
+            raw_df = _load_from_db()
+            if raw_df is not None and not raw_df.empty:
+                _DF_CACHE = _enrich_df(raw_df)
+                _CACHE_ERROR = None
+                _DATA_SOURCE = "db"
+                logger.info(
+                    "NLP dataframe loaded from DB (%d rows).", len(_DF_CACHE)
+                )
+                return _DF_CACHE
+            logger.info("DB returned no rows; falling back to CSV.")
+        except Exception as exc:
+            logger.warning("DB-backed NLP loading failed: %s — falling back to CSV.", exc)
+
+    # --- Attempt 2: static CSV fallback ---
     if not _ENRICHED_DATASET_PATH.exists():
         _CACHE_ERROR = f"NLP dataset not found: {_ENRICHED_DATASET_PATH}"
         return None
 
     try:
-        _DF_CACHE = pd.read_csv(_ENRICHED_DATASET_PATH)
+        _DF_CACHE = _read_csv_defensive(_ENRICHED_DATASET_PATH, "NLP dataset")
         _CACHE_ERROR = None
+        _DATA_SOURCE = "csv"
+        logger.info(
+            "NLP dataframe loaded from CSV fallback (%d rows).", len(_DF_CACHE)
+        )
         return _DF_CACHE
     except Exception as exc:
         _CACHE_ERROR = f"Failed to read NLP dataset: {exc}"
@@ -99,12 +166,24 @@ def _engineered_dataset_error_payload() -> dict[str, Any]:
 
 
 def _load_engineered_dataframe() -> pd.DataFrame | None:
-    """Load engineered dataset with caching and graceful errors."""
+    """Load engineered dataset with caching and graceful errors.
+
+    When the NLP dataframe was loaded from the DB, the enriched
+    dataframe already contains all needed columns, so we reuse it
+    as the engineered dataset as well.
+    """
     global _ENGINEERED_DF_CACHE, _ENGINEERED_CACHE_ERROR
 
     if _ENGINEERED_DF_CACHE is not None:
         return _ENGINEERED_DF_CACHE
 
+    # If the main dataframe came from DB, reuse it as engineered dataset
+    if _DATA_SOURCE == "db" and _DF_CACHE is not None:
+        _ENGINEERED_DF_CACHE = _DF_CACHE
+        _ENGINEERED_CACHE_ERROR = None
+        return _ENGINEERED_DF_CACHE
+
+    # Fallback: try loading static CSV
     if not _ENGINEERED_DATASET_PATH.exists():
         _ENGINEERED_CACHE_ERROR = (
             f"Engineered dataset not found: {_ENGINEERED_DATASET_PATH}"
@@ -112,7 +191,10 @@ def _load_engineered_dataframe() -> pd.DataFrame | None:
         return None
 
     try:
-        _ENGINEERED_DF_CACHE = pd.read_csv(_ENGINEERED_DATASET_PATH)
+        _ENGINEERED_DF_CACHE = _read_csv_defensive(
+            _ENGINEERED_DATASET_PATH,
+            "Engineered dataset",
+        )
         _ENGINEERED_CACHE_ERROR = None
         return _ENGINEERED_DF_CACHE
     except Exception as exc:
@@ -265,7 +347,9 @@ def _build_top_topics_table(df: pd.DataFrame) -> list[dict[str, Any]]:
         else pd.Series(dtype=float)
     )
 
+
     rows: list[dict[str, Any]] = []
+
     for topic_id, count in topic_counts.head(5).items():
         avg_value = float(avg_risk.get(topic_id)) if topic_id in avg_risk else None
         risk_level = _classify_topic_risk(avg_value or 0.0)
@@ -654,7 +738,49 @@ def get_strategic_summary() -> dict[str, Any]:
 
 
 def get_employee_nlp(employee_id: Any) -> dict[str, Any]:
-    """Return NLP details for a single employee by id_empleado."""
+    """Return NLP details for a single employee by id_empleado or email.
+
+    If *employee_id* looks like an email (contains ``@``), the function
+    first resolves the real ``employee_id`` from the ``user_credentials``
+    table and then proceeds with the normal NLP lookup.
+    """
+    resolved_id = str(employee_id).strip()
+
+    # ── Email → id_empleado resolution ──
+    if "@" in resolved_id:
+        try:
+            # Reuse the same import pattern as db_loader
+            try:
+                from backend.app.config import get_supabase_client
+            except ImportError:
+                from app.config import get_supabase_client  # type: ignore[no-redef]
+
+            client = get_supabase_client()
+            if client is not None:
+                resp = (
+                    client.table("user_credentials")
+                    .select("employee_id")
+                    .eq("email", resolved_id)
+                    .limit(1)
+                    .execute()
+                )
+                rows = resp.data or []
+                if rows and rows[0].get("employee_id"):
+                    resolved_id = str(rows[0]["employee_id"]).strip()
+                else:
+                    return {
+                        "status": "not_found",
+                        "employee_id": resolved_id,
+                        "message": "Email not found in user_credentials.",
+                    }
+        except Exception as exc:
+            logger.warning("Email resolution failed for %s: %s", resolved_id, exc)
+            return {
+                "status": "not_found",
+                "employee_id": resolved_id,
+                "message": "Could not resolve email to employee id.",
+            }
+
     df = _load_dataframe()
     if df is None:
         return _dataset_error_payload()
@@ -666,7 +792,7 @@ def get_employee_nlp(employee_id: Any) -> dict[str, Any]:
         }
 
     # Compare as strings to support numeric and string input ids.
-    target_id = str(employee_id).strip()
+    target_id = resolved_id
     matches = df[df["id_empleado"].astype(str).str.strip() == target_id]
 
     if matches.empty:
@@ -680,6 +806,8 @@ def get_employee_nlp(employee_id: Any) -> dict[str, Any]:
 
     payload = {
         "employee_id": _to_json_ready(row.get("id_empleado")),
+        "departamento": _to_json_ready(row.get("departamento")),
+        "wave": _to_json_ready(row.get("wave")),
         "sentiment_label": _to_json_ready(row.get("sentiment_label")),
         "sentiment_score": _to_json_ready(row.get("sentiment_score")),
         "sentiment_confidence": _to_json_ready(row.get("sentiment_confidence")),
@@ -689,10 +817,159 @@ def get_employee_nlp(employee_id: Any) -> dict[str, Any]:
         "autonomy_signal_score": _to_json_ready(row.get("autonomy_signal_score")),
         "ai_autonomy_dependency_index": _to_json_ready(row.get("ai_autonomy_dependency_index")),
         "ai_autonomy_dependency_category": _to_json_ready(row.get("ai_autonomy_dependency_category")),
+        "motivation_proxy": _to_json_ready(row.get("delta_motivation_score")),
         "full_text": _to_json_ready(row.get("full_text")),
+        "recommendations": _to_json_ready(row.get("recommendations", [])),
+        "alert_flags": _to_json_ready(row.get("alert_flags", [])),
     }
 
     return {
         "status": "ok",
         "employee": payload,
     }
+
+
+def get_alerts_summary() -> dict[str, Any]:
+    """Layer C aggregation: alerts, department cohorts, intervention priorities.
+
+    New endpoint payload — does NOT replace existing endpoints.
+    """
+    df = _load_dataframe()
+    if df is None:
+        return _dataset_error_payload()
+
+    total = len(df)
+
+    # ── Alert panels ──
+    alert_panels: list[dict[str, Any]] = []
+    alert_defs = {
+        "high_dependency": {
+            "label": "Alta dependencia IA",
+            "icon": "🔴",
+            "severity": "high",
+        },
+        "negative_sentiment": {
+            "label": "Sentimiento negativo",
+            "icon": "🟡",
+            "severity": "medium",
+        },
+        "difficulty_barriers": {
+            "label": "Dificultades y barreras",
+            "icon": "🟠",
+            "severity": "medium",
+        },
+        "low_motivation": {
+            "label": "Baja motivación",
+            "icon": "📉",
+            "severity": "high",
+        },
+        "time_pressure": {
+            "label": "Presión de tiempo",
+            "icon": "⏰",
+            "severity": "medium",
+        },
+        "mentoring_needs": {
+            "label": "Necesita mentoría",
+            "icon": "🔵",
+            "severity": "low",
+        },
+    }
+
+    if "alert_flags" in df.columns:
+        for alert_key, meta in alert_defs.items():
+            mask = df["alert_flags"].apply(
+                lambda flags: alert_key in flags if isinstance(flags, list) else False
+            )
+            count = int(mask.sum())
+            ids = (
+                df.loc[mask, "id_empleado"].astype(str).tolist()
+                if "id_empleado" in df.columns
+                else []
+            )
+            alert_panels.append({
+                "alert_key": alert_key,
+                "label": meta["label"],
+                "icon": meta["icon"],
+                "severity": meta["severity"],
+                "count": count,
+                "percent": round(count / max(total, 1) * 100, 1),
+                "employee_ids": ids[:20],  # cap at 20 for response size
+            })
+
+    # ── Department cohorts ──
+    department_cohorts: list[dict[str, Any]] = []
+    if "departamento" in df.columns and not df.empty:
+        dept_col = df["departamento"].fillna("Sin asignar").astype(str)
+        for dept, group in df.groupby(dept_col):
+            n = len(group)
+            neg_count = int(
+                (group.get("sentiment_label", pd.Series()).fillna("")
+                 .astype(str).str.lower() == "negative").sum()
+            ) if "sentiment_label" in group.columns else 0
+            high_dep = int(
+                (group.get("ai_autonomy_dependency_category", pd.Series()).fillna("")
+                 .astype(str).str.lower() == "high").sum()
+            ) if "ai_autonomy_dependency_category" in group.columns else 0
+            avg_risk = float(
+                pd.to_numeric(group.get("topic_risk_score", pd.Series()), errors="coerce")
+                .mean()
+            ) if "topic_risk_score" in group.columns else 0.0
+            avg_mot = float(
+                pd.to_numeric(group.get("delta_motivation_score", pd.Series()), errors="coerce")
+                .mean()
+            ) if "delta_motivation_score" in group.columns else 0.5
+
+            department_cohorts.append({
+                "department": str(dept),
+                "count": n,
+                "negative_sentiment_count": neg_count,
+                "high_dependency_count": high_dep,
+                "avg_risk_score": round(avg_risk, 3) if not pd.isna(avg_risk) else 0.0,
+                "avg_motivation": round(avg_mot, 3) if not pd.isna(avg_mot) else 0.5,
+            })
+        department_cohorts.sort(key=lambda c: c["avg_risk_score"], reverse=True)
+
+    # ── Intervention priorities (top 20 highest risk employees) ──
+    intervention_list: list[dict[str, Any]] = []
+    if "topic_risk_score" in df.columns and "id_empleado" in df.columns:
+        risk_sorted = df.nlargest(20, "topic_risk_score")
+        for _, row in risk_sorted.iterrows():
+            intervention_list.append({
+                "employee_id": _to_json_ready(row.get("id_empleado")),
+                "department": _to_json_ready(row.get("departamento")),
+                "sentiment_label": _to_json_ready(row.get("sentiment_label")),
+                "topic_id": _to_json_ready(row.get("topic_id")),
+                "risk_score": _to_json_ready(row.get("topic_risk_score")),
+                "dependency_category": _to_json_ready(row.get("ai_autonomy_dependency_category")),
+                "recommendations": _to_json_ready(row.get("recommendations", [])),
+                "alert_flags": _to_json_ready(row.get("alert_flags", [])),
+            })
+
+    # ── Wave breakdown ──
+    wave_breakdown: list[dict[str, Any]] = []
+    if "wave" in df.columns:
+        wave_col = df["wave"].fillna("unknown").astype(str)
+        for wave, group in df.groupby(wave_col):
+            n = len(group)
+            pos_pct = 0.0
+            if "sentiment_label" in group.columns:
+                pos_pct = round(
+                    float((group["sentiment_label"].fillna("").astype(str).str.lower() == "positive").sum())
+                    / max(n, 1) * 100, 1
+                )
+            wave_breakdown.append({
+                "wave": str(wave),
+                "count": n,
+                "positive_sentiment_percent": pos_pct,
+            })
+
+    return {
+        "status": "ok",
+        "total_responses": total,
+        "data_source": _DATA_SOURCE,
+        "alert_panels": _to_json_ready(alert_panels),
+        "department_cohorts": _to_json_ready(department_cohorts),
+        "intervention_priorities": _to_json_ready(intervention_list),
+        "wave_breakdown": _to_json_ready(wave_breakdown),
+    }
+

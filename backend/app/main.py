@@ -127,6 +127,9 @@ def create_app() -> FastAPI:
     app.include_router(surveys_routes.router)
     app.include_router(ml_routes.router)
     app.include_router(nlp_router)
+    # Register campaign management endpoints (RRHH only)
+    from app.api import campaign_routes
+    app.include_router(campaign_routes.router)
     
     # ━━━━━━━━━━━━━━━━━ Health Check Endpoints ━━━━━━━━━━━━━━━━━
     @app.get("/api/v1/health", tags=["health"])

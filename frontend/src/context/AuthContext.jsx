@@ -3,7 +3,13 @@
  * Manages user session state, login/logout, and JWT token persistence.
  */
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { authAPI } from "../services/api";
 
 const AuthContext = createContext(null);
@@ -31,7 +37,9 @@ function isRRHHDepartment(value) {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem("evaluai_token"));
+  const [token, setToken] = useState(() =>
+    localStorage.getItem("evaluai_token"),
+  );
   const [loading, setLoading] = useState(true);
   const canAccessAdminFeatures = isRRHHDepartment(user?.department);
 
@@ -77,7 +85,11 @@ export function AuthProvider({ children }) {
   }, []);
 
   const setPassword = useCallback(async (email, password, passwordConfirm) => {
-    const response = await authAPI.setPassword(email, password, passwordConfirm);
+    const response = await authAPI.setPassword(
+      email,
+      password,
+      passwordConfirm,
+    );
 
     // Auto-login after setting password
     localStorage.setItem("evaluai_token", response.access_token);
@@ -92,22 +104,22 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+
+
   const value = {
     user,
     token,
     loading,
     isAuthenticated: !!user && !!token,
+    department: user?.department || null,
+    isRRHH: canAccessAdminFeatures,
     canAccessAdminFeatures,
     login,
     setPassword,
     logout,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

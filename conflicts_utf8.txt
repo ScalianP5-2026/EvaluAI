@@ -1,0 +1,6 @@
+backend/app/api/access_control.py
+backend/app/api/surveys_routes.py
+backend/requirements.txt
+frontend/src/components/Sidebar.jsx
+frontend/src/context/AuthContext.jsx
+frontend/src/pages/LoginPage.jsx

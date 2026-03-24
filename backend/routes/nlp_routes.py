@@ -12,6 +12,7 @@ except ImportError:
 # Import NLP service functions from backend/nlp/service.py.
 try:
     from backend.nlp.service import (
+        get_alerts_summary,
         get_employee_nlp,
         get_executive_summary,
         get_npi_distribution,
@@ -22,6 +23,7 @@ try:
 except ImportError:
     # Fallback import for runtimes where backend is already the Python root.
     from nlp.service import (  # type: ignore
+        get_alerts_summary,
         get_employee_nlp,
         get_executive_summary,
         get_npi_distribution,
@@ -67,6 +69,12 @@ def get_nlp_strategic_summary(
     return get_strategic_summary()
 
 
+@router.get("/alerts")
+def get_nlp_alerts() -> dict[str, Any]:
+    """Return alert panels, department cohorts, and intervention priorities."""
+    return get_alerts_summary()
+
+
 @router.get("/employee/{employee_id}")
 def get_employee_nlp_profile(
     employee_id: str,
@@ -80,3 +88,4 @@ def get_employee_nlp_profile(
         raise HTTPException(status_code=404, detail=payload)
 
     return payload
+

@@ -158,10 +158,86 @@ export const dashboardAPI = {
     }
   },
 
-  uploadSurveys: async (file) => {
+  /**
+   * Fetch available survey campaigns for upload (id, name, wave)
+   */
+
+  getCampaigns: async () => {
+    try {
+      const response = await apiClient.get("/campaigns");
+      const data = response.data;
+      return Array.isArray(data) ? data : Array.isArray(data?.campaigns) ? data.campaigns : [];
+    } catch (error) {
+      handleError(error, "Get Campaigns");
+    }
+  },
+
+  createCampaign: async ({
+    title,
+    wave,
+    description,
+    source,
+    form_provider,
+    form_url,
+    is_active,
+  }) => {
+    try {
+      const response = await apiClient.post("/campaigns", {
+        title,
+        wave,
+        description,
+        source,
+        form_provider,
+        form_url,
+        is_active,
+      });
+      return response.data;
+    } catch (error) {
+      handleError(error, "Create Campaign");
+      throw error;
+    }
+  },
+
+  updateCampaign: async (id, data) => {
+    try {
+      const response = await apiClient.patch(`/campaigns/${id}`, data);
+      return response.data;
+    } catch (error) {
+      handleError(error, "Update Campaign");
+      throw error;
+    }
+  },
+
+  activateCampaign: async (id) => {
+    try {
+      const response = await apiClient.post(`/campaigns/${id}/activate`);
+      return response.data;
+    } catch (error) {
+      handleError(error, "Activate Campaign");
+      throw error;
+    }
+  },
+
+  deactivateCampaign: async (id) => {
+    try {
+      const response = await apiClient.post(`/campaigns/${id}/deactivate`);
+      return response.data;
+    } catch (error) {
+      handleError(error, "Deactivate Campaign");
+      throw error;
+    }
+  },
+
+  /**
+   * Upload survey file with campaign_id
+   * @param {File} file
+   * @param {string} campaignId
+   */
+  uploadSurveys: async (file, campaignId) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("campaign_id", campaignId);
       const response = await apiClient.post("/upload/surveys", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -227,6 +303,15 @@ export const nlpAPI = {
       return response.data;
     } catch (error) {
       handleError(error, "NLP Employee Profile");
+    }
+  },
+
+  getAlerts: async () => {
+    try {
+      const response = await nlpClient.get("/alerts");
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Alerts");
     }
   },
 
