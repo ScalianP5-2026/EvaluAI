@@ -42,8 +42,6 @@ class SurveyUploadService:
         """
         Process a survey file upload (.csv, .xls, .xlsx) end-to-end.
         """
-        import uuid
-
         import pandas as pd
         from app.services.data_store import DataRepository
         logger.info(f"Processing survey upload: {filename}")
