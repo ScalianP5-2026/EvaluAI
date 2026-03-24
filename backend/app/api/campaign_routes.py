@@ -24,7 +24,7 @@ def list_campaigns(service: CampaignService = Depends(get_campaign_service)):
     return {"campaigns": campaigns}
 
 @router.get("/{campaign_id}", response_model=CampaignResponse, dependencies=[Depends(require_rrhh_access)])
-def get_campaign(campaign_id: int, service: CampaignService = Depends(get_campaign_service)):
+def get_campaign(campaign_id: str, service: CampaignService = Depends(get_campaign_service)):
     """Get a campaign by ID (RRHH only)."""
     campaign = service.get_campaign(campaign_id)
     if not campaign:
@@ -43,7 +43,7 @@ def create_campaign(
 
 @router.patch("/{campaign_id}", response_model=CampaignResponse, dependencies=[Depends(require_rrhh_access)])
 def update_campaign(
-    campaign_id: int,
+    campaign_id: str,
     payload: CampaignUpdate,
     service: CampaignService = Depends(get_campaign_service),
 ):
@@ -55,7 +55,7 @@ def update_campaign(
 
 @router.post("/{campaign_id}/activate", response_model=CampaignResponse, dependencies=[Depends(require_rrhh_access)])
 def activate_campaign(
-    campaign_id: int,
+    campaign_id: str,
     service: CampaignService = Depends(get_campaign_service),
 ):
     """Activate a campaign (RRHH only)."""
@@ -66,7 +66,7 @@ def activate_campaign(
 
 @router.post("/{campaign_id}/deactivate", response_model=CampaignResponse, dependencies=[Depends(require_rrhh_access)])
 def deactivate_campaign(
-    campaign_id: int,
+    campaign_id: str,
     service: CampaignService = Depends(get_campaign_service),
 ):
     """Deactivate a campaign (RRHH only)."""
