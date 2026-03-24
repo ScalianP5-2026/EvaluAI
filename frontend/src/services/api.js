@@ -305,6 +305,15 @@ export const nlpAPI = {
     }
   },
 
+  getAlerts: async () => {
+    try {
+      const response = await nlpClient.get("/alerts");
+      return response.data;
+    } catch (error) {
+      handleError(error, "NLP Alerts");
+    }
+  },
+
   analyze: async (payload) => {
     try {
       const response = await apiClient.post("/nlp/analyze", payload);
