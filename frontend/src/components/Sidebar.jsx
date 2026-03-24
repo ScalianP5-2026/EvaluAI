@@ -13,15 +13,17 @@ import SurveyUpload from "./SurveyUpload";
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
   const { isDark, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, canAccessAdminFeatures } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const navItems = [
-    { path: "/dashboard", text: t("nav.dashboard") },
-    { path: "/chat", text: t("nav.chatbot") },
-    { path: "/nlp", text: t("nav.nlp") },
-  ];
+  const navItems = canAccessAdminFeatures
+    ? [
+        { path: "/dashboard", text: t("nav.dashboard") },
+        { path: "/chat", text: t("nav.chatbot") },
+        { path: "/nlp", text: t("nav.nlp") },
+      ]
+    : [{ path: "/chat", text: t("nav.chatbot") }];
 
   const isActive = (path) => location.pathname === path;
 
@@ -60,9 +62,11 @@ export default function Sidebar() {
       </nav>
 
       {/* Upload Section */}
-      <div className="p-4 border-t border-slate-800">
-        <SurveyUpload compact />
-      </div>
+      {canAccessAdminFeatures && (
+        <div className="p-4 border-t border-slate-800">
+          <SurveyUpload compact />
+        </div>
+      )}
 
       {/* Controls Section */}
       <div className="p-4 border-t border-slate-800">

@@ -20,6 +20,10 @@ class ChatRequest(BaseModel):
         default=None, 
         description="Contexto del empleado (si no viene, se fetch de BD)"
     )
+    provider: str = Field(
+        default="gemini",
+        description="Proveedor LLM (gemini o foundry)"
+    )
     
     class Config:
         json_schema_extra = {

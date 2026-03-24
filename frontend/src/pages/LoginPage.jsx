@@ -53,6 +53,10 @@ export default function LoginPage() {
 
       if (result.mustSetPassword) {
         setMode("set-password");
+        setPasswordValue("");
+        setPasswordConfirm("");
+        setError("");
+        return;
       }
     } catch (err) {
       const msg =
@@ -160,7 +164,8 @@ export default function LoginPage() {
                   type="button"
                   className="login-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
@@ -177,6 +182,23 @@ export default function LoginPage() {
                 <span className="login-spinner" />
               ) : null}
               {isLoading ? t("auth.loggingIn") : t("auth.login")}
+            </button>
+
+            <button
+              type="button"
+              className="login-back-link"
+              onClick={() => {
+                if (!email) {
+                  setError(t("auth.enterEmailFirst"));
+                  return;
+                }
+                setMode("set-password");
+                setPasswordValue("");
+                setPasswordConfirm("");
+                setError("");
+              }}
+            >
+              {t("auth.firstTimeAction")}
             </button>
           </form>
         )}
@@ -220,7 +242,7 @@ export default function LoginPage() {
                   type="button"
                   className="login-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  tabIndex={-1}
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>

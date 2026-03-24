@@ -7,6 +7,7 @@ Validates, deduplicates, and inserts into Supabase employees table.
 
 import logging
 
+from app.api.access_control import require_rrhh_access
 from app.config import get_supabase_client
 from app.models.survey_upload_schema import SurveyUploadResponse
 from app.services.survey_upload_service import SurveyUploadService
@@ -31,7 +32,8 @@ def get_upload_service(supabase: Client = Depends(get_supabase_client)) -> Surve
 )
 async def upload_surveys(
     file: UploadFile = File(..., description="CSV file with employee survey data (semicolon-delimited)"),
-    service: SurveyUploadService = Depends(get_upload_service)
+    service: SurveyUploadService = Depends(get_upload_service),
+    _current_user=Depends(require_rrhh_access),
 ) -> SurveyUploadResponse:
     """
     Upload and process a CSV survey file.
