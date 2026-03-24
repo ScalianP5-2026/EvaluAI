@@ -343,6 +343,7 @@
   },
   "chat": {
     "title": "Chatbot de Formación",
+    "welcomeMessage": "Hola, soy tu asistente de formación. Cuéntame tu objetivo y te recomendaré los mejores cursos para tu perfil.",
     "placeholder": "Haz una pregunta...",
     "noMessages": "Sin mensajes aún. ¡Inicia una conversación!",
     "sessionInfo": "Información de Sesión",
@@ -351,7 +352,10 @@
     "status": "Estado",
     "processing": "Procesando...",
     "ready": "Listo",
-    "sendError": "Error al enviar el mensaje. Por favor, inténtalo de nuevo."
+    "sendError": "Error al enviar el mensaje. Por favor, inténtalo de nuevo.",
+    "recommendedCourse": "Curso recomendado",
+    "recommendedMentor": "Mentor recomendado",
+    "plan30Days": "Plan de 30 días"
   },
   "insights": {
     "adoptionLow": "La adopción de IA es baja ({{rate}}%). Priorizar formación y casos prácticos.",
@@ -375,7 +379,7 @@
     "newPasswordPlaceholder": "Mín. 6 caracteres",
     "confirmPassword": "Confirmar contraseña",
     "confirmPasswordPlaceholder": "Repite tu contraseña",
-    "login": "Iniciar Sesión",
+    "login": "Iniciar sesión o registrarte",
     "loggingIn": "Iniciando sesión...",
     "logout": "Cerrar Sesión",
     "setPasswordButton": "Crear Contraseña e Iniciar Sesión",
@@ -387,8 +391,8 @@
     "sessionExpired": "Sesión expirada. Inicia sesión de nuevo.",
     "loggedInAs": "Conectado como",
     "firstTimeMessage": "Es tu primer inicio de sesión. Por favor, crea una contraseña para tu cuenta.",
-    "backToLogin": "Volver al inicio de sesión",
-    "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña"
+    "firstTimeAction": "¿Primera vez? Crear contraseña",
+    "enterEmailFirst": "Primero escribe tu correo",
+    "backToLogin": "Volver al inicio de sesión"
   }
 }

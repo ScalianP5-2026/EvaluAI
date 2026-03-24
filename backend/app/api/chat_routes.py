@@ -5,16 +5,23 @@ GET /api/v1/chat/history - Obtener historial
 """
 
 import logging
+import json
 import uuid
 from datetime import datetime
 from typing import Optional
 
+from app.api.access_control import is_rrhh_department
+from app.api.auth_routes import get_current_user
 from app.chatbot.conversation import ConversationMemory
 from app.chatbot.data_manager import DataManager
 from app.chatbot.domain_tracking import TrainingSessionTracker
+from app.chatbot.foundry_client import FoundryChatClient
 from app.chatbot.gemini_client import GeminiChatClient
+from app.chatbot.hybrid_rag import HybridRAGOrchestrator
 from app.chatbot.prompt_builder import PromptBuilder
+from app.chatbot.rag_metrics import record_hybrid_rag_event
 from app.chatbot.response_parser import parse_response
+from app.models.auth_schemas import EmployeeInfo
 from app.models.chat_schemas import (
     ChatRequest,
     ChatResponse,
@@ -60,21 +67,100 @@ def get_data_manager(supabase: Client = Depends(get_supabase_client)) -> DataMan
     """Dependency: Datamanager inicializado."""
     return DataManager(supabase)
 
-def get_gemini_client() -> GeminiChatClient:
-    """Dependency: GeminiChatClient inicializado."""
-    from app.config import GEMINI_API_KEY
-    return GeminiChatClient(api_key=GEMINI_API_KEY)
 
-# ═══════════════════════════════════════════════════════════════
+
+
+def _load_recent_history_for_user(
+    supabase: Client,
+    user_id: str,
+    limit: int = 8,
+) -> list[dict[str, str]]:
+    """
+    Load recent turns from the latest session for this user.
+
+    Returns turns in chronological order.
+    """
+    try:
+        sessions = (
+            supabase.table("chat_sessions")
+            .select("id")
+            .eq("employee_id", user_id)
+            .order("started_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        if not sessions.data:
+            return []
+
+        session_id = sessions.data[0].get("id")
+        if not session_id:
+            return []
+
+        turns_response = (
+            supabase.table("chat_turns")
+            .select("role, message, created_at")
+            .eq("session_id", session_id)
+            .order("created_at", desc=False)
+            .limit(limit)
+            .execute()
+        )
+
+        turns: list[dict[str, str]] = []
+        for turn in turns_response.data or []:
+            role = turn.get("role", "")
+            content = turn.get("message", "")
+            if role in ("user", "assistant") and content:
+                if role == "assistant":
+                    content = _extract_assistant_message(content)
+                turns.append({"role": role, "content": content})
+        return turns
+    except Exception as exc:
+        logger.warning("Could not preload chat history for %s: %s", user_id, exc)
+        return []
+
+
+def _extract_assistant_message(content: str) -> str:
+    """
+    Normalize assistant content for UI/history.
+
+    Older rows may contain full JSON blobs from LLM output. For those, extract
+    only the human-readable `message` field.
+    """
+    if not isinstance(content, str):
+        return str(content)
+
+    text = content.strip()
+    if not text:
+        return ""
+
+    if text.startswith("```"):
+        text = text.strip("`")
+        if text.lower().startswith("json"):
+            text = text[4:].strip()
+
+    if not text.startswith("{"):
+        return content
+
+    try:
+        payload = json.loads(text)
+        message = payload.get("message")
+        if isinstance(message, str) and message.strip():
+            return message
+    except Exception:
+        pass
+
+    return content
+
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # POST /api/v1/chat/query
-# ═══════════════════════════════════════════════════════════════
+# ---------------------------------------------------------------------------
 
 @router.post("/chat/query", response_model=ChatResponse)
 async def chat_query(
     request: ChatRequest,
     dm: DataManager = Depends(get_data_manager),
-    client: GeminiChatClient = Depends(get_gemini_client),
-    supabase: Client = Depends(get_supabase_client)
+    supabase: Client = Depends(get_supabase_client),
+    current_user: EmployeeInfo = Depends(get_current_user),
 ) -> ChatResponse:
     """
     Endpoint principal del chatbot.
@@ -97,61 +183,200 @@ async def chat_query(
         ChatResponse con mensaje + insights + recomendaciones
     """
     try:
+        if (
+            current_user.employee_id != request.user_id
+            and not is_rrhh_department(current_user.department)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only access your own chatbot session",
+            )
+
         session_id = str(uuid.uuid4())
-        logger.info(f"New chat session: {session_id} for user {request.user_id}")
+        logger.info(f"New chat session: {session_id} for user {request.user_id} using provider {request.provider}")
         
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        # 1. LOAD EMPLOYEE CONTEXT
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        
-        if request.employee_context:
-            employee_ctx = request.employee_context
-            logger.info("Using provided employee context")
+        from app.config import GEMINI_API_KEY
+        if request.provider.lower() in ("foundry", "azure", "azure_openai", "azure_foundry"):
+            client = FoundryChatClient()
         else:
-            employee_ctx = dm.get_employee_context(request.user_id)
-            if not employee_ctx:
-                logger.warning(f"Employee {request.user_id} not found in DB")
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Employee {request.user_id} not found"
-                )       
-             
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        # 2. LOAD RAG CONTEXT (SQL)
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            client = GeminiChatClient(api_key=GEMINI_API_KEY)
         
-        top_courses = dm.get_top_courses(
-            department=employee_ctx.get("department", "Unknown"),
-            limit=3
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+        # 1. LOAD EMPLOYEE CONTEXT
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+        
+        # Always load canonical employee context from DB so the LLM can access
+        # complete profile data for factual questions.
+        base_employee_ctx = dm.get_employee_context(request.user_id)
+        if not base_employee_ctx:
+            logger.warning(f"Employee {request.user_id} not found in DB")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Employee {request.user_id} not found"
+            )
+
+        # Optional request context can override non-critical fields, but we
+        # preserve canonical full-profile payload from Supabase.
+        if request.employee_context:
+            employee_ctx = {**base_employee_ctx, **request.employee_context}
+            employee_ctx["employee_full_profile"] = base_employee_ctx.get(
+                "employee_full_profile", {}
+            )
+            logger.info("Merged provided context on top of DB employee context")
+        else:
+            employee_ctx = base_employee_ctx
+
+        retrieved_facts = dm.get_retrieved_facts_for_query(
+            user_message=request.message,
+            employee_ctx=employee_ctx,
         )
+        employee_ctx["retrieved_facts"] = retrieved_facts
+        # Do not pass full raw profile to the LLM; keep structured retrieved facts only.
+        employee_ctx.pop("employee_full_profile", None)
+        logger.info(
+            "Structured retrieval scope for %s: %s",
+            request.user_id,
+            retrieved_facts.get("scope", []),
+        )
+             
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+        # 2. LOAD HYBRID RAG CONTEXT (STRUCTURED + FILE)
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
-        # 1. Obtenemos los datos puros
         similar_prof_data = dm.get_similar_profiles(
             department=employee_ctx.get("department", "Unknown"),
             ai_usage_frequency=employee_ctx.get("ai_usage_frequency", 3),
-            education_level=employee_ctx.get("education_level", "Unknown")
+            education_level=employee_ctx.get("education_level", "Unknown"),
         )
         dept_insights_raw = dm.get_department_insights(
             department=employee_ctx.get("department", "Unknown")
         )
-        
-        # 2. Aplanamos (Flatten) el diccionario de insights a un String legible para la IA
-        dept_insights_text = "; ".join(f"{k}: {v}" for k, v in dept_insights_raw.items()) if dept_insights_raw else "N/A"
-        
-        # 3. Construimos el RAG context EXACTO que espera el PromptBuilder
+        dept_insights_text = (
+            "; ".join(f"{k}: {v}" for k, v in dept_insights_raw.items())
+            if dept_insights_raw
+            else "N/A"
+        )
+
         rag_ctx = {
             "similar_profiles_summary": similar_prof_data.get("summary", "N/A"),
             "department_insights": dept_insights_text,
-            "top_courses": top_courses,
             "avg_improvement": similar_prof_data.get("avg_improvement", 24),
-            "risk_flags": [] # Lo inicializamos para que el LLM no falle al buscarlo
+            "risk_flags": [],
+            "top_courses": [],
+            "recommended_mentors": [],
+            "relevant_programs": [],
         }
-        
-        logger.info(f"RAG context loaded: {len(rag_ctx.get('top_courses', []))} courses")
 
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        hybrid = HybridRAGOrchestrator(dm)
+        hybrid_context = hybrid.run(
+            user_message=request.message,
+            employee_ctx=base_employee_ctx,
+            top_k_courses=5,
+            top_k_mentors=3,
+        )
+
+        ranked_courses = hybrid_context.get("ranked_courses", []) or []
+        ranked_mentors = hybrid_context.get("ranked_mentors", []) or []
+        recommended_programs = (
+            hybrid_context.get("recommended_programs", []) or ranked_courses[:3]
+        )
+
+        rag_ctx["top_courses"] = [
+            {
+                "title": item.get("title"),
+                "avg_autoeficacia_improvement": (item.get("metadata") or {}).get(
+                    "avg_autoeficacia_improvement"
+                ),
+                "avg_completion_rate": (item.get("metadata") or {}).get(
+                    "avg_completion_rate"
+                ),
+                "department": (item.get("metadata") or {}).get("department"),
+                "skill_level": (item.get("metadata") or {}).get("skill_level"),
+                "source": item.get("source"),
+                "score": item.get("score"),
+                "reasons": item.get("reasons", []),
+            }
+            for item in ranked_courses
+        ]
+
+        rag_ctx["recommended_mentors"] = [
+            {
+                "nombre": item.get("title"),
+                "mentor_initials": (item.get("metadata") or {}).get("mentor_initials")
+                or (item.get("metadata") or {}).get("nombre_codigo"),
+                "especialidades": (item.get("metadata") or {}).get("especialidades")
+                or (item.get("metadata") or {}).get("expertise"),
+                "role": (item.get("metadata") or {}).get("role"),
+                "competencia_level": (item.get("metadata") or {}).get(
+                    "competencia_level"
+                ),
+                "disponibilidad": (item.get("metadata") or {}).get("disponibilidad")
+                or (item.get("metadata") or {}).get("availability"),
+                "email": (item.get("metadata") or {}).get("email"),
+                "teams": (item.get("metadata") or {}).get("teams"),
+                "contact_channel": (item.get("metadata") or {}).get(
+                    "contact_channel"
+                ),
+                "source": item.get("source"),
+                "score": item.get("score"),
+                "reasons": item.get("reasons", []),
+            }
+            for item in ranked_mentors
+        ]
+
+        rag_ctx["relevant_programs"] = [
+            {
+                "title": item.get("title"),
+                "department": (item.get("metadata") or {}).get("department"),
+                "skill_level": (item.get("metadata") or {}).get("skill_level"),
+                "avg_autoeficacia_improvement": (item.get("metadata") or {}).get(
+                    "avg_autoeficacia_improvement"
+                ),
+                "avg_completion_rate": (item.get("metadata") or {}).get(
+                    "avg_completion_rate"
+                ),
+                "source": item.get("source"),
+                "score": item.get("score"),
+                "reasons": item.get("reasons", []),
+            }
+            for item in recommended_programs
+        ]
+
+        rag_ctx["hybrid_context"] = {
+            "query_understanding": hybrid_context.get("query_understanding", {}),
+            "tool_trace": hybrid_context.get("tool_trace", []),
+            "evaluation": hybrid_context.get("evaluation", {}),
+            "citations": hybrid_context.get("citations", []),
+        }
+
+        record_hybrid_rag_event(
+            {
+                "session_id": session_id,
+                "employee_id": request.user_id,
+                "query": request.message,
+                "query_understanding": hybrid_context.get("query_understanding", {}),
+                "evaluation": hybrid_context.get("evaluation", {}),
+                "tool_trace": hybrid_context.get("tool_trace", []),
+                "top_course_titles": [
+                    item.get("title") for item in rag_ctx.get("top_courses", [])[:5]
+                ],
+                "top_mentor_names": [
+                    item.get("nombre")
+                    for item in rag_ctx.get("recommended_mentors", [])[:3]
+                ],
+            }
+        )
+
+        logger.info(
+            "Hybrid RAG loaded: courses=%s, mentors=%s, programs=%s",
+            len(rag_ctx.get("top_courses", [])),
+            len(rag_ctx.get("recommended_mentors", [])),
+            len(rag_ctx.get("relevant_programs", [])),
+        )
+
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 2.5 GET ML SCORES
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
         ml_client = get_ml_client()
         employee_profile = {
@@ -167,70 +392,49 @@ async def chat_query(
         logger.info(f"ML scores obtained: recommendation={ml_scores.get('recommendation_score')}, "
                    f"risk={ml_scores.get('risk_score')}, confidence={ml_scores.get('confidence')}")
         
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        # 2.6 GET MENTOR RECOMMENDATIONS
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        
-        # Extract tecnologías from top courses titles
-        tecnologias = [c.get("title", "").split()[0] for c in top_courses]  # Simple: first word
-        mentores = dm.get_mentor_recommendations(especialidades=tecnologias, limit=2)
-        rag_ctx["recommended_mentors"] = mentores
-        
-        logger.info(f"Found {len(mentores)} mentor recommendations")
-        
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        # 2.7 GET RELEVANT PROGRAMS
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        
-        programas = dm.get_relevant_programs(
-            tecnologias=tecnologias,
-            nivel=None, # FIX: Evitamos cruzar nivel académico con dificultad de curso
-            limit=3
-        )
-        rag_ctx["relevant_programs"] = programas
-        
-        logger.info(f"Found {len(programas)} relevant programs")
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+        # 2.6 HYBRID RAG CONTEXT READY
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+        # Mentors and programs are already included in Hybrid RAG output.
 
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 3. INITIALIZE SESSION OBJECTS
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
         memory = ConversationMemory(request.user_id)
         tracker = TrainingSessionTracker(session_id, request.user_id)
         pb = PromptBuilder()
+
+        previous_turns = _load_recent_history_for_user(supabase, request.user_id)
+        for turn in previous_turns:
+            memory.add_turn(turn["role"], turn["content"])
                 
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 4. BUILD PROMPT (INITIAL)
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
-        # Use initial prompt if no history, contextual if history exists
-        if not memory.get_history():
-            prompt = pb.build_initial_prompt(
-                user_context=employee_ctx,
-                ml_scores=rag_ctx.get("ml_scores")
-            )
-        else:
-            prompt = pb.build_contextual_prompt(
-                user_message=request.message,
-                user_context=employee_ctx,
-                rag_context=rag_ctx,
-                history=memory.get_history(),
-                ml_scores=rag_ctx.get("ml_scores")
-            )
+        # Always include current user message in prompt construction.
+        prompt = pb.build_contextual_prompt(
+            user_message=request.message,
+            user_context=employee_ctx,
+            rag_context=rag_ctx,
+            history=memory.get_history(),
+            ml_scores=rag_ctx.get("ml_scores"),
+        )
         
-        logger.info("Prompt built, querying Gemini...")
+        logger.info("Prompt built, querying LLM provider...")
         
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 5. QUERY GEMINI
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
         response_text = await client.query(prompt, memory.get_history())
         
-        logger.info("Gemini response received")
+        logger.info("LLM response received")
         
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 6. PARSE RESPONSE
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
                 
         parsed = parse_response(response_text)
         
@@ -250,31 +454,33 @@ async def chat_query(
             )
             return chat_response
         
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 7. UPDATE MEMORY
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
+        assistant_message = parsed.get("message", response_text)
         memory.add_turn("user", request.message)
-        memory.add_turn("assistant", response_text)
+        memory.add_turn("assistant", assistant_message)
         
         # Extract metadata from conversation
         metadata = memory.extract_metadata()
         
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 8. BUILD CHAT RESPONSE
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
                 
         recommendations = None
         if parsed.get("recommendations"): 
             recommendations = RecommendationData(
                 course=parsed["recommendations"].get("course"),
                 rationale=parsed["recommendations"].get("rationale"),
-                plan_30_days=parsed["recommendations"].get("plan_30_days")
+                plan_30_days=parsed["recommendations"].get("plan_30_days"),
+                mentor=parsed["recommendations"].get("mentor"),
             )
         
         insights = parsed.get("insights", {})
         chat_response = ChatResponse(
-            message=parsed.get("message", response_text),
+            message=assistant_message,
             session_id=session_id,
             recommendations=recommendations,
             insights=InsightsData(
@@ -285,9 +491,9 @@ async def chat_query(
             risk_alert=parsed.get("risk_alert")
         )
         
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 9. SAVE TO SUPABASE
-        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
         try:
             # Save chat_sessions
@@ -314,7 +520,7 @@ async def chat_query(
             supabase.table("chat_turns").insert({
                 "session_id": session_id,
                 "role": "assistant",
-                "message": response_text,
+                "message": assistant_message,
                 "created_at": datetime.utcnow().isoformat()
             }).execute()
             
@@ -347,22 +553,23 @@ async def chat_query(
         )
         
             
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # GET /api/v1/chat/history
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 @router.get("/chat/history", response_model=list[ChatTurn])
 async def get_chat_history(
     user_id: str,
     limit: int = 10,
-    supabase: Client = Depends(get_supabase_client)
+    supabase: Client = Depends(get_supabase_client),
+    current_user: EmployeeInfo = Depends(get_current_user),
 ) -> list[ChatTurn]:
     """
-    Obtiene el historial de conversación de un empleado.
+    Obtiene el historial de conversaciÃ³n de un empleado.
     
     Args:
         user_id: ID del empleado
-        limit: Número máximo de turnos (default 10)
+        limit: NÃºmero mÃ¡ximo de turnos (default 10)
         supabase: Supabase client
     
     Returns:
@@ -370,7 +577,15 @@ async def get_chat_history(
     """
     
     try:
-        # Fetch último session
+        if (
+            current_user.employee_id != user_id
+            and not is_rrhh_department(current_user.department)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only access your own chatbot history",
+            )
+        # Fetch Ãºltimo session
         sessions = supabase.table("chat_sessions").select("id").eq(
             "employee_id", user_id
         ).order("started_at", desc=True).limit(1).execute()
@@ -387,14 +602,22 @@ async def get_chat_history(
         ).eq("session_id", session_id).order(
             "created_at", desc=True
         ).limit(limit).execute()
-        
+
+        # Keep API contract: return newest `limit` turns, but in chronological
+        # order for proper chat rendering.
+        ordered_turns = list(reversed(turns_response.data or []))
+
         turns = [
             ChatTurn(
                 role=turn["role"],
-                content=turn["message"],
+                content=(
+                    _extract_assistant_message(turn["message"])
+                    if turn["role"] == "assistant"
+                    else turn["message"]
+                ),
                 timestamp=turn["created_at"]
             )
-            for turn in turns_response.data
+            for turn in ordered_turns
         ]
         
         logger.info(f"Retrieved {len(turns)} turns for user {user_id}")
@@ -424,3 +647,4 @@ async def get_chat_history(
             
             
             
+

@@ -53,6 +53,10 @@ export default function LoginPage() {
 
       if (result.mustSetPassword) {
         setMode("set-password");
+        setPasswordValue("");
+        setPasswordConfirm("");
+        setError("");
+        return;
       }
     } catch (err) {
       const msg = err.response?.data?.detail || t("auth.invalidCredentials");
@@ -159,6 +163,7 @@ export default function LoginPage() {
                   type="button"
                   className="login-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
                   aria-label={
                     showPassword
                       ? t("auth.hidePassword")
@@ -178,6 +183,23 @@ export default function LoginPage() {
             >
               {isLoading ? <span className="login-spinner" /> : null}
               {isLoading ? t("auth.loggingIn") : t("auth.login")}
+            </button>
+
+            <button
+              type="button"
+              className="login-back-link"
+              onClick={() => {
+                if (!email) {
+                  setError(t("auth.enterEmailFirst"));
+                  return;
+                }
+                setMode("set-password");
+                setPasswordValue("");
+                setPasswordConfirm("");
+                setError("");
+              }}
+            >
+              {t("auth.firstTimeAction")}
             </button>
           </form>
         )}
@@ -221,6 +243,7 @@ export default function LoginPage() {
                   type="button"
                   className="login-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
                   aria-label={
                     showPassword
                       ? t("auth.hidePassword")

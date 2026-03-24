@@ -19,7 +19,7 @@ export default function ChatBox({ history, onSendMessage, loading }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col h-96 shadow-sm">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col h-[48rem] shadow-sm">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
         {t("chat.title")}
       </h2>
@@ -36,13 +36,51 @@ export default function ChatBox({ history, onSendMessage, loading }) {
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg ${
+                className={`max-w-md px-4 py-2 rounded-lg ${
                   msg.role === "user"
                     ? "bg-blue-600 text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 }`}
               >
                 <p className="text-sm">{msg.content}</p>
+
+                {msg.role === "assistant" && msg.recommendations && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 space-y-2">
+                    {msg.recommendations.course && (
+                      <div className="flex items-start gap-1.5 text-xs">
+                        <span>📘</span>
+                        <span>
+                          <span className="font-semibold">{t("chat.recommendedCourse")}:</span>{" "}
+                          {msg.recommendations.course}
+                        </span>
+                      </div>
+                    )}
+
+                    {msg.recommendations.mentor && (
+                      <div className="flex items-start gap-1.5 text-xs">
+                        <span>👤</span>
+                        <span>
+                          <span className="font-semibold">{t("chat.recommendedMentor")}:</span>{" "}
+                          {msg.recommendations.mentor}
+                        </span>
+                      </div>
+                    )}
+
+                    {msg.recommendations.plan_30_days &&
+                      msg.recommendations.plan_30_days.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs font-semibold mb-1">
+                            📅 {t("chat.plan30Days")}:
+                          </p>
+                          <ol className="list-decimal list-inside text-xs space-y-1 ml-1">
+                            {msg.recommendations.plan_30_days.map((step, i) => (
+                              <li key={i}>{step}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+                  </div>
+                )}
               </div>
             </div>
           ))

@@ -57,7 +57,7 @@ function useDraggable() {
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
   const { isDark, toggleTheme } = useTheme();
-  const { user, logout, isRRHH } = useAuth();
+  const { user, logout, isRRHH, canAccessAdminFeatures } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const campaignDrag = useDraggable();
@@ -74,11 +74,13 @@ export default function Sidebar() {
   const [campaignSuccess, setCampaignSuccess] = useState("");
   const [campaignLoading, setCampaignLoading] = useState(false);
 
-  const navItems = [
-    { path: "/dashboard", text: t("nav.dashboard") },
-    { path: "/chat", text: t("nav.chatbot") },
-    { path: "/nlp", text: t("nav.nlp") },
-  ];
+  const navItems = canAccessAdminFeatures
+    ? [
+        { path: "/dashboard", text: t("nav.dashboard") },
+        { path: "/chat", text: t("nav.chatbot") },
+        { path: "/nlp", text: t("nav.nlp") },
+      ]
+    : [{ path: "/chat", text: t("nav.chatbot") }];
 
   const isActive = (path) => location.pathname === path;
 
@@ -187,6 +189,7 @@ export default function Sidebar() {
           </Link>
         ))}
       </nav>
+
 
       {/* RRHH Actions Section */}
       {isRRHH && (
@@ -423,6 +426,7 @@ export default function Sidebar() {
               </div>
             </div>
           )}
+
         </div>
       )}
 

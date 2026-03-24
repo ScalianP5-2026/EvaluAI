@@ -118,11 +118,12 @@ export const authAPI = {
 // ═══════════════════════════════════════════════════════════════
 
 export const chatAPI = {
-  sendMessage: async (userId, message, employeeContext) => {
+  sendMessage: async (userId, message, provider, employeeContext) => {
     try {
       const response = await apiClient.post("/chat/query", {
         user_id: userId,
         message,
+        provider: provider || "gemini",
         employee_context: employeeContext,
       });
       return response.data;

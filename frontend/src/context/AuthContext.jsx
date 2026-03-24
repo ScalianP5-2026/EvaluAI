@@ -14,12 +14,34 @@ import { authAPI } from "../services/api";
 
 const AuthContext = createContext(null);
 
+function normalizeDepartment(value) {
+  if (!value) return "";
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replaceAll(".", "")
+    .replaceAll("_", " ")
+    .replace(/\s+/g, " ");
+}
+
+function isRRHHDepartment(value) {
+  const normalized = normalizeDepartment(value);
+  return (
+    normalized === "rrhh" ||
+    normalized === "rr hh" ||
+    normalized === "recursos humanos" ||
+    normalized === "human resources" ||
+    normalized === "hr"
+  );
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() =>
     localStorage.getItem("evaluai_token"),
   );
   const [loading, setLoading] = useState(true);
+  const canAccessAdminFeatures = isRRHHDepartment(user?.department);
 
   // Restore session from stored token on mount
   useEffect(() => {
@@ -82,19 +104,7 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  // Helper: is RRHH (by department, case-insensitive)
-  // Helper: is RRHH (robust, case-insensitive, allows common variants)
-  const isRRHH = (() => {
-    if (!user || !user.department || typeof user.department !== "string")
-      return false;
-    const dep = user.department.trim().toLowerCase();
-    // Accept: "rrhh", "recursos humanos", "human resources", etc.
-    return ["rrhh", "recursos humanos", "human resources", "hr"].some(
-      (variant) =>
-        dep === variant ||
-        dep.replace(/\s+/g, "") === variant.replace(/\s+/g, ""),
-    );
-  })();
+
 
   const value = {
     user,
@@ -102,7 +112,8 @@ export function AuthProvider({ children }) {
     loading,
     isAuthenticated: !!user && !!token,
     department: user?.department || null,
-    isRRHH,
+    isRRHH: canAccessAdminFeatures,
+    canAccessAdminFeatures,
     login,
     setPassword,
     logout,

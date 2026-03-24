@@ -8,9 +8,10 @@ Rules:
 
 from __future__ import annotations
 
+from fastapi import Depends, HTTPException, status
+
 from app.api.auth_routes import get_current_user
 from app.models.auth_schemas import EmployeeInfo
-from fastapi import Depends, HTTPException, status
 
 
 def normalize_department(value: str | None) -> str:
@@ -47,3 +48,4 @@ def require_rrhh_access(
             detail="Access restricted to RRHH users",
         )
     return current_user
+

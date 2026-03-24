@@ -5,6 +5,7 @@ Constructs structured prompts to ensure Gemini 2.5 Flash responds in JSON format
 The goal is to force deterministic, parseable JSON output from the LLM.
 """
 
+import json
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -33,6 +34,46 @@ class PromptBuilder:
             "If you deviate from the JSON format, the system will reject your response.\n"
             "No markdown, no explanations, no preamble."
         )
+
+    @staticmethod
+    def _resolve_ai_usage_frequency(user_context: Dict[str, Any]) -> Any:
+        """Use canonical AI usage key, with backward-compatible fallback."""
+        return user_context.get(
+            "ai_usage_frequency",
+            user_context.get("ai_usage", 3),
+        )
+
+    @staticmethod
+    def _resolve_seniority(user_context: Dict[str, Any]) -> str:
+        """Resolve seniority from context, deriving it from years if missing."""
+        explicit = user_context.get("seniority")
+        if explicit:
+            return str(explicit)
+
+        years = user_context.get("years_in_company")
+        try:
+            years_value = float(years)
+        except (TypeError, ValueError):
+            return "Mid-level"
+
+        if years_value < 2:
+            return "Junior"
+        if years_value < 6:
+            return "Mid-level"
+        return "Senior"
+
+    @staticmethod
+    def _build_retrieved_facts_block(user_context: Dict[str, Any]) -> str:
+        """
+        Serialize compact retrieved facts for prompt injection.
+        """
+        facts = user_context.get("retrieved_facts", {})
+        if not facts:
+            return "No retrieved facts available."
+        try:
+            return json.dumps(facts, ensure_ascii=False)
+        except Exception:
+            return str(facts)
 
     def build_initial_prompt(
         self, 
@@ -73,9 +114,13 @@ Model not available yet (loading...)
 Department: {user_context.get('department', 'Unknown')}
 Motivation Level: {user_context.get('motivation', 5)}/7
 Self-Efficacy: {user_context.get('self_efficacy', 5)}/7
-AI Usage Frequency: {user_context.get('ai_usage', 3)}/5
-Seniority: {user_context.get('seniority', 'Mid-level')}
+AI Usage Frequency: {self._resolve_ai_usage_frequency(user_context)}/5
+Years in Company: {user_context.get('years_in_company', 'Unknown')}
+Seniority: {self._resolve_seniority(user_context)}
 Education Level: {user_context.get('education_level', 'Bachelor')}
+
+--- RETRIEVED EMPLOYEE FACTS ---
+{self._build_retrieved_facts_block(user_context)}
 
 {ml_context}
 --- INITIAL INSTRUCTION ---
@@ -90,12 +135,7 @@ You MUST respond ONLY with this exact JSON structure (no other text):
   "recommendations": {{
     "course": "Recommended course name or null",
     "mentor": "Suggested mentor profile or null",
-    "plan_30_days": [
-      "Week 1: action",
-      "Week 2: action",
-      "Week 3: action",
-      "Week 4: action"
-    ]
+    "plan_30_days": null
   }},
   "insights": {{
     "general": "General insight from training data",
@@ -113,8 +153,10 @@ You MUST respond ONLY with this exact JSON structure (no other text):
 CRITICAL RULES:
 - Respond ONLY with JSON. No text before or after.
 - Use null for missing information, never empty strings.
+- Only provide 'course', 'mentor', or 'plan_30_days' if explicitly asked or highly relevant. Usually, return null initially.
 - The JSON must be valid and parseable.
-- Do not add explanations or markdown."""
+- Do not add explanations or markdown.
+- If the employee asks about their own profile values, use the RETRIEVED EMPLOYEE FACTS above."""
 
         logger.debug("Initial prompt built successfully")
         return prompt
@@ -190,9 +232,44 @@ Model not available yet
         # Format mentores and programas
         mentores = rag_context.get("recommended_mentors", []) if rag_context else []
         programas = rag_context.get("relevant_programs", []) if rag_context else []
+        hybrid_context = rag_context.get("hybrid_context", {}) if rag_context else {}
         
         mentores_text = ", ".join([m.get("nombre", "Unknown") for m in mentores]) if mentores else "None available"
+        mentor_contacts_text = (
+            "; ".join(
+                [
+                    (
+                        f"{m.get('nombre', 'Unknown')}"
+                        f" [iniciales: {m.get('mentor_initials', 'N/A')}]"
+                        f" | email: {m.get('email', 'N/A')}"
+                        f" | teams: {m.get('teams', 'N/A')}"
+                        f" | canal: {m.get('contact_channel', 'N/A')}"
+                    )
+                    for m in mentores
+                    if m.get("email") or m.get("teams")
+                ]
+            )
+            if mentores
+            else "None"
+        )
         programas_text = ", ".join([p.get("title", "Unknown") for p in programas]) if programas else "None available"
+        citations = hybrid_context.get("citations", []) if isinstance(hybrid_context, dict) else []
+        citations_text = (
+            ", ".join(
+                [
+                    f"{c.get('title', 'Unknown')} ({c.get('source', 'unknown')})"
+                    for c in citations[:8]
+                ]
+            )
+            if citations
+            else "None"
+        )
+        retrieval_eval = hybrid_context.get("evaluation", {}) if isinstance(hybrid_context, dict) else {}
+        retrieval_eval_text = (
+            "; ".join([f"{k}: {v}" for k, v in retrieval_eval.items()])
+            if retrieval_eval
+            else "N/A"
+        )
         
         prompt = f"""{self.system_role}
         
@@ -200,9 +277,13 @@ Model not available yet
 Department: {user_context.get('department', 'Unknown')}
 Motivation Level: {user_context.get('motivation', 5)}/7
 Self-Efficacy: {user_context.get('self_efficacy', 5)}/7
-AI Usage Frequency: {user_context.get('ai_usage', 3)}/5
-Seniority: {user_context.get('seniority', 'Mid-level')}
+AI Usage Frequency: {self._resolve_ai_usage_frequency(user_context)}/5
+Years in Company: {user_context.get('years_in_company', 'Unknown')}
+Seniority: {self._resolve_seniority(user_context)}
 Education Level: {user_context.get('education_level', 'Bachelor')}
+
+--- RETRIEVED EMPLOYEE FACTS ---
+{self._build_retrieved_facts_block(user_context)}
 
 {ml_context}
 --- RAG ENRICHED CONTEXT (from SQL data) ---
@@ -214,7 +295,12 @@ Risk Flags: {', '.join(rag_context.get('risk_flags', [])) if rag_context.get('ri
 
 --- MENTORS & PROGRAMS ---
 Available Mentors: {mentores_text}
+Mentor Contacts: {mentor_contacts_text}
 Relevant Programs: {programas_text}
+
+--- HYBRID RAG TRACE ---
+Top citations: {citations_text}
+Retrieval quality snapshot: {retrieval_eval_text}
 
 {conversation_block}
 
@@ -229,12 +315,7 @@ You MUST respond ONLY with this exact JSON structure (no other text):
   "recommendations": {{
     "course": "Recommended course based on context or null",
     "mentor": "Suggested mentor role or null",
-    "plan_30_days": [
-      "Week 1: specific action",
-      "Week 2: specific action",
-      "Week 3: specific action",
-      "Week 4: specific action"
-    ]
+    "plan_30_days": null
   }},
   "insights": {{
     "general": "Insight based on aggregated training data patterns",
@@ -254,10 +335,12 @@ CRITICAL RULES FOR RESPONSE:
 - Use null for missing information (not empty strings, not "N/A").
 - The JSON must be valid and properly formatted.
 - The 'message' field should be conversational and helpful.
-- The 'plan_30_days' array should contain 4 concrete, actionable steps.
+- ONLY provide 'course', 'mentor', and 'plan_30_days' if explicitly asked for a plan in this turn. Otherwise, return null for all three and DO NOT repeat the plan.
 - Do not use markdown, code blocks, or any formatting outside JSON.
 - If the employee message contains a clear learning goal, set goal_detected to true.
-- If a skill is mentioned or inferred, include it in recommended_skill."""
+- If a skill is mentioned or inferred, include it in recommended_skill.
+- If the employee asks how to contact a mentor, use the Mentor Contacts emails from context.
+- If the employee asks about their own profile values, use the RETRIEVED EMPLOYEE FACTS above."""
 
         logger.debug(
             f"Contextual prompt built (history: {len(history)} turns, "
