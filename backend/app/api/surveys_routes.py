@@ -41,25 +41,19 @@ async def upload_surveys(
     - All rows will have source set to 'bulk_upload'.
     - Deduplication, date normalization, and batch tracking are preserved.
     """
-    # Validate file type
+    # Validate file presence and extension
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded.")
+
+    allowed_exts = (".csv", ".xlsx", ".xls")
+    if not file.filename.lower().endswith(allowed_exts):
+        raise HTTPException(status_code=400, detail="File must be .csv, .xlsx, or .xls")
 
     # Validate campaign_id
     if not campaign_id:
         raise HTTPException(status_code=422, detail="campaign_id is required.")
 
-    try:
-        return service.process_csv_upload(await file.read(), file.filename, campaign_id=campaign_id)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-        raise HTTPException(status_code=400, detail="File must have a filename")
-    
-    allowed_exts = (".csv", ".xlsx", ".xls")
-    if not file.filename.lower().endswith(allowed_exts):
-        raise HTTPException(status_code=400, detail="File must be .csv, .xlsx, or .xls")
-    
-    # Read file
+    # Read file once
     MAX_SIZE = 5 * 1024 * 1024
     try:
         content = await file.read()
@@ -77,31 +71,31 @@ async def upload_surveys(
             status_code=400,
             detail=f"File too large ({actual_mb:.1f}MB, max 5MB)"
         )
-    
+
     # Process CSV
     try:
-        result = service.process_csv_upload(content, file.filename)
-        
+        result = service.process_csv_upload(content, file.filename, campaign_id=campaign_id)
+
         # Log upload summary
         logger.info(
             f"Survey upload summary: {result.inserted_rows} inserted, "
             f"{result.skipped_duplicates} duplicates, "
             f"{result.invalid_rows} invalid"
         )
-        
+
         # If no rows were inserted or skipped as duplicates, return 422
         if result.inserted_rows == 0 and result.skipped_duplicates == 0 and result.valid_rows > 0:
             raise HTTPException(
                 status_code=422,
                 detail="No rows could be inserted. Check error details."
             )
-        
+
         return result
-        
+
     except ValueError as e:
         logger.error(f"Validation error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-        
+        raise HTTPException(status_code=422, detail=str(e))
+
     except Exception as e:
         logger.error(f"Unexpected error processing CSV: {e}")
         raise HTTPException(
