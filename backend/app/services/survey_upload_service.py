@@ -24,6 +24,14 @@ from supabase import Client
 logger = logging.getLogger(__name__)
 
 
+class SurveyFileFormatError(ValueError):
+    """Raised when the uploaded file cannot be read or has an unsupported format."""
+
+
+class SurveyValidationError(ValueError):
+    """Raised when a request parameter or referenced resource (e.g. campaign_id) fails validation."""
+
+
 IMPORT_TYPE = "survey_responses"  # Matches allowed value in DB
 
 class SurveyUploadService:
@@ -51,7 +59,7 @@ class SurveyUploadService:
         # Detect file type
         ext = filename.lower().split('.')[-1]
         if ext not in {"csv", "xls", "xlsx"}:
-            raise ValueError("File must be .csv, .xls, or .xlsx")
+            raise SurveyFileFormatError("File must be .csv, .xls, or .xlsx")
 
         # Parse file to DataFrame
         try:
@@ -62,12 +70,12 @@ class SurveyUploadService:
                 df = pd.read_excel(BytesIO(file_content), engine="openpyxl" if ext == "xlsx" else "xlrd")
         except Exception as e:
             logger.error(f"Failed to parse file: {e}")
-            raise ValueError(f"Failed to parse file: {e}")
+            raise SurveyFileFormatError(f"Failed to parse file: {e}")
 
 
         # --- Campaign association required ---
         if campaign_id is None:
-            raise ValueError("campaign_id is required for manual survey upload.")
+            raise SurveyValidationError("campaign_id is required for manual survey upload.")
 
         # Load campaign to inherit wave if needed
         campaign = None
@@ -76,9 +84,9 @@ class SurveyUploadService:
             campaign = campaign_result.data
         except Exception as e:
             logger.error(f"Failed to load campaign {campaign_id}: {e}")
-            raise ValueError(f"Invalid campaign_id: {campaign_id}")
+            raise SurveyValidationError(f"Invalid campaign_id: {campaign_id}")
         if not campaign:
-            raise ValueError(f"Invalid campaign_id: {campaign_id}")
+            raise SurveyValidationError(f"Invalid campaign_id: {campaign_id}")
         campaign_wave = campaign.get("wave")
 
         # Normalize and validate

@@ -9,7 +9,7 @@ import logging
 
 from app.config import get_supabase_client
 from app.models.survey_upload_schema import SurveyUploadResponse
-from app.services.survey_upload_service import SurveyUploadService
+from app.services.survey_upload_service import SurveyFileFormatError, SurveyUploadService, SurveyValidationError
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from supabase import Client
 
@@ -51,60 +51,7 @@ async def upload_surveys(
 
     try:
         return service.process_csv_upload(await file.read(), file.filename, campaign_id=campaign_id)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-        raise HTTPException(status_code=400, detail="File must have a filename")
-    
-    allowed_exts = (".csv", ".xlsx", ".xls")
-    if not file.filename.lower().endswith(allowed_exts):
-        raise HTTPException(status_code=400, detail="File must be .csv, .xlsx, or .xls")
-    
-    # Read file
-    MAX_SIZE = 5 * 1024 * 1024
-    try:
-        content = await file.read()
-    except Exception as e:
-        logger.error(f"Error reading file: {e}")
-        raise HTTPException(status_code=400, detail="Failed to read file")
-
-    if not content:
-        raise HTTPException(status_code=400, detail="File is empty")
-
-    # Validate file size (max 5MB) after reading to avoid relying on file.size
-    if len(content) > MAX_SIZE:
-        actual_mb = len(content) / (1024 * 1024)
-        raise HTTPException(
-            status_code=400,
-            detail=f"File too large ({actual_mb:.1f}MB, max 5MB)"
-        )
-    
-    # Process CSV
-    try:
-        result = service.process_csv_upload(content, file.filename)
-        
-        # Log upload summary
-        logger.info(
-            f"Survey upload summary: {result.inserted_rows} inserted, "
-            f"{result.skipped_duplicates} duplicates, "
-            f"{result.invalid_rows} invalid"
-        )
-        
-        # If no rows were inserted or skipped as duplicates, return 422
-        if result.inserted_rows == 0 and result.skipped_duplicates == 0 and result.valid_rows > 0:
-            raise HTTPException(
-                status_code=422,
-                detail="No rows could be inserted. Check error details."
-            )
-        
-        return result
-        
-    except ValueError as e:
-        logger.error(f"Validation error: {e}")
+    except SurveyFileFormatError as e:
         raise HTTPException(status_code=400, detail=str(e))
-        
-    except Exception as e:
-        logger.error(f"Unexpected error processing CSV: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="An error occurred processing your upload. Please try again."
-        )
+    except SurveyValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
