@@ -135,12 +135,7 @@ You MUST respond ONLY with this exact JSON structure (no other text):
   "recommendations": {{
     "course": "Recommended course name or null",
     "mentor": "Suggested mentor profile or null",
-    "plan_30_days": [
-      "Week 1: action",
-      "Week 2: action",
-      "Week 3: action",
-      "Week 4: action"
-    ]
+    "plan_30_days": null
   }},
   "insights": {{
     "general": "General insight from training data",
@@ -158,6 +153,7 @@ You MUST respond ONLY with this exact JSON structure (no other text):
 CRITICAL RULES:
 - Respond ONLY with JSON. No text before or after.
 - Use null for missing information, never empty strings.
+- Only provide 'course', 'mentor', or 'plan_30_days' if explicitly asked or highly relevant. Usually, return null initially.
 - The JSON must be valid and parseable.
 - Do not add explanations or markdown.
 - If the employee asks about their own profile values, use the RETRIEVED EMPLOYEE FACTS above."""
@@ -319,12 +315,7 @@ You MUST respond ONLY with this exact JSON structure (no other text):
   "recommendations": {{
     "course": "Recommended course based on context or null",
     "mentor": "Suggested mentor role or null",
-    "plan_30_days": [
-      "Week 1: specific action",
-      "Week 2: specific action",
-      "Week 3: specific action",
-      "Week 4: specific action"
-    ]
+    "plan_30_days": null
   }},
   "insights": {{
     "general": "Insight based on aggregated training data patterns",
@@ -344,7 +335,7 @@ CRITICAL RULES FOR RESPONSE:
 - Use null for missing information (not empty strings, not "N/A").
 - The JSON must be valid and properly formatted.
 - The 'message' field should be conversational and helpful.
-- The 'plan_30_days' array should contain 4 concrete, actionable steps.
+- ONLY provide 'course', 'mentor', and 'plan_30_days' if explicitly asked for a plan in this turn. Otherwise, return null for all three and DO NOT repeat the plan.
 - Do not use markdown, code blocks, or any formatting outside JSON.
 - If the employee message contains a clear learning goal, set goal_detected to true.
 - If a skill is mentioned or inferred, include it in recommended_skill.

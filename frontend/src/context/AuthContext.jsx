@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
       }
 
       try {
-        const userData = await authAPI.getMe(storedToken);
+        const userData = await authAPI.getMe();
         setUser(userData);
         setToken(storedToken);
       } catch (error) {

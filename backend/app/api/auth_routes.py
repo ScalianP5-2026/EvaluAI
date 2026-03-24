@@ -33,7 +33,21 @@ logger = logging.getLogger(__name__)
 # Security Configuration
 # ═══════════════════════════════════════════════════════════════
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "evaluai-dev-secret-key-change-in-production-2026")
+_JWT_SECRET_DEFAULT = "evaluai-dev-secret-key-change-in-production-2026"
+_raw_jwt_secret = os.getenv("JWT_SECRET_KEY")
+
+if not _raw_jwt_secret:
+    if os.getenv("APP_ENV", "development").lower() == "production":
+        raise RuntimeError(
+            "JWT_SECRET_KEY environment variable must be set in production. "
+            "Please configure it before starting the application."
+        )
+    logger.warning(
+        "JWT_SECRET_KEY is not set. Using insecure default — DO NOT use in production."
+    )
+    _raw_jwt_secret = _JWT_SECRET_DEFAULT
+
+JWT_SECRET_KEY = _raw_jwt_secret
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "60"))
 
@@ -122,7 +136,14 @@ async def login(request: LoginRequest):
         )
     
     credential = result.data[0]
-    
+
+    # Reject disabled accounts
+    if not credential.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
     # Check if password has been set
     if credential.get("password_hash") is None:
         return MustSetPasswordResponse(
@@ -207,7 +228,14 @@ async def set_password(request: SetPasswordRequest):
         )
     
     credential = result.data[0]
-    
+
+    # Reject disabled accounts
+    if not credential.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled"
+        )
+
     # Ensure password hasn't been set already
     if credential.get("password_hash") is not None:
         raise HTTPException(
@@ -296,7 +324,21 @@ async def get_current_user(
         )
     
     credential = cred_result.data[0]
-    
+
+    # Reject disabled accounts
+    if not credential.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is disabled"
+        )
+
+    # Verify the credential belongs to the token subject to prevent mismatch
+    if credential.get("employee_id") != employee_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token subject does not match credential"
+        )
+
     # Fetch employee details
     employee = None
     try:

@@ -20,6 +20,10 @@ class ChatRequest(BaseModel):
         default=None, 
         description="Contexto del empleado (si no viene, se fetch de BD)"
     )
+    provider: str = Field(
+        default="gemini",
+        description="Proveedor LLM (gemini o foundry)"
+    )
     
     class Config:
         json_schema_extra = {
@@ -34,6 +38,7 @@ class RecommendationData(BaseModel):
     """Recomendaciones dentro de ChatResponse"""        
     
     course: Optional[str] = Field(default=None, description="Curso recomendado")
+    mentor: Optional[str] = Field(default=None, description="Mentor sugerido")
     rationale: Optional[str] = Field(default=None, description="Por qué este curso")
     plan_30_days: Optional[List[str]] = Field(
         default=None,
@@ -99,6 +104,7 @@ class ChatTurn(BaseModel):
     role: str = Field(..., description="user o assistant")
     content: str = Field(..., description="Contenido del mensaje")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+    recommendations: Optional[Dict] = Field(default=None, description="Metadato de la DB")
 
 # ═══════════════════════════════════════════════════════════════
 # KPI SCHEMAS

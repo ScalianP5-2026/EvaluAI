@@ -315,6 +315,12 @@ Covers smoke tests for health, dashboard, chat, and nlp.
 - `EVALUAI_AZURE_FOUNDRY_TEMPERATURE` (default: `0.2`)
 - `VITE_API_BASE_URL` (React only, default: `http://localhost:8000/api/v1`)
 
+### Authentication / Autenticación
+
+- `JWT_SECRET_KEY` — Secret key used to sign JWT tokens. **Required in production** (no default; the app will refuse to start if unset when `APP_ENV=production`).
+- `JWT_ALGORITHM` (default: `HS256`) — Signing algorithm for JWT tokens (e.g. `HS256`, `RS256`).
+- `JWT_EXPIRATION_MINUTES` (default: `60`) — Token lifetime in minutes. Reduce for higher-security environments.
+
 ## 14) Azure Foundry Chat Mode
 
 The `/chat/query` endpoint supports two providers while keeping the same response schema used by the React UI:

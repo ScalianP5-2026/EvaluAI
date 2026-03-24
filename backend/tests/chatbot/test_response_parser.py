@@ -4,10 +4,11 @@ Unit tests for response_parser.
 Tests JSON parsing, fallback handling, and validation.
 """
 
-import pytest
 import json
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add backend to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -77,7 +78,7 @@ class TestResponseParser:
         assert result is not None
         assert "message" in result
         assert result["success"] is False
-        assert "Fall back" in result["message"]
+        assert "Fallback" in result["message"]
 
     def test_parse_empty_response_falls_back(self, mock_empty_response):
         """Test that empty response triggers fallback."""

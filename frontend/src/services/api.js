@@ -38,6 +38,7 @@ const nlpClient = axios.create({
 const authInterceptor = (config) => {
   const token = localStorage.getItem("evaluai_token");
   if (token) {
+    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -102,11 +103,9 @@ export const authAPI = {
     }
   },
 
-  getMe: async (token) => {
+  getMe: async () => {
     try {
-      const response = await apiClient.get("/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiClient.get("/auth/me");
       return response.data;
     } catch (error) {
       handleError(error, "Auth Me");
@@ -119,11 +118,12 @@ export const authAPI = {
 // ═══════════════════════════════════════════════════════════════
 
 export const chatAPI = {
-  sendMessage: async (userId, message, employeeContext) => {
+  sendMessage: async (userId, message, provider, employeeContext) => {
     try {
       const response = await apiClient.post("/chat/query", {
         user_id: userId,
         message,
+        provider: provider || "gemini",
         employee_context: employeeContext,
       });
       return response.data;

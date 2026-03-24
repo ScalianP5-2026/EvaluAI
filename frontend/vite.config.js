@@ -25,6 +25,7 @@ export default defineConfig({
   plugins: [react()],
 
   server: {
+    host: "0.0.0.0", // Expose to all network interfaces (needed for Docker/DevContainers)
     // Development server port for Vite React app
     port: 3000,
     host: true,

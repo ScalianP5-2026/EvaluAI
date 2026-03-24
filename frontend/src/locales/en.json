@@ -310,7 +310,10 @@
     "status": "Status",
     "processing": "Processing...",
     "ready": "Ready",
-    "sendError": "Failed to send message. Please try again."
+    "sendError": "Failed to send message. Please try again.",
+    "recommendedCourse": "Recommended course",
+    "recommendedMentor": "Recommended mentor",
+    "plan30Days": "30-Day Plan"
   },
   "insights": {
     "adoptionLow": "AI adoption is low ({{rate}}%). Prioritize practical training cases.",
