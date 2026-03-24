@@ -142,13 +142,13 @@ class DataRepository:
             "d1_mejora_competencias", "d2_preparado_retos", "d3_amplia_habilidades", "d4_aprendizaje_autonomo",
             "c1_confio_sin_verificar", "c2_dificil_sin_ia", "c3_pensamiento_critico", "c4_reflexiono_calidad"
         ]
+        # Prepare a case-insensitive view of alias source keys for drop logic
+        alias_source_keys_lower = {source.lower() for source in aliases.keys()}
         for col in list(normalized.columns):
-            if col.upper() in aliases.keys() and col not in metric_cols and col != col.lower():
+            # Drop non-canonical (typically raw/uppercase) metric/source columns once their canonical
+            # lowercase counterparts exist or are defined via aliases.
+            if col.lower() in alias_source_keys_lower and col.lower() not in metric_cols and col != col.lower():
                 normalized.drop(columns=[col], inplace=True)
-        # Apply mapping, but never drop id_empleado
-        for source, target in aliases.items():
-            if source in normalized.columns and target not in normalized.columns:
-                normalized[target] = normalized[source]
 
         # Ensure id_empleado is always present and string
         if "id_empleado" not in normalized.columns:
