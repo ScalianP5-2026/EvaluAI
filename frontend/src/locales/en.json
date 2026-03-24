@@ -20,6 +20,8 @@
     "campaignActive": "Active",
     "campaignInactive": "Inactive",
     "campaignTitleRequired": "Title is required",
+    "campaignWaveRequired": "Wave is required",
+    "campaignTitleAndWaveRequired": "Title and Wave are required",
     "campaignCreateError": "Error creating campaign",
     "create": "Create",
     "creating": "Creating...",
