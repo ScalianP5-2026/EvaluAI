@@ -20,6 +20,8 @@
     "campaignActive": "Activa",
     "campaignInactive": "Inactiva",
     "campaignTitleRequired": "El título es obligatorio",
+    "campaignWaveRequired": "La ola es obligatoria",
+    "campaignTitleAndWaveRequired": "El título y la ola son obligatorios",
     "campaignCreateError": "Error al crear campaña",
     "create": "Crear",
     "creating": "Creando...",

@@ -108,19 +108,17 @@ export default function Sidebar() {
     const wave = campaignWave.trim();
 
     if (!title && !wave) {
-      setCampaignError(
-        `${t("dashboard.campaignTitleLabel")} & ${t("dashboard.campaignWaveLabel")} required`,
-      );
+      setCampaignError(t("dashboard.campaignTitleAndWaveRequired"));
       return;
     }
 
     if (!title) {
-      setCampaignError(`${t("dashboard.campaignTitleLabel")} required`);
+      setCampaignError(t("dashboard.campaignTitleRequired"));
       return;
     }
 
     if (!wave) {
-      setCampaignError(`${t("dashboard.campaignWaveLabel")} required`);
+      setCampaignError(t("dashboard.campaignWaveRequired"));
       return;
     }
 
