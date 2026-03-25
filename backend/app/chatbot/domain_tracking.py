@@ -4,7 +4,7 @@ Part of the chatbot context management system.
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Dict, List
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class TrainingSessionTracker:
         """
         self.session_id = session_id
         self.user_id = user_id
-        self.start_time = datetime.utcnow()
+        self.start_time = datetime.now(UTC)
         self.turn_count = 0
         self.identified_goals: List[str] = []
         self.mentioned_modules: List[str] = []
@@ -55,7 +55,7 @@ class TrainingSessionTracker:
     
     def track_skill_gap(self, skill: str, confidence: float = 0.5) -> None:
         """Record a detected skill gap."""
-        gap = {"skill": skill, "confidence": confidence, "timestamp": datetime.utcnow()}
+        gap = {"skill": skill, "confidence": confidence, "timestamp": datetime.now(UTC)}
         self.skill_gaps.append(gap)
         logger.debug(f"Skill gap tracked: {skill}")
     
@@ -70,7 +70,7 @@ class TrainingSessionTracker:
         Returns:
             Dictionary with session summary
         """
-        duration = (datetime.utcnow() - self.start_time).total_seconds()
+        duration = (datetime.now(UTC) - self.start_time).total_seconds()
         
         return {
             "session_id": self.session_id,

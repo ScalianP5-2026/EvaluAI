@@ -6,7 +6,7 @@ from app.services.data_store import DataRepository
 
 
 # Subclass to bypass file loading in tests
-class TestableDataRepository(DataRepository):
+class DataRepositoryForTests(DataRepository):
     def __init__(self):
         pass
 
@@ -34,7 +34,7 @@ def test_normalize_surveys_canonical_fields():
             "dedupe_key": "EMP001-2024",
         }
     ])
-    repo = TestableDataRepository()
+    repo = DataRepositoryForTests()
     norm = repo._normalize_surveys(df)
     row = norm.iloc[0]
     # Canonical fields
@@ -73,7 +73,7 @@ def test_normalize_surveys_timestamp_parsing():
         {"id_empleado": "EMP005", "survey_completed_at": "not-a-date"},  # invalid
         {"id_empleado": "EMP006", "survey_completed_at": ""},  # blank
     ])
-    repo = TestableDataRepository()
+    repo = DataRepositoryForTests()
     norm = repo._normalize_surveys(df)
     # ISO8601
     assert norm.loc[0, "survey_completed_at"] == "2024-03-21T10:00:00"
@@ -90,7 +90,7 @@ def test_normalize_surveys_extra_fields_preserved():
     df = pd.DataFrame([
         {"id_empleado": "EMP004", "extra_field": "should_stay"}
     ])
-    repo = TestableDataRepository()
+    repo = DataRepositoryForTests()
     norm = repo._normalize_surveys(df)
     assert "extra_field" in norm.columns
     assert norm.loc[0, "extra_field"] == "should_stay"

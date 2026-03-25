@@ -7,20 +7,20 @@ GET /api/v1/chat/history - Obtener historial
 import logging
 import json
 import uuid
-from datetime import datetime
-from typing import Optional
+from datetime import UTC, datetime
+from typing import Optional, Any
 
 from app.api.access_control import is_rrhh_department
 from app.api.auth_routes import get_current_user
 from app.chatbot.conversation import ConversationMemory
 from app.chatbot.data_manager import DataManager
 from app.chatbot.domain_tracking import TrainingSessionTracker
-from app.chatbot.foundry_client import FoundryChatClient
-from app.chatbot.gemini_client import GeminiChatClient
 from app.chatbot.hybrid_rag import HybridRAGOrchestrator
+from app.chatbot.pii_guard import PIIGuard
 from app.chatbot.prompt_builder import PromptBuilder
 from app.chatbot.rag_metrics import record_hybrid_rag_event
 from app.chatbot.response_parser import parse_response
+from app.chatbot import settings as chatbot_settings
 from app.models.auth_schemas import EmployeeInfo
 from app.models.chat_schemas import (
     ChatRequest,
@@ -66,6 +66,14 @@ def get_supabase_client() -> Client:
 def get_data_manager(supabase: Client = Depends(get_supabase_client)) -> DataManager:
     """Dependency: Datamanager inicializado."""
     return DataManager(supabase)
+
+
+def get_gemini_client():
+    """Build default Gemini client (kept as test-overridable helper)."""
+    from app.config import GEMINI_API_KEY
+    from app.chatbot.gemini_client import GeminiChatClient
+
+    return GeminiChatClient(api_key=GEMINI_API_KEY)
 
 
 
@@ -159,6 +167,7 @@ def _extract_assistant_message(content: str) -> str:
 async def chat_query(
     request: ChatRequest,
     dm: DataManager = Depends(get_data_manager),
+    gemini_client: Any = Depends(get_gemini_client),
     supabase: Client = Depends(get_supabase_client),
     current_user: EmployeeInfo = Depends(get_current_user),
 ) -> ChatResponse:
@@ -195,11 +204,12 @@ async def chat_query(
         session_id = str(uuid.uuid4())
         logger.info(f"New chat session: {session_id} for user {request.user_id} using provider {request.provider}")
         
-        from app.config import GEMINI_API_KEY
         if request.provider.lower() in ("foundry", "azure", "azure_openai", "azure_foundry"):
+            from app.chatbot.foundry_client import FoundryChatClient
+
             client = FoundryChatClient()
         else:
-            client = GeminiChatClient(api_key=GEMINI_API_KEY)
+            client = gemini_client
         
         # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         # 1. LOAD EMPLOYEE CONTEXT
@@ -404,6 +414,7 @@ async def chat_query(
         memory = ConversationMemory(request.user_id)
         tracker = TrainingSessionTracker(session_id, request.user_id)
         pb = PromptBuilder()
+        pii_guard = PIIGuard(enabled=chatbot_settings.PII_GUARD_ENABLED)
 
         previous_turns = _load_recent_history_for_user(supabase, request.user_id)
         for turn in previous_turns:
@@ -414,13 +425,35 @@ async def chat_query(
         # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
         # Always include current user message in prompt construction.
+        history_for_llm = pii_guard.anonymize_structure(memory.get_history())
+        user_message_for_llm = pii_guard.anonymize_text(request.message)
+        employee_ctx_for_llm = pii_guard.anonymize_structure(employee_ctx)
+        rag_ctx_for_llm = pii_guard.anonymize_structure(rag_ctx)
+
         prompt = pb.build_contextual_prompt(
-            user_message=request.message,
-            user_context=employee_ctx,
-            rag_context=rag_ctx,
-            history=memory.get_history(),
-            ml_scores=rag_ctx.get("ml_scores"),
+            user_message=user_message_for_llm,
+            user_context=employee_ctx_for_llm,
+            rag_context=rag_ctx_for_llm,
+            history=history_for_llm,
+            ml_scores=rag_ctx_for_llm.get("ml_scores"),
         )
+
+        if chatbot_settings.PII_GUARD_ENABLED:
+            outbound_payload = {
+                "prompt": prompt,
+                "history": history_for_llm,
+                "user_context": employee_ctx_for_llm,
+                "rag_context": rag_ctx_for_llm,
+            }
+            if pii_guard.has_unmasked_pii_structure(outbound_payload):
+                logger.error(
+                    "PII guard blocked outbound LLM call for user %s due to residual direct identifiers",
+                    request.user_id,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Unable to process request safely. Please remove personal identifiers and try again.",
+                )
         
         logger.info("Prompt built, querying LLM provider...")
         
@@ -428,7 +461,7 @@ async def chat_query(
         # 5. QUERY GEMINI
         # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
-        response_text = await client.query(prompt, memory.get_history())
+        response_text = await client.query(prompt, history_for_llm)
         
         logger.info("LLM response received")
         
@@ -442,7 +475,7 @@ async def chat_query(
             logger.error(f"Failed to parse response: {parsed.get('raw')}")
             # Fallback: retornar mensaje raw
             chat_response = ChatResponse(
-                message=response_text,
+                message=pii_guard.deanonymize_text(response_text),
                 session_id=session_id,
                 insights=InsightsData(
                     general="Procesando tu solicitud...",
@@ -458,6 +491,8 @@ async def chat_query(
         # 7. UPDATE MEMORY
         # â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
         
+        parsed = pii_guard.deanonymize_structure(parsed)
+
         assistant_message = parsed.get("message", response_text)
         memory.add_turn("user", request.message)
         memory.add_turn("assistant", assistant_message)
@@ -500,7 +535,7 @@ async def chat_query(
             supabase.table("chat_sessions").insert({
                 "id": session_id,
                 "employee_id": request.user_id,
-                "started_at": datetime.utcnow().isoformat(),
+                "started_at": datetime.now(UTC).isoformat(),
                 "goal_detected": metadata.get("goal_detected", False),
                 "primary_goal": metadata.get("primary_goal"),
                 "goal_clarity": metadata.get("goal_clarity"),
@@ -513,7 +548,7 @@ async def chat_query(
                 "session_id": session_id,
                 "role": "user", 
                 "message": request.message,
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": datetime.now(UTC).isoformat()
             }).execute()
             
             # Save chat_turns (assistant turn)
@@ -521,7 +556,7 @@ async def chat_query(
                 "session_id": session_id,
                 "role": "assistant",
                 "message": assistant_message,
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": datetime.now(UTC).isoformat()
             }).execute()
             
             # Save recommendation if exists
@@ -531,7 +566,7 @@ async def chat_query(
                     "session_id": session_id,
                     "course_recommended": recommendations.course,
                     "plan_generated": bool(recommendations.plan_30_days),
-                    "created_at": datetime.utcnow().isoformat()
+                    "created_at": datetime.now(UTC).isoformat()
                 }).execute()
             
             logger.info(f"Session data saved to Supabase: {session_id}")

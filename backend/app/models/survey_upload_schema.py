@@ -7,7 +7,7 @@ Supports the 41-column EIPIA CSV format but maps to 9 table columns.
 
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class EmployeeSurveyRow(BaseModel):
@@ -82,12 +82,10 @@ class EmployeeSurveyRow(BaseModel):
     prefiere_humano_vs_ia: Optional[int] = Field(None, ge=0, le=5)
     nivel_integracion_ia: Optional[int] = Field(None, ge=1, le=5)
     
-    class Config:
-        """Pydantic config for flexible field matching."""
-        # Allow population by field name
-        populate_by_name = True
-        # Allow extra fields (CSV might have more columns)
-        extra = "allow"
+    model_config = ConfigDict(
+        populate_by_name=True,
+        extra="allow",
+    )
     
     @field_validator("*", mode="before")
     @classmethod

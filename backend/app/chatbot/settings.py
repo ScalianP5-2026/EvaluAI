@@ -110,6 +110,15 @@ FOUNDRY_STRUCTURED_SCHEMA_STRICT: bool = _as_bool(
 """Whether structured output schema enforcement should be strict."""
 
 
+# ==================== PRIVACY / PII GUARD ====================
+
+PII_GUARD_ENABLED: bool = _as_bool(
+    os.getenv("CHATBOT_PII_GUARD_ENABLED", "true"),
+    default=True,
+)
+"""Enable deterministic PII anonymization before LLM calls."""
+
+
 # ==================== CONVERSATION MEMORY ====================
 
 CONVERSATION_MAX_TURNS: int = int(os.getenv("CHATBOT_CONVERSATION_MAX_TURNS", "10"))
@@ -218,6 +227,7 @@ def print_settings() -> None:
         print(f"Retries: {GEMINI_MAX_RETRIES}")
         print(f"Foundry Structured Outputs: {FOUNDRY_USE_STRUCTURED_OUTPUTS}")
         print(f"Foundry Structured Schema: {FOUNDRY_STRUCTURED_SCHEMA_NAME}")
+        print(f"PII Guard Enabled: {PII_GUARD_ENABLED}")
         print(f"Memory Turns: {CONVERSATION_MAX_TURNS}")
         print(f"API Turns: {CONVERSATION_MAX_TURNS_TO_API}")
         print(f"Goal Keywords: {', '.join(GOAL_DETECTION_KEYWORDS)}")

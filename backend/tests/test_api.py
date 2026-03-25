@@ -16,10 +16,13 @@ DEPRECATED (not tested):
 """
 
 import json
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import patch
 
 from app.api import chat_routes
 from app.chatbot.data_manager import DataManager
+from app.models.auth_schemas import EmployeeInfo
 from app.main import app
 from fastapi.testclient import TestClient
 
@@ -49,7 +52,25 @@ def test_chat_query_endpoint() -> None:
     """
     # --- Mock DataManager (wraps Supabase queries) ---
     mock_dm = MagicMock(spec=DataManager)
-    mock_dm.get_similar_profiles.return_value = {"count": 5}
+    mock_dm.get_employee_context.return_value = {
+        "employee_id": "test-employee-001",
+        "department": "Technology",
+        "education_level": "Bachelor",
+        "ai_usage_frequency": 3,
+        "motivation": 7.0,
+        "self_efficacy": 6.5,
+        "age": 30,
+        "years_in_company": 3,
+    }
+    mock_dm.get_retrieved_facts_for_query.return_value = {
+        "source": "structured_db_retrieval",
+        "scope": ["identity", "ai_usage"],
+        "facts": {},
+    }
+    mock_dm.get_similar_profiles.return_value = {
+        "summary": "5 similar employees",
+        "avg_improvement": 24,
+    }
     mock_dm.get_department_insights.return_value = {"count_employees": 10}
     mock_dm.get_top_courses.return_value = []
 
@@ -77,25 +98,58 @@ def test_chat_query_endpoint() -> None:
     # --- Mock Supabase client used for inserts inside the route handler ---
     mock_supabase = MagicMock()
 
+    # Make history preload return empty deterministic data.
+    mock_supabase.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value = SimpleNamespace(data=[])
+
+    # --- Mock auxiliary services used inside the route ---
+    mock_hybrid_instance = MagicMock()
+    mock_hybrid_instance.run.return_value = {
+        "ranked_courses": [],
+        "ranked_mentors": [],
+        "recommended_programs": [],
+        "query_understanding": {},
+        "tool_trace": [],
+        "evaluation": {},
+        "citations": [],
+    }
+
+    mock_ml_client = MagicMock()
+    mock_ml_client.get_employee_scores.return_value = {
+        "recommendation_score": 0.75,
+        "risk_score": 0.2,
+        "confidence": 0.9,
+        "model_available": True,
+    }
+
     app.dependency_overrides[chat_routes.get_data_manager] = lambda: mock_dm
     app.dependency_overrides[chat_routes.get_gemini_client] = lambda: mock_gemini
     app.dependency_overrides[chat_routes.get_supabase_client] = lambda: mock_supabase
+    app.dependency_overrides[chat_routes.get_current_user] = lambda: EmployeeInfo(
+        employee_id="test-employee-001",
+        email="test@example.com",
+        department="Technology",
+        age=30,
+        gender=None,
+        education_level="Bachelor",
+        years_in_company=3,
+    )
 
     try:
-        response = client.post(
-            "/api/v1/chat/query",
-            json={
-                "user_id": "test-employee-001",
-                "message": "I want to learn Python for ML",
-                "employee_context": {
-                    "department": "Technology",
-                    "education_level": "Bachelor",
-                    "ai_usage_frequency": 3,
-                    "motivation": 7.0,
-                    "self_efficacy": 6.5,
+        with patch.object(chat_routes, "HybridRAGOrchestrator", return_value=mock_hybrid_instance), patch.object(chat_routes, "get_ml_client", return_value=mock_ml_client), patch.object(chat_routes, "record_hybrid_rag_event", return_value=None):
+            response = client.post(
+                "/api/v1/chat/query",
+                json={
+                    "user_id": "test-employee-001",
+                    "message": "I want to learn Python for ML",
+                    "employee_context": {
+                        "department": "Technology",
+                        "education_level": "Bachelor",
+                        "ai_usage_frequency": 3,
+                        "motivation": 7.0,
+                        "self_efficacy": 6.5,
+                    },
                 },
-            },
-        )
+            )
 
         assert response.status_code == 200
         payload = response.json()

@@ -155,6 +155,10 @@ class DataRepository:
             normalized["id_empleado"] = ""
         normalized["id_empleado"] = normalized["id_empleado"].astype(str)
 
+        # Keep legacy compatibility field aligned with canonical identifier.
+        if "employee_id" not in normalized.columns:
+            normalized["employee_id"] = normalized["id_empleado"]
+
         # Derived numeric fields (Likert averages, preserve decimals)
         derived_numeric = {
             "motivation": ["M1_estimulante", "M2_aumenta_interes", "M3_aporta_valor", "M4_mayor_esfuerzo"],
@@ -222,12 +226,6 @@ class DataRepository:
             if not isinstance(val, str) or not val.strip():
                 return "__INVALID__"
             val = val.strip()
-            # Try ISO8601 and pandas default parsing
-            try:
-                dt = pd.to_datetime(val, errors="raise")
-                return dt.strftime("%Y-%m-%dT%H:%M:%S")
-            except Exception:
-                pass
             # Try DD/MM/YYYY HH:MM:SS
             try:
                 dt = pd.to_datetime(val, format="%d/%m/%Y %H:%M:%S", errors="raise")
@@ -237,6 +235,12 @@ class DataRepository:
             # Try DD/MM/YYYY
             try:
                 dt = pd.to_datetime(val, format="%d/%m/%Y", errors="raise")
+                return dt.strftime("%Y-%m-%dT%H:%M:%S")
+            except Exception:
+                pass
+            # Try ISO8601 and pandas default parsing
+            try:
+                dt = pd.to_datetime(val, errors="raise")
                 return dt.strftime("%Y-%m-%dT%H:%M:%S")
             except Exception:
                 pass
@@ -282,7 +286,7 @@ class DataRepository:
         normalized["role"] = normalized["role"].fillna("Unknown").astype(str)
         normalized["comment"] = normalized["comment"].fillna("").astype(str)
         normalized["last_goal"] = normalized["last_goal"].fillna("General upskilling").astype(str)
-        normalized["employee_id"] = normalized["employee_id"].astype(str)
+        normalized["employee_id"] = normalized["employee_id"].fillna(normalized["id_empleado"]).astype(str)
 
         # Preserve all columns, order with required first
         ordered_columns = REQUIRED_SURVEY_COLUMNS + [
