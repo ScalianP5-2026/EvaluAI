@@ -66,8 +66,8 @@
     "rrhhActionsTitle": "RRHH Actions",
     "executiveInsight": "Executive Behavioral Insight",
     "strategicLayerBadge": "STRATEGIC LAYER",
-    "strategicLayerTitle": "Strategic Intelligence Layer",
-    "strategicLayerSubtitle": "Cross-link NLP signals with ML risk models to brief leadership teams.",
+    "strategicLayerTitle": "Strategic Summary of Risks and Opportunities",
+    "strategicLayerSubtitle": "Executive view of AI adoption and associated risks in the organization.",
     "topic": "Topic",
     "sentimentDescription": "Distribution of employee perception regarding AI integration.",
     "topicDescription": "Ranked frequency of dominant conversational themes detected by NLP.",
@@ -79,24 +79,27 @@
     "noNpiData": "No NPI distribution data available.",
     "executiveUnavailable": "Executive summary is not available.",
     "strategicKpis": {
-      "neutralSentiment": "Neutral Sentiment Share",
-      "neutralSentimentCaption": "Portion of workforce reporting neutral tonality",
-      "topRiskTopic": "Top Risk Topic",
-      "topRiskTopicCaption": "Theme concentrating the highest risk weight",
+      "positiveSentiment": "Positive Opinions",
+      "positiveSentimentCaption": "Percentage of employees with positive sentiment",
+      "negativeSentiment": "Negative Opinions",
+      "negativeSentimentCaption": "Percentage of employees with negative sentiment",
+      "topRiskTopic": "Most Mentioned Topic",
+      "topRiskTopicCaption": "Topic with the highest number of mentions in analyzed opinions.",
       "noTopic": "No dominant topic",
       "highAiAutonomyDependencyRisk": "High AI Autonomy/Dependency Risk",
       "highAiAutonomyDependencyRiskCaption": "Share of employees flagged as high dependency risk",
-      "avgAiAutonomyDependencyScore": "Avg NPI Score",
-      "avgAiAutonomyDependencyScoreCaption": "Mean AI autonomy/dependency index (0-1 scale)"
+      "avgAiAutonomyDependencyScoreCaption": "Higher values indicate greater risk of excessive AI tool dependency."
     },
+    "sentimentChartTitle": "Employee Sentiment Analysis",
     "mlCorrelation": {
       "title": "ML ↔ NLP Alignment",
-      "subtitle": "Overlap of employees marked high dropout risk and high behavioral risk.",
-      "overlapLabel": "High dropout & high risk overlap"
+      "subtitle": "Overlap of employees marked high dropout risk and high opinion-based risk (NLP).",
+      "overlapLabel": "High dropout & high risk (NLP) overlap",
+      "noOverlapMessage": "Currently, no employees are at high risk according to both models."
     },
     "radar": {
-      "title": "Behavioral Signal Radar",
-      "description": "Scores normalized 0-1 across sentiment, autonomy, dependency, motivation, and risk.",
+      "title": "Behavioral Indicator Radar",
+      "description": "Visualizes the organization's aggregate profile across five key dimensions: sentiment, autonomy, dependency, motivation, and risk.",
       "sentiment": "Sentiment Positivity",
       "autonomy": "Autonomy Signal",
       "dependency": "Dependency Signal",
@@ -117,33 +120,11 @@
     },
     "strategicInsight": {
       "title": "Strategic Insight",
-      "body": "High AI autonomy/dependency risk signals represent {{risk}} of responses. Focus interventions on {{topic}} while addressing ML dropout overlap of {{overlap}} and stabilizing the average NPI score ({{npi}}).",
+      "body": "High AI autonomy/dependency risk signals represent {{risk}} of responses. Focus interventions on {{topic}} while addressing ML dropout overlap of {{overlap}} and stabilizing the AI Dependency Index ({{npi}}).",
       "default": "Strategic summary is not available."
     },
     "aiAutonomyDependencyIndex": "AI Autonomy & Dependency Index",
     "aiAutonomyDependencyDescription": "This index estimates behavioral risk related to AI dependency, reduced autonomy, and diminished critical thinking."
-  },
-  "sentiment": {
-    "positive": "Positive",
-    "neutral": "Neutral",
-    "negative": "Negative"
-  },
-  "risk": {
-    "high": "High",
-    "moderate": "Moderate Risk",
-    "medium": "Moderate Risk",
-    "low": "Low"
-  },
-  "sidebar": {
-    "subtitle": "Training Intelligence",
-    "uploadCSV": "Upload CSV",
-    "language": "Language",
-    "theme": "Theme",
-    "light": "Light",
-    "dark": "Dark"
-  },
-  "branding": {
-    "scalian": "EvaluAI — Powered by SCALIAN Intelligence"
   },
   "executive": {
     "snapshot": "Executive Snapshot",
@@ -156,9 +137,9 @@
     "employeeMotivationDesc": "sustained learning motivation score",
     "dependencyRiskDesc": "employees in manageable risk range",
     "summaryTitle": "Executive Impact Summary",
-    "summaryParagraph1": "AI-integrated training shows moderate adoption across the organisation, with 46% of employees engaging with AI tools frequently or very frequently. Occasional or rare usage accounts for the remaining workforce, indicating a clear opportunity to scale adoption.",
-    "summaryParagraph2": "Motivation levels remain stable at 3.95/5, sustaining employee interest in AI-supported learning. Dependency risk is manageable, with 5% of employees classified as high-risk and 64% in the moderate-risk range.",
-    "summaryParagraph3": "Recommendation: Continue investment in AI training infrastructure while implementing risk mitigation activities focused on employee self-efficacy development.",
+    "summaryParagraph1": "📊 AI Adoption: 46% use tools frequently. Clear opportunity to scale across the workforce.",
+    "summaryParagraph2": "💪 Stable motivation (3.95/5). Controlled risk: only 5% at high risk, 64% moderate.",
+    "summaryParagraph3": "✅ Action: invest in AI training + mitigate risks with self-efficacy programs.",
     "status": "Status",
     "lastUpdated": "Last Updated"
   },
@@ -343,7 +324,7 @@
   },
   "chat": {
     "title": "Training Chatbot",
-    "welcomeMessage": "Hello, I am your training assistant. Tell me your goal and I will recommend the best courses for your profile.",
+    "welcomeMessage": "Hello! I am your personalized FormatIA Agent. I integrate Machine Learning models to assess your profile, your current motivation, and calculate your dropout risk for training programs. Then I cross these data with your department and assign you the ideal mentor. Finally, I generate a tailored 30-day action plan for you. What new skill, technology, or certification would you like to master today?",
     "placeholder": "Ask a question...",
     "noMessages": "No messages yet. Start a conversation!",
     "sessionInfo": "Session Info",

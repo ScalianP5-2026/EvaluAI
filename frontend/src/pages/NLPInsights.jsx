@@ -115,7 +115,9 @@ export default function NLPInsights() {
 
   const normalizeRiskKey = (label) => {
     if (!label) return "low";
-    const normalized = String(label).replace(/_risk$/i, "").toLowerCase();
+    const normalized = String(label)
+      .replace(/_risk$/i, "")
+      .toLowerCase();
     return normalized === "moderate" ? "medium" : normalized;
   };
 
@@ -167,7 +169,9 @@ export default function NLPInsights() {
 
   const sanitizeTopicId = (topicValue) => {
     if (topicValue === null || topicValue === undefined) return "";
-    return String(topicValue).replace(/^Topic\s+/i, "").replace(/^#/, "");
+    return String(topicValue)
+      .replace(/^Topic\s+/i, "")
+      .replace(/^#/, "");
   };
 
   const translateTopicDisplayName = (topicValue) => {
@@ -319,10 +323,7 @@ export default function NLPInsights() {
     setProfileLoading(true);
 
     try {
-      
-
       const data = await nlpAPI.getEmployee(employeeId);
-      
 
       setEmployeeProfile(data?.status === "ok" ? data.employee : null);
     } catch (err) {
@@ -348,7 +349,8 @@ export default function NLPInsights() {
 
     const {
       high_ai_autonomy_dependency_risk_percent,
-      neutral_sentiment_percent,
+      positive_sentiment_percent,
+      negative_sentiment_percent,
       avg_npi_score,
       top_risk_topic,
     } = strategicSummary.kpis;
@@ -365,16 +367,23 @@ export default function NLPInsights() {
         tone: "risk",
       },
       {
-        key: "neutral",
-        label: t("nlp.strategicKpis.neutralSentiment"),
-        value: formatPercentageValue(neutral_sentiment_percent ?? null, 1),
-        caption: t("nlp.strategicKpis.neutralSentimentCaption"),
-        tone: "signal",
+        key: "positive",
+        label: t("nlp.strategicKpis.positiveSentiment"),
+        value: formatPercentageValue(positive_sentiment_percent ?? null, 1),
+        caption: t("nlp.strategicKpis.positiveSentimentCaption"),
+        tone: "metric",
+      },
+      {
+        key: "negative",
+        label: t("nlp.strategicKpis.negativeSentiment"),
+        value: formatPercentageValue(negative_sentiment_percent ?? null, 1),
+        caption: t("nlp.strategicKpis.negativeSentimentCaption"),
+        tone: "risk",
       },
       {
         key: "npi",
         label: t("nlp.strategicKpis.avgAiAutonomyDependencyScore"),
-        value: formatNumberValue(avg_npi_score ?? null, 2),
+        value: formatPercentageValue((avg_npi_score ?? 0) * 100, 1),
         caption: t("nlp.strategicKpis.avgAiAutonomyDependencyScoreCaption"),
         tone: "metric",
       },
@@ -513,7 +522,7 @@ export default function NLPInsights() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
               {strategicKpiCards.map((card) => (
                 <div key={card.key} className={getKpiToneClasses(card.tone)}>
                   <p className="text-xs font-semibold uppercase tracking-wide">
@@ -535,16 +544,28 @@ export default function NLPInsights() {
                 {t("nlp.mlCorrelation.subtitle")}
               </p>
               <div className="mt-6">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-300">
-                  <span>{t("nlp.mlCorrelation.overlapLabel")}</span>
-                  <span>{mlOverlapDisplay}</span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-slate-200 dark:bg-slate-800">
-                  <div
-                    className="h-full rounded-full bg-indigo-500 dark:bg-indigo-400"
-                    style={{ width: `${mlOverlapBarWidth}%` }}
-                  />
-                </div>
+                {mlOverlapValue === 0 || mlOverlapValue === null ? (
+                  <div className="flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 p-4">
+                    <span className="text-emerald-600 dark:text-emerald-400 text-lg">
+                      ✅
+                    </span>
+                    <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                      {t("nlp.mlCorrelation.noOverlapMessage")}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-300">
+                      <span>{t("nlp.mlCorrelation.overlapLabel")}</span>
+                      <span>{mlOverlapDisplay}</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-slate-200 dark:bg-slate-800">
+                      <div
+                        className="h-full rounded-full bg-indigo-500 dark:bg-indigo-400"
+                        style={{ width: `${mlOverlapBarWidth}%` }}
+                      />q
+                  </>
+                )}
               </div>
             </div>
 
@@ -590,13 +611,7 @@ export default function NLPInsights() {
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <ChartCard
-          title={
-            i18n.language === "es"
-              ? "Distribución de Sentimiento"
-              : "Sentiment Distribution"
-          }
-        >
+        <ChartCard title={t("nlp.sentimentChartTitle")}>
           {!sentimentReady || sentimentChartData.length === 0 ? (
             <div className="h-72 flex items-center justify-center text-gray-400 dark:text-gray-500">
               {t("nlp.noData")}
@@ -681,7 +696,9 @@ export default function NLPInsights() {
     <div className="space-y-8">
       <ChartCard
         title={
-          i18n.language === "es" ? "Distribución de Temas" : "Topic Distribution"
+          i18n.language === "es"
+            ? "Distribución de Temas"
+            : "Topic Distribution"
         }
       >
         {!topicReady || topicChartData.length === 0 ? (

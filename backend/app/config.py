@@ -121,10 +121,10 @@ class AppConfig:
     CORS_ALLOW_HEADERS: list = ["*"]
     
     # ─ Data File Paths ─
-    # These CSV files are loaded at startup to seed the database
-    surveys_path: str = os.getenv("EVALUAI_SURVEYS_PATH", "data/raw/survey_raw.xlsx")
-    courses_path: str = os.getenv("EVALUAI_COURSES_PATH", "data/courses.csv")
-    mentors_path: str = os.getenv("EVALUAI_MENTORS_PATH", "data/mentors.csv")
+    # These CSV/XLSX files are seeded at startup
+    surveys_path: str = os.getenv("EVALUAI_SURVEYS_PATH") or "data/raw/survey_raw.xlsx"
+    courses_path: str = os.getenv("EVALUAI_COURSES_PATH") or "data/raw/courses_catalog.xlsx"
+    mentors_path: str = os.getenv("EVALUAI_MENTORS_PATH") or "data/raw/mentors_catalog.xlsx"
     
     # ─ Chat Provider Configuration ─
     # Currently supports "rule_based" (default) or "gemini"
@@ -134,7 +134,7 @@ class AppConfig:
     azure_foundry_endpoint: str = os.getenv("EVALUAI_AZURE_FOUNDRY_ENDPOINT", "")
     azure_foundry_api_key: str = os.getenv("EVALUAI_AZURE_FOUNDRY_API_KEY", "")
     azure_foundry_model: str = os.getenv("EVALUAI_AZURE_FOUNDRY_MODEL", "")
-    azure_foundry_temperature: float = float(os.getenv("EVALUAI_AZURE_FOUNDRY_TEMPERATURE", "0.2"))
+    azure_foundry_temperature: float = float(os.getenv("EVALUAI_AZURE_FOUNDRY_TEMPERATURE") or "0.2")
     
     # ─ Chatbot AI Settings ─
     # Model selection and behavior tuning

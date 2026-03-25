@@ -47,9 +47,16 @@ class DataRepository:
 
     def _load_csv(self, path: Path) -> pd.DataFrame:
         if not path.exists():
-            logger.warning(f"CSV file not found: {path}")
+            logger.warning(f"File not found: {path}")
             return pd.DataFrame()
-        df = pd.read_csv(path, encoding="utf-8-sig")
+        
+        suffix = path.suffix.lower()
+        if suffix in {".xls", ".xlsx"}:
+            engine = "openpyxl" if suffix == ".xlsx" else "xlrd"
+            df = pd.read_excel(path, engine=engine)
+        else:
+            df = pd.read_csv(path, encoding="utf-8-sig")
+            
         df.columns = [str(col).replace("\ufeff", "").strip() for col in df.columns]
         return df
 

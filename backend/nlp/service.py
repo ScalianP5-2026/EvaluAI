@@ -18,12 +18,16 @@ except Exception:  # pragma: no cover
 
 # DB-backed NLP pipeline helpers (same package)
 try:
-    from nlp.db_loader import load_survey_responses as _load_from_db
     from nlp.analyzers import enrich_dataframe as _enrich_df
+    from nlp.db_loader import load_survey_responses as _load_from_db
 except ImportError:
     try:
-        from backend.nlp.db_loader import load_survey_responses as _load_from_db  # type: ignore[no-redef]
-        from backend.nlp.analyzers import enrich_dataframe as _enrich_df  # type: ignore[no-redef]
+        from backend.nlp.analyzers import (
+            enrich_dataframe as _enrich_df,  # type: ignore[no-redef]
+        )
+        from backend.nlp.db_loader import (
+            load_survey_responses as _load_from_db,  # type: ignore[no-redef]
+        )
     except ImportError:
         _load_from_db = None  # type: ignore[assignment]
         _enrich_df = None  # type: ignore[assignment]
@@ -315,23 +319,14 @@ def _classify_topic_risk(score: float) -> str:
 
 
 def _determine_top_risk_topic(df: pd.DataFrame) -> str | None:
-    if df.empty or "topic_id" not in df.columns or "topic_risk_score" not in df.columns:
+    if df.empty or "topic_id" not in df.columns:
         return None
-
-    prepared = df.dropna(subset=["topic_id", "topic_risk_score"])
-    if prepared.empty:
+    
+    # We use most mentioned topic (frequency) instead of weighted risk
+    counts = df["topic_id"].value_counts()
+    if counts.empty:
         return None
-
-    total = len(prepared)
-    grouped = prepared.groupby("topic_id")
-    weighted_scores = grouped["topic_risk_score"].mean() * (grouped.size() / total)
-    if weighted_scores.empty:
-        return None
-    try:
-        best_topic = weighted_scores.idxmax()
-    except Exception:
-        return None
-    return str(best_topic)
+    return str(counts.index[0])
 
 
 def _build_top_topics_table(df: pd.DataFrame) -> list[dict[str, Any]]:
@@ -433,29 +428,27 @@ def _build_fallback_summary(
 ) -> str:
     sentiment_label, sentiment_value = _top_entry(sentiment_distribution)
     topic_sentence = _build_topic_sentence(topic_distribution, lang)
-    risk_label, risk_value = _top_entry(npi_distribution)
-
-    total_sentiment = sum(float(v or 0) for v in sentiment_distribution.values()) or 1.0
-    total_risk = sum(float(v or 0) for v in npi_distribution.values()) or 1.0
-
-    sentiment_percent = _format_percentage(sentiment_value, total_sentiment)
-    risk_percent = _format_percentage(risk_value, total_risk)
-
+    sentiment_term = sentiment_label
+    risk_term = risk_label
+    
     if lang == "es":
+        sentiment_map = {"positive": "positivo", "negative": "negativo", "neutral": "neutral"}
+        risk_map = {"high": "alto", "medium": "moderado", "low": "bajo", "unknown": "desconocido"}
+        sentiment_term = sentiment_map.get(sentiment_label, sentiment_label)
+        risk_term = risk_map.get(risk_label, risk_label)
+        
         lines = [
-            "Insight Ejecutivo NLP (fallback)",
-            f"- Sentimiento dominante: {_localize_term(_SENTIMENT_TERMS, sentiment_label, lang)} ({sentiment_percent}%).",
-            f"- {topic_sentence}.",
-            f"- Riesgo de autonomía/dependencia IA más frecuente: {_localize_term(_RISK_TERMS, risk_label, lang)} ({risk_percent}%).",
-            "- Acción sugerida: reforzar la alfabetización en IA, supervisar equipos con riesgo alto y preservar la autonomía de decisiones.",
+            f"📊 Sentimiento dominante: {sentiment_term} ({sentiment_percent}%)",
+            f"🔍 {topic_sentence}",
+            f"⚠️ Riesgo principal: {risk_term} ({risk_percent}%)",
+            "✅ Acción: reforzar alfabetización IA y supervisar equipos de alto riesgo.",
         ]
     else:
         lines = [
-            "Executive NLP Insight (fallback)",
-            f"- Predominant sentiment: {_localize_term(_SENTIMENT_TERMS, sentiment_label, lang)} ({sentiment_percent}%).",
-            f"- {topic_sentence}.",
-            f"- AI autonomy/dependency risk trend: {_localize_term(_RISK_TERMS, risk_label, lang)} ({risk_percent}%).",
-            "- Recommended action: reinforce AI literacy coaching, monitor high-risk cohorts, and protect human autonomy checkpoints.",
+            f"📊 Dominant sentiment: {sentiment_term} ({sentiment_percent}%)",
+            f"🔍 {topic_sentence}",
+            f"⚠️ Key risk: {risk_term} ({risk_percent}%)",
+            "✅ Action: reinforce AI literacy and monitor high-risk cohorts.",
         ]
 
     return "\n".join(lines)
@@ -613,25 +606,21 @@ def get_executive_summary(lang: str = "en") -> dict[str, Any]:
         else "Generate the executive summary in English."
     )
 
-    prompt = textwrap.dedent(
-        f"""
+    prompt = textwrap.dedent(f"""
         {language_instruction}
-
-        You are an AI organizational behavior analyst.
-
-        Sentiment distribution: {sentiment_distribution}
-        Top topics: {topic_distribution}
-        AI autonomy/dependency risk distribution: {npi_distribution}
-
-        Provide:
-        1. Key sentiment insights
-        2. Dominant discussion themes
-        3. Behavioral risk implications
-        4. Recommended leadership actions
-
-        Structure clearly.
-        """
-    ).strip()
+        You are a concise AI organizational analyst.
+    
+        Data: Sentiment={sentiment_distribution}, Topics={topic_distribution}, Risk={npi_distribution}
+    
+        Write a brief executive insight (max 5 bullet points) with:
+        • 📊 Key sentiment trend (one line)
+        • 🔍 Top discussion theme (one line)  
+        • ⚠️ Main risk signal (one line)
+        • ✅ Recommended action (one line)
+        • 📈 Overall outlook (one line)
+    
+        Use emoji bullets. Be direct and data-driven. No headers or titles.
+    """).strip()
 
     summary_text = call_llm(prompt)
     if summary_text is not None:
@@ -675,6 +664,8 @@ def get_strategic_summary() -> dict[str, Any]:
 
     high_risk_percent = _percent_of_category(df, "ai_autonomy_dependency_category", "high")
     neutral_sentiment_percent = _percent_of_category(df, "sentiment_label", "neutral")
+    positive_sentiment_percent = _percent_of_category(df, "sentiment_label", "positive")
+    negative_sentiment_percent = _percent_of_category(df, "sentiment_label", "negative")
     npi_series = _safe_numeric_series(df, "ai_autonomy_dependency_index")
     avg_npi_score = float(round(npi_series.mean(), 2)) if not npi_series.empty else 0.0
     top_risk_topic = _determine_top_risk_topic(df) or ""
@@ -682,6 +673,8 @@ def get_strategic_summary() -> dict[str, Any]:
     kpis = {
         "high_ai_autonomy_dependency_risk_percent": high_risk_percent,
         "neutral_sentiment_percent": neutral_sentiment_percent,
+        "positive_sentiment_percent": positive_sentiment_percent,
+        "negative_sentiment_percent": negative_sentiment_percent,
         "avg_npi_score": avg_npi_score,
         "top_risk_topic": top_risk_topic,
     }
