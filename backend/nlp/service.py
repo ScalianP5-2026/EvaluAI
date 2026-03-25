@@ -10,10 +10,10 @@ import pandas as pd
 
 try:  # pragma: no cover - import path differs between runtimes
     from backend.app.chatbot.gemini_client import GeminiChatClient
-except ImportError:  # pragma: no cover
+except Exception:  # pragma: no cover
     try:
         from app.chatbot.gemini_client import GeminiChatClient  # type: ignore
-    except ImportError:  # pragma: no cover
+    except Exception:  # pragma: no cover
         GeminiChatClient = None  # type: ignore
 
 # DB-backed NLP pipeline helpers (same package)

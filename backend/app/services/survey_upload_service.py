@@ -10,6 +10,7 @@ Handles:
 
 import csv
 import logging
+from datetime import UTC, datetime
 from io import BytesIO, StringIO
 from typing import BinaryIO
 
@@ -221,7 +222,6 @@ class SurveyUploadService:
                 invalid_rows.append(idx)
 
         # Create import_batches record and get batch id
-        import datetime
         batch_id = None
         batch_status = status
         total_rows = len(norm_df)
@@ -270,7 +270,7 @@ class SurveyUploadService:
                 # No rows inserted, but process completed (all duplicates/errors)
                 batch_status = "completed_with_errors"
             # Set finished_at and updated_at at the true end
-            finished_at = datetime.datetime.utcnow().isoformat()
+            finished_at = datetime.now(UTC).isoformat()
             updated_at = finished_at
             if batch_id:
                 self.supabase.table("import_batches").update({
@@ -290,7 +290,7 @@ class SurveyUploadService:
             invalid_rows=invalid_count,
             inserted_rows=inserted_count,
             skipped_duplicates=skipped_count,
-            errors=[e.dict() for e in errors[:10]]
+            errors=[e.model_dump() for e in errors[:10]]
         )
     
     def _insert_rows(self, valid_rows: list[tuple[int, EmployeeSurveyRow]]) -> tuple[int, int]:

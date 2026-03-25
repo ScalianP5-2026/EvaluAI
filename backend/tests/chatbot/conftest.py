@@ -101,7 +101,6 @@ def mock_api_key():
     return "test-api-key-12345"
 
 
-@pytest.mark.asyncio
 async def mock_async_gemini_call():
     """Mock async Gemini API call."""
     return """{"message": "test response", "recommendations": {}}"""

@@ -2,10 +2,10 @@
 Pydantic schemas para chatbot y KPIs.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 # ═══════════════════════════════════════════════════════════════
 # CHAT SCHEMAS
@@ -25,14 +25,15 @@ class ChatRequest(BaseModel):
         description="Proveedor LLM (gemini o foundry)"
     )
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "user_id": "1XVWCBPH",
                 "message": "Quiero aprender Machine Learning",
                 "employee_context": None
             }
         }
+    )
 
 class RecommendationData(BaseModel):
     """Recomendaciones dentro de ChatResponse"""        
@@ -68,8 +69,8 @@ class ChatResponse(BaseModel):
         description="Alerta de riesgo (ej: dependencia_alta, baja_motivacion)"
     )
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "message": "Perfecto, veo que quieres aprender ML...",
                 "session_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -91,6 +92,7 @@ class ChatResponse(BaseModel):
                 "risk_alert": None
             }
         }
+    )
 
 class ConversationHistoryRequest(BaseModel):
     """Request para GET /api/v1/chat/history"""
@@ -103,7 +105,7 @@ class ChatTurn(BaseModel):
     
     role: str = Field(..., description="user o assistant")
     content: str = Field(..., description="Contenido del mensaje")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     recommendations: Optional[Dict] = Field(default=None, description="Metadato de la DB")
 
 # ═══════════════════════════════════════════════════════════════
@@ -181,12 +183,12 @@ class KPIResponse(BaseModel):
         description="KPI 5: Motivación vs uso de IA"
     )
     calculated_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.now(UTC),
         description="Fecha/hora del cálculo"
     )
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example":{
                 "acceptance_distribution": {
                     "very_low": 15,
@@ -229,6 +231,7 @@ class KPIResponse(BaseModel):
                 
             }
         }
+    )
 
 
 class ErrorResponse(BaseModel):
@@ -236,7 +239,7 @@ class ErrorResponse(BaseModel):
     
     detail: str = Field(..., description="Mensaje de error")
     status_code: int = Field(..., description="Código HTTP")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
         
         
         
