@@ -19,14 +19,9 @@ export default function DashboardPage() {
       setLoading(true);
       const data = await kpiAPI.getSummary();
       setKpiData(data);
-      setError(null);
     } catch (err) {
       console.error("Failed to load KPIs:", err);
-      const serverMessage =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
-        err?.message;
-      setError(serverMessage || t("dashboard.loadError"));
+      setError(t("dashboard.loadError"));
     } finally {
       setLoading(false);
     }

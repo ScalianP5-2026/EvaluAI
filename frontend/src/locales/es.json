@@ -66,8 +66,8 @@
     "rrhhActionsTitle": "Acciones RRHH",
     "executiveInsight": "Insight Ejecutivo Conductual",
     "strategicLayerBadge": "CAPA ESTRATÉGICA",
-    "strategicLayerTitle": "Capa de Inteligencia Estratégica",
-    "strategicLayerSubtitle": "Conecta señales NLP con modelos de riesgo ML para informar al liderazgo.",
+    "strategicLayerTitle": "Resumen Estratégico de Riesgos y Oportunidades",
+    "strategicLayerSubtitle": "Visión ejecutiva de la adopción y riesgos asociados al uso de IA en la organización.",
     "topic": "Tema",
     "sentimentDescription": "Distribución de la percepción de los empleados sobre la integración de IA.",
     "topicDescription": "Frecuencia ordenada de los temas conversacionales predominantes detectados por NLP.",
@@ -79,28 +79,32 @@
     "noNpiData": "No hay datos de distribución del NPI disponibles.",
     "executiveUnavailable": "El resumen ejecutivo no está disponible.",
     "strategicKpis": {
-      "neutralSentiment": "Sentimiento Neutral",
-      "neutralSentimentCaption": "Parte de la fuerza laboral con tono neutral",
-      "topRiskTopic": "Tema de Mayor Riesgo",
-      "topRiskTopicCaption": "Tema que concentra el mayor peso de riesgo",
+      "positiveSentiment": "Opiniones Positivas",
+      "positiveSentimentCaption": "Porcentaje de empleados con sentimiento positivo",
+      "negativeSentiment": "Opiniones Negativas",
+      "negativeSentimentCaption": "Porcentaje de empleados con sentimiento negativo",      
+      "topRiskTopic": "Tema más mencionado",
+      "topRiskTopicCaption": "Tema con mayor número de menciones en las opiniones analizadas.",
       "noTopic": "Sin tema dominante",
       "highAiAutonomyDependencyRisk": "Riesgo Alto de Autonomía/Dependencia IA",
-      "highAiAutonomyDependencyRiskCaption": "Porcentaje de colaboradores marcados como alto riesgo de dependencia",
-      "avgAiAutonomyDependencyScore": "Promedio NPI",
-      "avgAiAutonomyDependencyScoreCaption": "Media del índice de autonomía/dependencia IA (escala 0-1)"
+      "highAiAutonomyDependencyRiskCaption": "Porcentaje de colaboradores marcados como alto riesgo de dependencia",        
+      "avgAiAutonomyDependencyScore": "Índice de Dependencia IA (avg)",
+      "avgAiAutonomyDependencyScoreCaption": "Media de riesgo de dependencia (Índice Autonomía)"
     },
+    "sentimentChartTitle": "Análisis de sentimiento de empleados",
     "mlCorrelation": {
-      "title": "Alineación ML ↔ NLP",
-      "subtitle": "Superposición de empleados en alto riesgo de abandono y alto riesgo conductual.",
-      "overlapLabel": "Solapamiento alto abandono + alto riesgo"
+      "title": "Correlación entre riesgo de abandono y opiniones",
+      "subtitle": "Superposición de empleados en alto riesgo de abandono y alto riesgo según opiniones (NLP).",
+      "overlapLabel": "Solapamiento alto abandono + alto riesgo (NLP)",
+      "noOverlapMessage": "Actualmente no hay empleados en alto riesgo simultáneo según ambos modelos."
     },
     "radar": {
-      "title": "Radar de Señales Conductuales",
-      "description": "Puntuaciones normalizadas 0-1 en sentimiento, autonomía, dependencia, motivación y riesgo.",
+      "title": "Radar de Indicadores de Comportamiento",
+      "description": "Visualiza el perfil agregado de la organización en cinco dimensiones clave: sentimiento, autonomía, dependencia, motivación y riesgo.",
       "sentiment": "Sentimiento Positivo",
       "autonomy": "Señal de Autonomía",
       "dependency": "Señal de Dependencia",
-      "motivation": "Proxy de Motivación",
+      "motivation": "Motivación",
       "risk": "Nivel de Riesgo"
     },
     "topTopics": {
@@ -117,10 +121,10 @@
     },
     "strategicInsight": {
       "title": "Insight Estratégico",
-      "body": "Las señales de alto riesgo de autonomía/dependencia IA representan {{risk}} de las respuestas. Enfoca intervenciones en {{topic}} mientras atiendes el solapamiento ML de abandono {{overlap}} y estabilizas el promedio NPI ({{npi}}).",
+      "body": "Las señales de alto riesgo de autonomía/dependencia IA representan {{risk}} de las respuestas. Enfoca intervenciones en {{topic}} mientras atiendes el solapamiento ML de abandono {{overlap}} y estabilizas el Índice de Dependencia ({{npi}}).",
       "default": "El resumen estratégico no está disponible."
     },
-    "aiAutonomyDependencyIndex": "Índice de Autonomía y Dependencia IA",
+    "aiAutonomyDependencyIndex": "Indice de Autonomia y Dependencia IA",
     "aiAutonomyDependencyDescription": "Este índice estima el riesgo conductual relacionado con dependencia a la IA, pérdida de autonomía profesional y reducción del pensamiento crítico."
   },
   "sentiment": {
@@ -156,9 +160,9 @@
     "employeeMotivationDesc": "puntuación de motivación de aprendizaje sostenida",
     "dependencyRiskDesc": "empleados en rango de riesgo manejable",
     "summaryTitle": "Resumen del Impacto Ejecutivo",
-    "summaryParagraph1": "La formación integrada con IA muestra una adopción moderada en toda la organización, con el 46% de los empleados usando herramientas de IA frecuentemente o muy frecuentemente. El uso ocasional o infrecuente representa el resto de la plantilla, indicando una oportunidad clara de escalar la adopción.",
-    "summaryParagraph2": "Los niveles de motivación se mantienen estables en 3,95/5, sosteniendo el interés de los empleados en el aprendizaje asistido por IA. El riesgo de dependencia es manejable: un 5% de empleados se clasifica como alto riesgo y un 64% en riesgo moderado.",
-    "summaryParagraph3": "Recomendación: Continuar la inversión en infraestructura de formación con IA mientras se implementan actividades de mitigación de riesgos enfocadas en el desarrollo de autoeficacia de los empleados.",
+    "summaryParagraph1": "📊 Adopción IA: 46% usa herramientas frecuentemente. Oportunidad clara de escalar al resto de la plantilla.",
+    "summaryParagraph2": "💪 Motivación estable (3,95/5). Riesgo controlado: solo 5% en alto riesgo, 64% moderado.",
+    "summaryParagraph3": "✅ Acción: invertir en formación IA + mitigar riesgos con programas de autoeficacia.",
     "status": "Estado",
     "lastUpdated": "Última Actualización"
   },
@@ -343,7 +347,7 @@
   },
   "chat": {
     "title": "Chatbot de Formación",
-    "welcomeMessage": "Hola, soy tu asistente de formación. Cuéntame tu objetivo y te recomendaré los mejores cursos para tu perfil.",
+    "welcomeMessage": "¡Hola! Soy tu Agente FormatIA personalizado. Integro modelos de Machine Learning para evaluar tu perfil, tu motivación actual y calcular el riesgo de abandono respecto a formaciones. Luego cruzo estos datos con tu departamento y te asigno el mentor ideal. Por ultimo genero un plan de acción de 30 días a medida para ti. ¿Qué nueva competencia, tecnología o certificación te gustaría dominar hoy?",
     "placeholder": "Haz una pregunta...",
     "noMessages": "Sin mensajes aún. ¡Inicia una conversación!",
     "sessionInfo": "Información de Sesión",

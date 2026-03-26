@@ -15,6 +15,26 @@ def _as_bool(value: str, default: bool = False) -> bool:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
+
+def _as_float(value: str | None, default: float) -> float:
+    """Parse float env values safely."""
+    if value is None or value.strip() == "":
+        return default
+    try:
+        return float(value)
+    except ValueError:
+        return default
+
+
+def _as_int(value: str | None, default: int) -> int:
+    """Parse int env values safely."""
+    if value is None or value.strip() == "":
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
 # ==================== LLM PROVIDER ====================
 # Supported values: "gemini" (default), "foundry", "azure_foundry", "azure_openai"
 
@@ -30,16 +50,16 @@ GEMINI_API_KEY: str = os.getenv("CHATBOT_GEMINI_API_KEY", "")
 GEMINI_MODEL: str = os.getenv("CHATBOT_GEMINI_MODEL", "gemini-2.5-flash")
 """Gemini model to use"""
 
-GEMINI_TEMPERATURE: float = float(os.getenv("CHATBOT_GEMINI_TEMPERATURE", "0.4"))
+GEMINI_TEMPERATURE: float = _as_float(os.getenv("CHATBOT_GEMINI_TEMPERATURE"), 0.4)
 """Temperature for response consistency (0.0-1.0)"""
 
-GEMINI_MAX_TOKENS: int = int(os.getenv("CHATBOT_GEMINI_MAX_TOKENS", "4096"))
+GEMINI_MAX_TOKENS: int = _as_int(os.getenv("CHATBOT_GEMINI_MAX_TOKENS"), 4096)
 """Maximum number of output tokens"""
 
-GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("CHATBOT_GEMINI_TIMEOUT_SECONDS", "30"))
+GEMINI_TIMEOUT_SECONDS: int = _as_int(os.getenv("CHATBOT_GEMINI_TIMEOUT_SECONDS"), 30)
 """Request timeout in seconds"""
 
-GEMINI_MAX_RETRIES: int = int(os.getenv("CHATBOT_GEMINI_MAX_RETRIES", "3"))
+GEMINI_MAX_RETRIES: int = _as_int(os.getenv("CHATBOT_GEMINI_MAX_RETRIES"), 3)
 """Number of retry attempts on failure"""
 
 # ==================== AZURE FOUNDRY / AZURE OPENAI ====================
@@ -56,16 +76,16 @@ FOUNDRY_DEPLOYMENT: str = os.getenv("CHATBOT_FOUNDRY_DEPLOYMENT", "")
 FOUNDRY_API_VERSION: str = os.getenv("CHATBOT_FOUNDRY_API_VERSION", "2025-01-01-preview")
 """Azure OpenAI API version"""
 
-FOUNDRY_TEMPERATURE: float = float(os.getenv("CHATBOT_FOUNDRY_TEMPERATURE", "0.4"))
+FOUNDRY_TEMPERATURE: float = _as_float(os.getenv("CHATBOT_FOUNDRY_TEMPERATURE"), 0.4)
 """Temperature for Foundry responses"""
 
-FOUNDRY_MAX_TOKENS: int = int(os.getenv("CHATBOT_FOUNDRY_MAX_TOKENS", "800"))
+FOUNDRY_MAX_TOKENS: int = _as_int(os.getenv("CHATBOT_FOUNDRY_MAX_TOKENS"), 800)
 """Max output tokens for Foundry responses"""
 
-FOUNDRY_TIMEOUT_SECONDS: int = int(os.getenv("CHATBOT_FOUNDRY_TIMEOUT_SECONDS", "30"))
+FOUNDRY_TIMEOUT_SECONDS: int = _as_int(os.getenv("CHATBOT_TIMEOUT_SECONDS"), 30)
 """Request timeout in seconds"""
 
-FOUNDRY_MAX_RETRIES: int = int(os.getenv("CHATBOT_FOUNDRY_MAX_RETRIES", "3"))
+FOUNDRY_MAX_RETRIES: int = _as_int(os.getenv("CHATBOT_MAX_RETRIES"), 3)
 """Number of retry attempts on failure"""
 
 FOUNDRY_SYSTEM_PROMPT: str = os.getenv(
@@ -121,10 +141,10 @@ PII_GUARD_ENABLED: bool = _as_bool(
 
 # ==================== CONVERSATION MEMORY ====================
 
-CONVERSATION_MAX_TURNS: int = int(os.getenv("CHATBOT_CONVERSATION_MAX_TURNS", "10"))
+CONVERSATION_MAX_TURNS: int = _as_int(os.getenv("CHATBOT_CONVERSATION_MAX_TURNS"), 10)
 """Maximum turns stored in memory"""
 
-CONVERSATION_MAX_TURNS_TO_API: int = int(os.getenv("CHATBOT_CONVERSATION_MAX_TURNS_TO_API", "8"))
+CONVERSATION_MAX_TURNS_TO_API: int = _as_int(os.getenv("CHATBOT_CONVERSATION_MAX_TURNS_TO_API"), 8)
 """Maximum turns sent to Gemini API (token limit awareness)"""
 
 
