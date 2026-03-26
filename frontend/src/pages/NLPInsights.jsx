@@ -563,7 +563,8 @@ export default function NLPInsights() {
                       <div
                         className="h-full rounded-full bg-indigo-500 dark:bg-indigo-400"
                         style={{ width: `${mlOverlapBarWidth}%` }}
-                      />q
+                      />
+                    </div>
                   </>
                 )}
               </div>
@@ -1158,22 +1159,32 @@ export default function NLPInsights() {
                 i18n.language === "es"
                   ? "Puntuación Sentimiento"
                   : "Sentiment Score",
-              value: formatNumberValue(p.sentiment_score, 3),
+              // Mapeo de -1...1 a 0...100%
+              value: formatPercentageValue(
+                (((p.sentiment_score || 0) + 1) / 2) * 100,
+                1,
+              ),
             },
             {
               label: i18n.language === "es" ? "Confianza" : "Confidence",
-              value: formatNumberValue(p.sentiment_confidence, 3),
+              value: formatPercentageValue(
+                (p.sentiment_confidence || 0) * 100,
+                1,
+              ),
             },
             {
               label:
                 i18n.language === "es"
                   ? "Índice Dependencia"
                   : "Dependency Index",
-              value: formatNumberValue(p.ai_autonomy_dependency_index, 3),
+              value: formatPercentageValue(
+                (p.ai_autonomy_dependency_index || 0) * 100,
+                1,
+              ),
             },
             {
               label: i18n.language === "es" ? "Motivación" : "Motivation",
-              value: formatNumberValue(p.motivation_proxy, 3),
+              value: formatPercentageValue((p.motivation_proxy || 0) * 100, 1),
             },
           ].map((m) => (
             <div

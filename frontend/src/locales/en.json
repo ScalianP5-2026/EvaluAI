@@ -88,11 +88,12 @@
       "noTopic": "No dominant topic",
       "highAiAutonomyDependencyRisk": "High AI Autonomy/Dependency Risk",
       "highAiAutonomyDependencyRiskCaption": "Share of employees flagged as high dependency risk",
+      "avgAiAutonomyDependencyScore": "AI Dependency Index (avg)",
       "avgAiAutonomyDependencyScoreCaption": "Higher values indicate greater risk of excessive AI tool dependency."
     },
     "sentimentChartTitle": "Employee Sentiment Analysis",
     "mlCorrelation": {
-      "title": "ML ↔ NLP Alignment",
+      "title": "Correlation between dropout risk and opinions",
       "subtitle": "Overlap of employees marked high dropout risk and high opinion-based risk (NLP).",
       "overlapLabel": "High dropout & high risk (NLP) overlap",
       "noOverlapMessage": "Currently, no employees are at high risk according to both models."
@@ -103,7 +104,7 @@
       "sentiment": "Sentiment Positivity",
       "autonomy": "Autonomy Signal",
       "dependency": "Dependency Signal",
-      "motivation": "Motivation Proxy",
+      "motivation": "Motivation",
       "risk": "Risk Level"
     },
     "topTopics": {

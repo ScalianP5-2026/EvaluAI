@@ -5,11 +5,10 @@ import axios from "axios";
 // ═══════════════════════════════════════════════════════════════
 
 const API_BASE_URL =
-  (typeof import.meta !== "undefined" &&
-    import.meta.env &&
-    import.meta.env.VITE_API_BASE_URL) ||
-  "/api/v1";
-const NLP_BASE_URL = "/api/nlp";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:9000/api/v1";
+
+const NLP_BASE_URL =
+  import.meta.env.VITE_API_NLP_URL || "http://localhost:9000/api/nlp";
 const VERBOSE_API_ERROR_LOGGING =
   typeof import.meta !== "undefined" &&
   import.meta.env &&
@@ -166,7 +165,11 @@ export const dashboardAPI = {
     try {
       const response = await apiClient.get("/campaigns");
       const data = response.data;
-      return Array.isArray(data) ? data : Array.isArray(data?.campaigns) ? data.campaigns : [];
+      return Array.isArray(data)
+        ? data
+        : Array.isArray(data?.campaigns)
+          ? data.campaigns
+          : [];
     } catch (error) {
       handleError(error, "Get Campaigns");
     }

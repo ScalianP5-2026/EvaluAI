@@ -426,29 +426,37 @@ def _build_fallback_summary(
     topic_distribution: dict[str, Any],
     npi_distribution: dict[str, Any],
 ) -> str:
-    sentiment_label, sentiment_value = _top_entry(sentiment_distribution)
+    """Genera un resumen detallado cuando el LLM no está disponible."""
+    # Extraer datos predominantes
+    sent_label, sent_val = _top_entry(sentiment_distribution)
+    risk_label, risk_val = _top_entry(npi_distribution)
     topic_sentence = _build_topic_sentence(topic_distribution, lang)
-    sentiment_term = sentiment_label
-    risk_term = risk_label
     
+    # Calcular porcentajes reales
+    sent_pct = round(sent_val * 100, 1) if sent_val else 0
+    risk_pct = round(risk_val * 100, 1) if risk_val else 0
+
     if lang == "es":
-        sentiment_map = {"positive": "positivo", "negative": "negativo", "neutral": "neutral"}
-        risk_map = {"high": "alto", "medium": "moderado", "low": "bajo", "unknown": "desconocido"}
-        sentiment_term = sentiment_map.get(sentiment_label, sentiment_label)
-        risk_term = risk_map.get(risk_label, risk_label)
+        sent_map = {"positive": "positivo", "negative": "negativo", "neutral": "neutral"}
+        risk_map = {"high": "alto", "medium": "moderado", "low": "bajo"}
+        
+        s_term = sent_map.get(sent_label.lower(), sent_label)
+        r_term = risk_map.get(risk_label.lower(), risk_label)
         
         lines = [
-            f"📊 Sentimiento dominante: {sentiment_term} ({sentiment_percent}%)",
-            f"🔍 {topic_sentence}",
-            f"⚠️ Riesgo principal: {risk_term} ({risk_percent}%)",
-            "✅ Acción: reforzar alfabetización IA y supervisar equipos de alto riesgo.",
+            f"Análisis de Voz del Empleado (Modo Datos):",
+            f"• 📊 Percepción: El sentimiento predominante es {s_term} ({sent_pct}% de las opiniones).",
+            f"• 🔍 Temática: {topic_sentence}.",
+            f"• ⚠️ Riesgo: Se detecta un nivel de riesgo de dependencia {r_term} ({risk_pct}% de la muestra).",
+            f"• ✅ Recomendación: Reforzar programas de capacitación y supervisión de autonomía."
         ]
     else:
         lines = [
-            f"📊 Dominant sentiment: {sentiment_term} ({sentiment_percent}%)",
-            f"🔍 {topic_sentence}",
-            f"⚠️ Key risk: {risk_term} ({risk_percent}%)",
-            "✅ Action: reinforce AI literacy and monitor high-risk cohorts.",
+            f"Employee Voice Analysis (Data Mode):",
+            f"• 📊 Perception: Dominant sentiment is {sent_label} ({sent_pct}% of responses).",
+            f"• 🔍 Topics: {topic_sentence}.",
+            f"• ⚠️ Autonomy Risk: {risk_label} risk level detected ({risk_pct}% of sample).",
+            f"• ✅ Action: Focus on AI literacy and monitor high-dependency cohorts."
         ]
 
     return "\n".join(lines)

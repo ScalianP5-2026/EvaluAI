@@ -87,12 +87,13 @@
       "topRiskTopicCaption": "Tema con mayor número de menciones en las opiniones analizadas.",
       "noTopic": "Sin tema dominante",
       "highAiAutonomyDependencyRisk": "Riesgo Alto de Autonomía/Dependencia IA",
-      "highAiAutonomyDependencyRiskCaption": "Porcentaje de colaboradores marcados como alto riesgo de dependencia",
-      "avgAiAutonomyDependencyScoreCaption": "Cuanto más alto, mayor riesgo de dependencia excesiva de herramientas de IA."
+      "highAiAutonomyDependencyRiskCaption": "Porcentaje de colaboradores marcados como alto riesgo de dependencia",        
+      "avgAiAutonomyDependencyScore": "Índice de Dependencia IA (avg)",
+      "avgAiAutonomyDependencyScoreCaption": "Media de riesgo de dependencia (Índice Autonomía)"
     },
     "sentimentChartTitle": "Análisis de sentimiento de empleados",
     "mlCorrelation": {
-      "title": "Alineación ML ↔ NLP",
+      "title": "Correlación entre riesgo de abandono y opiniones",
       "subtitle": "Superposición de empleados en alto riesgo de abandono y alto riesgo según opiniones (NLP).",
       "overlapLabel": "Solapamiento alto abandono + alto riesgo (NLP)",
       "noOverlapMessage": "Actualmente no hay empleados en alto riesgo simultáneo según ambos modelos."
@@ -103,7 +104,7 @@
       "sentiment": "Sentimiento Positivo",
       "autonomy": "Señal de Autonomía",
       "dependency": "Señal de Dependencia",
-      "motivation": "Proxy de Motivación",
+      "motivation": "Motivación",
       "risk": "Nivel de Riesgo"
     },
     "topTopics": {
@@ -123,7 +124,7 @@
       "body": "Las señales de alto riesgo de autonomía/dependencia IA representan {{risk}} de las respuestas. Enfoca intervenciones en {{topic}} mientras atiendes el solapamiento ML de abandono {{overlap}} y estabilizas el Índice de Dependencia ({{npi}}).",
       "default": "El resumen estratégico no está disponible."
     },
-    "aiAutonomyDependencyIndex": "Índice de Autonomía y Dependencia IA",
+    "aiAutonomyDependencyIndex": "Indice de Autonomia y Dependencia IA",
     "aiAutonomyDependencyDescription": "Este índice estima el riesgo conductual relacionado con dependencia a la IA, pérdida de autonomía profesional y reducción del pensamiento crítico."
   },
   "sentiment": {
