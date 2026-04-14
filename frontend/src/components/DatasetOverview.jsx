@@ -11,25 +11,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-// ─── Static dataset constants (survey_raw, n=100) ──────────
-// Sorted descending by count so index 0 is always the executive highlight.
-
-const DATASET_N = 100;
-
-const GENDER_DIST = [
-  { key: "nonBinary",   count: 29 },
-  { key: "female",      count: 27 },
-  { key: "unspecified", count: 23 },
-  { key: "male",        count: 21 },
-];
-
-const TOOL_DIST = [
-  { name: "ChatGPT", count: 27 },
-  { name: "Copilot", count: 21 },
-  { name: "Gemini",  count: 18 },
-  { name: "LMS IA",  count: 17 },
-  { name: null,      count: 17 }, // localised as dataset.toolOther
-];
+const EMPTY_DIST = [];
 
 // ─── Colour palettes ──────────────────────────────────────────────────────────
 const DEPT_COLORS   = ["bg-violet-500","bg-indigo-500","bg-blue-500","bg-cyan-500","bg-teal-500"];
@@ -57,11 +39,33 @@ export default function DatasetOverview({ data }) {
     const deptData  = data.department_segmentation || {};
     const deptCount = Object.keys(deptData).length;
 
-    const avgMotivation    = 3.95;
-    const avgSelfEfficacy  = 3.82;
-    const avgAIUsage       = 2.8;
-    const avgAge           = 38.5;
-    const aiIntegrationLevel = 3.2;
+    const motionByUsage  = data.motivation_by_usage || {};
+    const usageEntries   = Object.entries(motionByUsage);
+    const usageTotal     = usageEntries.reduce((s, [, v]) => s + (v.count ?? 0), 0);
+    const freqCount      = (motionByUsage["4_frequent"]?.count ?? 0) +
+                           (motionByUsage["5_very_frequent"]?.count ?? 0);
+    const adoptionRate   = usageTotal > 0 ? Math.round((freqCount / usageTotal) * 100) : 0;
+
+    const weightedMotivationSum = Object.values(motionByUsage).reduce(
+      (sum, value) => sum + Number(value?.avg_motivation ?? 0) * Number(value?.count ?? 0),
+      0,
+    );
+
+    const weightedUsageSum = Object.entries(motionByUsage).reduce(
+      (sum, [key, value]) => {
+        const count = Number(value?.count ?? 0);
+        const match = String(key).match(/^(\d+)/);
+        const usageLevel = match ? Number(match[1]) : 0;
+        return sum + usageLevel * count;
+      },
+      0,
+    );
+
+    const avgMotivation = usageTotal > 0 ? Number((weightedMotivationSum / usageTotal).toFixed(2)) : 0;
+    const avgAIUsage = usageTotal > 0 ? Number((weightedUsageSum / usageTotal).toFixed(2)) : 0;
+    const avgSelfEfficacy = 0;
+    const avgAge = 0;
+    const aiIntegrationLevel = 0;
 
     // ── Dependency risk ────────────────────────────────────────────────────
     const riskData   = data.dependency_risk || {};
@@ -85,14 +89,6 @@ export default function DatasetOverview({ data }) {
     const topDept   = deptEntries[0] ?? { name: "—", count: 0 };
     const topDeptPct = deptTotal > 0 ? Math.round((topDept.count / deptTotal) * 100) : 0;
 
-    // ── AI adoption rate (frequent + very_frequent / motionByUsage total) ─────
-    const motionByUsage  = data.motivation_by_usage || {};
-    const usageEntries   = Object.entries(motionByUsage);
-    const usageTotal     = usageEntries.reduce((s, [, v]) => s + (v.count ?? 0), 0);
-    const freqCount      = (motionByUsage["4_frequent"]?.count ?? 0) +
-                           (motionByUsage["5_very_frequent"]?.count ?? 0);
-    const adoptionRate   = usageTotal > 0 ? Math.round((freqCount / usageTotal) * 100) : 0;
-
     // ── Automatic insight key selection ────────────────────────────────────────
     const adoptionKey  = adoptionRate < 20 ? "adoptionLow"
                        : adoptionRate < 50 ? "adoptionModerate"
@@ -110,15 +106,11 @@ export default function DatasetOverview({ data }) {
       t(`insights.${riskInsKey}`,   { pct: riskPct.high }),
     ];
 
-    // ── Gender distribution (dataset constant, n=100) ──────────────────────
-    const genderTop    = GENDER_DIST[0];
-    const genderTopLbl = t(`dataset.gender_${genderTop.key}`);
-    const genderTopPct = Math.round((genderTop.count / DATASET_N) * 100);
+    const genderEntries = EMPTY_DIST;
+    const genderTop = { label: "—", count: 0, pct: 0 };
 
-    // ── Primary AI Tool distribution (dataset constant, n=100) ────────────
-    const toolTop    = TOOL_DIST[0];
-    const toolTopLbl = toolTop.name ?? t("dataset.toolOther");
-    const toolTopPct = Math.round((toolTop.count / DATASET_N) * 100);
+    const toolEntries = EMPTY_DIST;
+    const toolTop = { label: "—", count: 0, pct: 0 };
 
     return (
       <div className="mb-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
@@ -188,7 +180,7 @@ export default function DatasetOverview({ data }) {
                 <InsightBox
                   icon="🎯"
                   label={t("dataset.humanAIPreference")}
-                  value={t("dataset.humanAIPreferenceValue")}
+                  value={totalEmployees > 0 ? t("dataset.humanAIPreferenceValue") : "0%"}
                 />
               </div>
 
@@ -214,30 +206,30 @@ export default function DatasetOverview({ data }) {
                 <DistributionCard
                   icon="👥"
                   label={t("dataset.genderDistribution")}
-                  topLabel={genderTopLbl}
+                  topLabel={genderTop.label}
                   topCount={genderTop.count}
-                  topPct={genderTopPct}
-                  entries={GENDER_DIST.map((g, i) => ({
-                    label: t(`dataset.gender_${g.key}`),
+                  topPct={genderTop.pct}
+                  entries={genderEntries.map((g, i) => ({
+                    label: g.label,
                     count: g.count,
                     color: GENDER_COLORS[i % GENDER_COLORS.length],
                   }))}
-                  total={DATASET_N}
+                  total={0}
                 />
 
                 {/* Primary AI Tool — data from dataset constant */}
                 <DistributionCard
                   icon="🛠️"
                   label={t("dataset.primaryAIToolDist")}
-                  topLabel={toolTopLbl}
+                  topLabel={toolTop.label}
                   topCount={toolTop.count}
-                  topPct={toolTopPct}
-                  entries={TOOL_DIST.map((tool, i) => ({
-                    label: tool.name ?? t("dataset.toolOther"),
+                  topPct={toolTop.pct}
+                  entries={toolEntries.map((tool, i) => ({
+                    label: tool.label,
                     count: tool.count,
                     color: TOOL_COLORS[i % TOOL_COLORS.length],
                   }))}
-                  total={DATASET_N}
+                  total={0}
                 />
 
               </div>

@@ -58,14 +58,39 @@ export default function ExecutiveSnapshot({ data }) {
   const adoptionRate =
     usageTotal > 0 ? Math.round((freqCount / usageTotal) * 100) : 0;
 
+  const weightedUsageSum = Object.entries(motionByUsage).reduce(
+    (sum, [key, value]) => {
+      const count = Number(value?.count ?? 0);
+      const match = String(key).match(/^(\d+)/);
+      const usageLevel = match ? Number(match[1]) : 0;
+      return sum + usageLevel * count;
+    },
+    0,
+  );
+  const aiUsageIntensity =
+    usageTotal > 0 ? Math.round((weightedUsageSum / (usageTotal * 5)) * 100) : 0;
+
+  const weightedMotivationSum = Object.values(motionByUsage).reduce(
+    (sum, value) => sum + Number(value?.avg_motivation ?? 0) * Number(value?.count ?? 0),
+    0,
+  );
+  const employeeMotivation =
+    usageTotal > 0 ? (weightedMotivationSum / usageTotal).toFixed(2) : "0.00";
+
+  const dependencyTotals = data.dependency_risk
+    ? Number(data.dependency_risk.high_risk ?? 0) +
+      Number(data.dependency_risk.medium_risk ?? 0) +
+      Number(data.dependency_risk.low_risk ?? 0)
+    : 0;
+
   const dependencyRisk = data.dependency_risk
-    ? Math.round(
+    ? dependencyTotals > 0
+      ? Math.round(
         (data.dependency_risk.medium_risk /
-          (data.dependency_risk.high_risk +
-            data.dependency_risk.medium_risk +
-            data.dependency_risk.low_risk)) *
+          dependencyTotals) *
           100,
       )
+      : 0
     : 0;
 
   const statusLabels = {
@@ -88,14 +113,24 @@ export default function ExecutiveSnapshot({ data }) {
     },
     {
       title: t("executive.aiUsageIntensity"),
-      value: "42%",
-      status: "monitor",
+      value: `${aiUsageIntensity}%`,
+      status:
+        aiUsageIntensity > 60
+          ? "healthy"
+          : aiUsageIntensity >= 30
+            ? "monitor"
+            : "alert",
       description: t("executive.aiUsageIntensityDesc"),
     },
     {
       title: t("executive.employeeMotivation"),
-      value: "3.95/5",
-      status: "healthy",
+      value: `${employeeMotivation}/5`,
+      status:
+        Number(employeeMotivation) >= 4
+          ? "healthy"
+          : Number(employeeMotivation) >= 3
+            ? "monitor"
+            : "alert",
       description: t("executive.employeeMotivationDesc"),
     },
     {

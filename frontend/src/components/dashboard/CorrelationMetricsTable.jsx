@@ -8,42 +8,43 @@ import { useTranslation } from "react-i18next";
 export default function CorrelationMetricsTable({ data }) {
   const { t } = useTranslation();
 
-  // Mock correlation data - in production, this would come from backend
+  const primaryCorrelation = data?.ai_usage_correlation || {};
+
   const correlationMetrics = [
     {
       id: 1,
       label: t("correlation.metric1Label"),
       description: t("correlation.metric1Desc"),
-      coefficient: 0.34,
-      pValue: 0.085,
+      coefficient: Number(primaryCorrelation.correlation ?? 0),
+      pValue: Number(primaryCorrelation.p_value ?? 1),
     },
     {
       id: 2,
       label: t("correlation.metric2Label"),
       description: t("correlation.metric2Desc"),
-      coefficient: 0.28,
-      pValue: 0.142,
+      coefficient: 0,
+      pValue: 1,
     },
     {
       id: 3,
       label: t("correlation.metric3Label"),
       description: t("correlation.metric3Desc"),
-      coefficient: -0.07,
-      pValue: 0.518,
+      coefficient: 0,
+      pValue: 1,
     },
     {
       id: 4,
       label: t("correlation.metric4Label"),
       description: t("correlation.metric4Desc"),
-      coefficient: 0.15,
-      pValue: 0.301,
+      coefficient: 0,
+      pValue: 1,
     },
     {
       id: 5,
       label: t("correlation.metric5Label"),
       description: t("correlation.metric5Desc"),
-      coefficient: 0.42,
-      pValue: 0.028,
+      coefficient: 0,
+      pValue: 1,
     },
   ];
 

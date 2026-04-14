@@ -21,6 +21,33 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["kpi"])
 
+
+def _default_acceptance_distribution() -> dict:
+    return {
+        "very_low": 0,
+        "low": 0,
+        "medium": 0,
+        "high": 0,
+        "very_high": 0,
+    }
+
+
+def _default_ai_usage_correlation() -> dict:
+    return {
+        "correlation": 0.0,
+        "p_value": 1.0,
+        "significance": "no data",
+        "insight": "No survey data available",
+    }
+
+
+def _default_dependency_risk_distribution() -> dict:
+    return {
+        "high_risk": 0,
+        "medium_risk": 0,
+        "low_risk": 0,
+    }
+
 # ═══════════════════════════════════════════════════════════════
 # GET /api/v1/kpi/summary
 # ═══════════════════════════════════════════════════════════════
@@ -47,18 +74,14 @@ async def get_kpi_summary(
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # KPI 1: ACCEPTANCE DISTRIBUTION
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        acceptance_dist = calculate_acceptance_distribution()
-        if not acceptance_dist:
-            raise ValueError("Failed to calculate acceptance distribution")
+        acceptance_dist = calculate_acceptance_distribution() or _default_acceptance_distribution()
         
         logger.info(f"KPI1 Acceptance: {acceptance_dist}")
         
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         # KPI 2: AI USAGE VS AUTOEFICACIA CORRELATION
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        correlation = calculate_ai_usage_vs_autoeficacia_correlation()
-        if not correlation:
-            raise ValueError("Failed to calculate correlation")
+        correlation = calculate_ai_usage_vs_autoeficacia_correlation() or _default_ai_usage_correlation()
         
         logger.info(f"KPI2 Correlation: r={correlation.get('correlation')}, p={correlation.get('p_value')}")
 
@@ -66,9 +89,7 @@ async def get_kpi_summary(
         # KPI 3: DEPENDENCY RISK DISTRIBUTION
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
-        risk_dist = calculate_dependency_risk_distribution()
-        if not risk_dist:
-            raise ValueError("Failed to calculate dependency risk")
+        risk_dist = calculate_dependency_risk_distribution() or _default_dependency_risk_distribution()
         
         logger.info(f"KPI3 Dependency Risk: {risk_dist}")
         
@@ -76,9 +97,7 @@ async def get_kpi_summary(
         # KPI 4: DEPARTMENT SEGMENTATION
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
-        dept_seg = calculate_department_segmentation()
-        if not dept_seg:
-            raise ValueError("Failed to calculate department segmentation")
+        dept_seg = calculate_department_segmentation() or {}
         
         logger.info(f"KPI4 Departments: {len(dept_seg)} departments segmented")
         
@@ -86,9 +105,7 @@ async def get_kpi_summary(
         # KPI 5: MOTIVATION BY AI USAGE
         # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         
-        motivation = calculate_motivation_by_ai_usage()
-        if not motivation:
-            raise ValueError("Failed to calculate motivation by AI usage")
+        motivation = calculate_motivation_by_ai_usage() or {}
         
         logger.info(f"KPI5 Motivation: {len(motivation)} segments")
 

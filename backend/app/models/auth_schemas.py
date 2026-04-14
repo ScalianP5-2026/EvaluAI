@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -16,8 +16,17 @@ from pydantic import BaseModel, EmailStr, Field
 
 class LoginRequest(BaseModel):
     """Login request with email and password."""
-    email: EmailStr = Field(..., description="Employee email address")
+    email: str = Field(..., description="Employee email address or admin username")
     password: str = Field("", description="Employee password (empty on first login attempt)")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email_or_admin(cls, value: str) -> str:
+        candidate = (value or "").strip()
+        if candidate.lower() == "admin":
+            return "admin"
+        EmailStr(candidate)
+        return candidate
 
 
 class SetPasswordRequest(BaseModel):

@@ -4,6 +4,7 @@ Initializes the app, configures routes, CORS, and startup/shutdown hooks.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from app.api import auth_routes, chat_routes, kpi_routes, ml_routes, surveys_routes
@@ -25,6 +26,10 @@ except ImportError:
     from routes.nlp_routes import router as nlp_router
 
 logger = logging.getLogger(__name__)
+
+
+def _env_flag(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
 
 # ═══════════════════════════════════════════════════════════════
 # Lifespan Context Manager (FastAPI 0.93+)
@@ -60,21 +65,27 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"⚠ Mentores seed failed: {e}")
 
-        # Seed employees (execute once on startup)
-        try:
-            logger.info("Seeding employees...")
-            await seed_employees(supabase)
-            logger.info("✓ Employees seeded")
-        except Exception as e:
-            logger.warning(f"⚠ Employees seed failed: {e}")
+        # Seed employees (optional; disabled by default)
+        if _env_flag("SEED_EMPLOYEES_ON_STARTUP", "false"):
+            try:
+                logger.info("Seeding employees...")
+                await seed_employees(supabase)
+                logger.info("✓ Employees seeded")
+            except Exception as e:
+                logger.warning(f"⚠ Employees seed failed: {e}")
+        else:
+            logger.info("Skipping employees seed (SEED_EMPLOYEES_ON_STARTUP=false)")
 
-        # Seed user credentials (execute once on startup)
-        try:
-            logger.info("Seeding user credentials...")
-            await seed_user_credentials(supabase)
-            logger.info("✓ User credentials seeded successfully")
-        except Exception as e:
-            logger.warning(f"⚠ User credentials seed skipped: {str(e)}")
+        # Seed user credentials (optional; disabled by default)
+        if _env_flag("SEED_USER_CREDENTIALS_ON_STARTUP", "false"):
+            try:
+                logger.info("Seeding user credentials...")
+                await seed_user_credentials(supabase)
+                logger.info("✓ User credentials seeded successfully")
+            except Exception as e:
+                logger.warning(f"⚠ User credentials seed skipped: {str(e)}")
+        else:
+            logger.info("Skipping user credentials seed (SEED_USER_CREDENTIALS_ON_STARTUP=false)")
             
         logger.info("✓ API ready at /api/v1 (Gemini configured)")
         logger.info("=== EvaluAI Backend Ready ===")

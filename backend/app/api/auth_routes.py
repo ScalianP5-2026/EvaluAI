@@ -56,6 +56,12 @@ security = HTTPBearer()
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
+BUILTIN_ADMIN_USERNAME = "admin"
+BUILTIN_ADMIN_PASSWORD = "scalian"
+BUILTIN_ADMIN_EMPLOYEE_ID = "admin"
+BUILTIN_ADMIN_EMAIL = "admin@scalian.com"
+BUILTIN_ADMIN_DEPARTMENT = "RRHH"
+
 
 # ═══════════════════════════════════════════════════════════════
 # Helper Functions
@@ -105,6 +111,19 @@ def _build_employee_info(credential: dict, employee: Optional[dict] = None) -> E
     )
 
 
+def _build_builtin_admin_info() -> EmployeeInfo:
+    """Return the built-in admin profile (not stored in DB)."""
+    return EmployeeInfo(
+        employee_id=BUILTIN_ADMIN_EMPLOYEE_ID,
+        email=BUILTIN_ADMIN_EMAIL,
+        department=BUILTIN_ADMIN_DEPARTMENT,
+        age=None,
+        gender=None,
+        education_level=None,
+        years_in_company=None,
+    )
+
+
 # ═══════════════════════════════════════════════════════════════
 # POST /api/v1/auth/login
 # ═══════════════════════════════════════════════════════════════
@@ -117,6 +136,27 @@ async def login(request: LoginRequest):
     If password_hash is NULL (first login), returns must_set_password response.
     If credentials are valid, returns JWT access token.
     """
+    normalized_login = (request.email or "").strip().lower()
+
+    # Built-in admin account (never persisted in database)
+    if normalized_login == BUILTIN_ADMIN_USERNAME:
+        if request.password != BUILTIN_ADMIN_PASSWORD:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+
+        access_token = create_access_token(data={
+            "sub": BUILTIN_ADMIN_EMPLOYEE_ID,
+            "email": BUILTIN_ADMIN_EMAIL,
+            "is_builtin_admin": True,
+        })
+
+        return LoginResponse(
+            access_token=access_token,
+            employee=_build_builtin_admin_info(),
+        )
+
     supabase = get_supabase_client()
     
     # Look up employee credentials by email
@@ -207,6 +247,12 @@ async def set_password(request: SetPasswordRequest):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Passwords do not match"
+        )
+
+    if request.email.strip().lower() == BUILTIN_ADMIN_USERNAME:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Built-in admin password cannot be changed",
         )
     
     supabase = get_supabase_client()
@@ -304,6 +350,14 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload"
         )
+
+    if payload.get("is_builtin_admin") is True:
+        if employee_id != BUILTIN_ADMIN_EMPLOYEE_ID or email != BUILTIN_ADMIN_EMAIL:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload"
+            )
+        return _build_builtin_admin_info()
     
     supabase = get_supabase_client()
     

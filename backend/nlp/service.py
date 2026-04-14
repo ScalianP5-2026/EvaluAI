@@ -103,10 +103,7 @@ def _read_csv_defensive(path: Path, dataset_name: str) -> pd.DataFrame:
 
 
 def _load_dataframe() -> pd.DataFrame | None:
-    """Load and cache NLP enriched dataframe.
-
-    Priority: 1) Supabase survey_responses → enrich  2) static CSV fallback.
-    """
+    """Load and cache NLP enriched dataframe from Supabase only."""
     global _DF_CACHE, _CACHE_ERROR, _DATA_SOURCE
 
     if _DF_CACHE is not None:
@@ -124,26 +121,14 @@ def _load_dataframe() -> pd.DataFrame | None:
                     "NLP dataframe loaded from DB (%d rows).", len(_DF_CACHE)
                 )
                 return _DF_CACHE
-            logger.info("DB returned no rows; falling back to CSV.")
+            _CACHE_ERROR = "No survey responses available in DB for NLP analysis."
+            return None
         except Exception as exc:
-            logger.warning("DB-backed NLP loading failed: %s — falling back to CSV.", exc)
+            _CACHE_ERROR = f"DB-backed NLP loading failed: {exc}"
+            return None
 
-    # --- Attempt 2: static CSV fallback ---
-    if not _ENRICHED_DATASET_PATH.exists():
-        _CACHE_ERROR = f"NLP dataset not found: {_ENRICHED_DATASET_PATH}"
-        return None
-
-    try:
-        _DF_CACHE = _read_csv_defensive(_ENRICHED_DATASET_PATH, "NLP dataset")
-        _CACHE_ERROR = None
-        _DATA_SOURCE = "csv"
-        logger.info(
-            "NLP dataframe loaded from CSV fallback (%d rows).", len(_DF_CACHE)
-        )
-        return _DF_CACHE
-    except Exception as exc:
-        _CACHE_ERROR = f"Failed to read NLP dataset: {exc}"
-        return None
+    _CACHE_ERROR = "NLP DB loader is unavailable."
+    return None
 
 
 def _dataset_error_payload() -> dict[str, Any]:
@@ -183,23 +168,8 @@ def _load_engineered_dataframe() -> pd.DataFrame | None:
         _ENGINEERED_CACHE_ERROR = None
         return _ENGINEERED_DF_CACHE
 
-    # Fallback: try loading static CSV
-    if not _ENGINEERED_DATASET_PATH.exists():
-        _ENGINEERED_CACHE_ERROR = (
-            f"Engineered dataset not found: {_ENGINEERED_DATASET_PATH}"
-        )
-        return None
-
-    try:
-        _ENGINEERED_DF_CACHE = _read_csv_defensive(
-            _ENGINEERED_DATASET_PATH,
-            "Engineered dataset",
-        )
-        _ENGINEERED_CACHE_ERROR = None
-        return _ENGINEERED_DF_CACHE
-    except Exception as exc:
-        _ENGINEERED_CACHE_ERROR = f"Failed to read engineered dataset: {exc}"
-        return None
+    _ENGINEERED_CACHE_ERROR = "No engineered NLP dataset available in DB."
+    return None
 
 
 def _normalize_language(lang: str | None) -> str:

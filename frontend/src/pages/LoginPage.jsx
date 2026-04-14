@@ -130,18 +130,18 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="login-form">
             <div className="login-field">
               <label htmlFor="login-email" className="login-label">
-                {t("auth.email")}
+                Usuario o email
               </label>
               <input
                 id="login-email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@scalian.com"
+                placeholder="admin o name@scalian.com"
                 className="login-input"
                 required
                 autoFocus
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
 
@@ -213,9 +213,9 @@ export default function LoginPage() {
             </div>
 
             <div className="login-field">
-              <label className="login-label">{t("auth.email")}</label>
+              <label className="login-label">Usuario o email</label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 className="login-input login-input--readonly"
                 readOnly

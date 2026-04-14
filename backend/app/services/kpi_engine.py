@@ -1,50 +1,56 @@
 """
-KPI Engine: Calcula 5 KPIs MVP desde CSV/Excel.
+KPI Engine: Calcula 5 KPIs MVP desde survey_responses en Supabase.
 """
 
 import logging
-from pathlib import Path
 from typing import Dict
 
 import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
 
-from app.config import settings
+from app.config import get_supabase_client
 
 logger = logging.getLogger(__name__)
 
-# Ruta al dataset resuelta desde la configuración centralizada.
-# Si la ruta es relativa, se resuelve respecto al directorio del backend.
-_BASE_DIR = Path(__file__).resolve().parents[2]
-_raw_path = Path(settings.surveys_path)
-DATA_PATH = _raw_path if _raw_path.is_absolute() else _BASE_DIR / _raw_path
+_KPI_SELECT_COLUMNS = (
+    "departamento,"
+    "frecuencia_uso_ia,"
+    "at1_rendimiento,at2_facilita_aprendizaje,at3_facilidad_uso,at4_integracion_positiva,"
+    "ae1_resolver_problemas,ae2_confianza_digital,ae3_uso_eficaz,ae4_seguridad_aplicacion,"
+    "m1_estimulante,m2_aumenta_interes,m3_aporta_valor,m4_mayor_esfuerzo,"
+    "c1_confio_sin_verificar,c2_dificil_sin_ia,c3_pensamiento_critico,c4_reflexiono_calidad"
+)
 
 
-def _load_dataset(path: Path) -> pd.DataFrame:
-    """Load a dataset from CSV or Excel based on file suffix."""
-    suffix = path.suffix.lower()
-    if suffix == ".xlsx":
-        return pd.read_excel(path, engine="openpyxl")
-    elif suffix == ".xls":
-        return pd.read_excel(path, engine="xlrd")
-    else:
-        return pd.read_csv(path, sep=';')
+def _load_dataset_from_db() -> pd.DataFrame:
+    """Load KPI dataset from Supabase survey_responses table."""
+    try:
+        supabase = get_supabase_client()
+        response = (
+            supabase.table("survey_responses")
+            .select(_KPI_SELECT_COLUMNS)
+            .limit(5000)
+            .execute()
+        )
+        rows = response.data or []
+        if not rows:
+            logger.warning("No survey_responses found in Supabase for KPI calculations")
+            return pd.DataFrame()
+        df = pd.DataFrame(rows)
+        logger.info(f"Loaded {len(df)} survey rows from Supabase for KPI calculations")
+        return df
+    except Exception as e:
+        logger.error(f"Error loading KPI dataset from Supabase: {e}")
+        return pd.DataFrame()
 
 
 class KPIEngine:
     """Calcula KPIs MVP."""
     
     def __init__(self):
-        """Load dataset on init."""
-        try:
-            if not DATA_PATH.exists():
-                raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
-            self.df = _load_dataset(DATA_PATH)
-            logger.info(f"Loaded {len(self.df)} employees from dataset: {DATA_PATH}")
-        except Exception as e:
-            logger.error(f"Error loading dataset: {e}")
-            self.df = pd.DataFrame()
+        """Load dataset on init from Supabase."""
+        self.df = _load_dataset_from_db()
             
     def calculate_acceptance_distribution(self) -> Dict:
         """
@@ -54,10 +60,7 @@ class KPIEngine:
             {"very_low": 15, "low": 20, "medium": 35, "high": 25, "very_high": 5}
         """
         try:
-            # Línea ~38 - buscar "at" columns
-            at_cols = [col for col in self.df.columns if col.startswith("AT")]  # ✅ UPPERCASE
-
-            # etc para todas las búsquedas de columnas
+            at_cols = [col for col in self.df.columns if col.lower().startswith("at")]
             if not at_cols:
                 logger.warning("AT columns not found")
                 return {}
@@ -94,7 +97,7 @@ class KPIEngine:
         try: 
             # Detectar columnas
             freq_cols = [col for col in self.df.columns if "frecuencia" in col.lower()]
-            ae_cols = [col for col in self.df.columns if col.startswith("AE")]
+            ae_cols = [col for col in self.df.columns if col.lower().startswith("ae")]
             
             if not freq_cols or not ae_cols:
                 logger.warning("Required columns not found")
@@ -132,7 +135,13 @@ class KPIEngine:
             {"high_risk": 15, "medium_risk": 35, "low_risk": 50}
         """
         try: 
-            c_cols = [col for col in self.df.columns if col.startswith("C")]
+            c_candidates = [
+                "c1_confio_sin_verificar",
+                "c2_dificil_sin_ia",
+                "c3_pensamiento_critico",
+                "c4_reflexiono_calidad",
+            ]
+            c_cols = [col for col in c_candidates if col in self.df.columns]
             if len(c_cols) < 4:
                 logger.warning("C columns not found (need c1, c2, c3, c4)")
                 return {}
@@ -179,8 +188,8 @@ class KPIEngine:
         """
         try:
             dept_col = [col for col in self.df.columns if "departamento" in col.lower()]
-            m_cols = [col for col in self.df.columns if col.startswith("M")]
-            ae_cols = [col for col in self.df.columns if col.startswith("AE")]
+            m_cols = [col for col in self.df.columns if col.lower().startswith("m")]
+            ae_cols = [col for col in self.df.columns if col.lower().startswith("ae")]
             
             if not dept_col or not m_cols or not ae_cols:
                 logger.warning("Required columns not found")
@@ -224,7 +233,7 @@ class KPIEngine:
         """
         try:
             freq_cols = [col for col in self.df.columns if "frecuencia" in col.lower()]
-            m_cols = [col for col in self.df.columns if col.startswith("M")]
+            m_cols = [col for col in self.df.columns if col.lower().startswith("m")]
             
             if not freq_cols or not m_cols:
                 logger.warning("Required columns not found")
